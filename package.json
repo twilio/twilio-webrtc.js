@@ -1,0 +1,24 @@
+{
+  "name": "twilio-webrtc.js",
+  "version": "1.0.0-dev",
+  "description": "WebRTC-related APIs and shims used by twilio-video.js",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/twilio/twilio-webrtc.js.git"
+  },
+  "keywords": [
+    "WebRTC",
+    "shim",
+    "video"
+  ],
+  "author": "Manjesh Malavalli <mmalavalli@twilio.com>",
+  "license": "MIT",
+  "bugs": {
+    "url": "https://github.com/twilio/twilio-webrtc.js/issues"
+  },
+  "homepage": "https://github.com/twilio/twilio-webrtc.js#readme"
+}
