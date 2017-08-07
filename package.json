@@ -3,7 +3,8 @@
   "version": "1.0.0-dev",
   "description": "WebRTC-related APIs and shims used by twilio-video.js",
   "scripts": {
-    "lint": "eslint ./lib"
+    "lint": "eslint ./lib",
+    "test:unit": "mocha ./test/unit/index.js"
   },
   "repository": {
     "type": "git",
@@ -21,6 +22,7 @@
   },
   "homepage": "https://github.com/twilio/twilio-webrtc.js#readme",
   "devDependencies": {
-    "eslint": "^4.4.1"
+    "eslint": "^4.4.1",
+    "mocha": "^3.5.0"
   }
 }
