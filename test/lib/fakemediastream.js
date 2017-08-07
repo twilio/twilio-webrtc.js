@@ -1,8 +1,8 @@
 'use strict';
 
 var inherits = require('util').inherits;
-var randomName = require('../lib/util').randomName;
-var EventTarget = require('../../lib/eventtarget');
+var randomName = require('./util').randomName;
+var EventTarget = require('../../lib/util/eventtarget');
 
 function FakeMediaStream() {
   var audioTracks = [];
