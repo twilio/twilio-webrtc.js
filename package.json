@@ -4,10 +4,10 @@
   "description": "WebRTC-related APIs and shims used by twilio-video.js",
   "scripts": {
     "lint": "eslint ./lib",
+    "test:unit": "mocha ./test/unit/index.js",
     "test:integration:native": "karma start karma/integration.conf.js",
     "test:integration:adapter": "karma start karma/integration.adapter.conf.js",
     "test:integration": "npm-run-all test:integration:*",
-    "test:unit": "mocha ./test/unit/index.js",
     "test": "npm-run-all test:*"
   },
   "repository": {
@@ -43,6 +43,7 @@
     "karma-spec-reporter": "0.0.31",
     "mocha": "^3.5.0",
     "npm-run-all": "^4.0.2",
-    "watchify": "^3.9.0"
+    "watchify": "^3.9.0",
+    "webrtc-adapter": "^4.2.2"
   }
 }
