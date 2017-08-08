@@ -1,5 +1,10 @@
-require('./spec/localtracks');
-require('./spec/connect');
-require('./spec/room');
-require('./spec/localparticipant');
-require('./spec/util/insightspublisher');
+'use strict';
+
+// NOTE(mroberts): Print out adapter.js information if we are running with
+// adapter.js enabled.
+if (typeof adapter !== 'undefined') {
+  console.log(adapter);
+}
+
+require('./spec/rtcpeerconnection');
+require('./spec/rtcsessiondescription');
