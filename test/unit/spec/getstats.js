@@ -1,10 +1,10 @@
 'use strict';
 
 var assert = require('assert');
-var FakeMediaStream = require('../../../lib/fakemediastream').FakeMediaStream;
-var FakeMediaStreamTrack = require('../../../lib/fakemediastream').FakeMediaStreamTrack;
-var FakeRTCPeerConnection = require('../../../lib/fakestats').FakeRTCPeerConnection;
-var getStats = require('../../../../lib/webrtc/getstats');
+var FakeMediaStream = require('../../lib/fakemediastream').FakeMediaStream;
+var FakeMediaStreamTrack = require('../../lib/fakemediastream').FakeMediaStreamTrack;
+var FakeRTCPeerConnection = require('../../lib/fakestats').FakeRTCPeerConnection;
+var getStats = require('../../../lib/getstats');
 
 describe('getStats', function() {
   it('should reject the promise if RTCPeerConnection is not specified', () => {
@@ -160,12 +160,12 @@ describe('getStats', function() {
           ssrc: 'foo',
           bytesSent: 45,
           packetsSent: 50,
-          frameRateMean: 28.84
+          framerateMean: 28.84
         }
       }
     };
-    var fakeInbound = options.outbound_rtcp_media_0;
-    var fakeOutbound = options.outbound_rtp_media_0;
+    var fakeInbound = options.firefoxFakeStats.outbound_rtcp_media_0;
+    var fakeOutbound = options.firefoxFakeStats.outbound_rtp_media_0;
     var peerConnection = new FakeRTCPeerConnection(options);
     var localStream = new FakeMediaStream();
     var remoteStream = new FakeMediaStream();
@@ -177,7 +177,7 @@ describe('getStats', function() {
     peerConnection._addLocalStream(localStream);
     peerConnection._addRemoteStream(remoteStream);
 
-    getStats(peerConnection, { testForFirefox: true })
+    return getStats(peerConnection, { testForFirefox: true })
       .then(response => {
         assert.equal(response.localAudioTrackStats.length, 1);
         assert.equal(response.localVideoTrackStats.length, 1);
@@ -190,14 +190,14 @@ describe('getStats', function() {
           .forEach(report => {
             assert(report.trackId);
             assert(report.timestamp);
-            assert.equal(report.frameRateSent, Math.round(fakeOutbound.frameRateMean));
+            assert.equal(report.frameRateSent, Math.round(fakeOutbound.framerateMean));
             assert.equal(report.ssrc, fakeOutbound.ssrc);
             assert.equal(report.bytesSent, fakeOutbound.bytesSent);
             assert.equal(report.packetsSent, fakeOutbound.packetsSent);
             assert.equal(report.bytesReceived, fakeInbound.bytesReceived);
             assert.equal(report.packetsReceived, fakeInbound.packetsReceived);
             assert.equal(report.packetsLost, fakeInbound.packetsLost);
-            assert.equal(report.jitter, fakeInbound.jitter);
+            assert.equal(report.jitter, Math.round(fakeInbound.jitter * 1000));
             assert.equal(report.roundTripTime, fakeInbound.mozRtt);
           });
       });
@@ -223,12 +223,12 @@ describe('getStats', function() {
           packetsReceived: 50,
           packetsLost: 5,
           jitter: 0.05,
-          frameRateMean: 20.45
+          framerateMean: 20.45
         }
       }
     };
-    var fakeInbound = options.inbound_rtp_media_0;
-    var fakeOutbound = options.inbound_rtcp_media_0;
+    var fakeInbound = options.firefoxFakeStats.inbound_rtp_media_0;
+    var fakeOutbound = options.firefoxFakeStats.inbound_rtcp_media_0;
     var peerConnection = new FakeRTCPeerConnection(options);
     var localStream = new FakeMediaStream();
     var remoteStream = new FakeMediaStream();
@@ -240,7 +240,7 @@ describe('getStats', function() {
     peerConnection._addLocalStream(localStream);
     peerConnection._addRemoteStream(remoteStream);
 
-    getStats(peerConnection, { testForFirefox: true })
+    return getStats(peerConnection, { testForFirefox: true })
       .then(response => {
         assert.equal(response.localAudioTrackStats.length, 1);
         assert.equal(response.localVideoTrackStats.length, 1);
@@ -253,14 +253,14 @@ describe('getStats', function() {
           .forEach(report => {
             assert(report.trackId);
             assert(report.timestamp);
-            assert.equal(report.frameRateReceived, Math.round(fakeInbound.frameRateMean));
+            assert.equal(report.frameRateReceived, Math.round(fakeInbound.framerateMean));
             assert.equal(report.ssrc, fakeInbound.ssrc);
             assert.equal(report.bytesReceived, fakeInbound.bytesReceived);
             assert.equal(report.packetsReceived, fakeInbound.packetsReceived);
             assert.equal(report.packetsLost, fakeInbound.packetsLost);
-            assert.equal(report.jitter, fakeInbound.jitter);
+            assert.equal(report.jitter, Math.round(fakeInbound.jitter * 1000));
             assert.equal(report.bytesSent, fakeOutbound.bytesSent);
-            assert.equal(report.packetsSent, fakeInbound.packetsSent);
+            assert.equal(report.packetsSent, fakeOutbound.packetsSent);
           });
       });
   });

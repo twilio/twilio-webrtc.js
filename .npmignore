@@ -1,12 +1,6 @@
 .DS_Store
-*.sw*
-browsers
-coverage
-node_modules
-npm-debug.log
-test.json
 .idea
-
-.travis.yml
-dist/docs
-test/
+coverage
+karma
+node_modules
+test
