@@ -1,4 +1,6 @@
 .DS_Store
 .idea
 coverage
+karma
 node_modules
+test
