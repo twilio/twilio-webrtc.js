@@ -1,13 +1,13 @@
 'use strict';
 
 var assert = require('assert');
-var MediaStream = require('../../../../lib/webrtc/mediastream');
-var RTCIceCandidate = require('../../../../lib/webrtc/rtcicecandidate');
-var RTCSessionDescription = require('../../../../lib/webrtc/rtcsessiondescription');
-var RTCPeerConnection = require('../../../../lib/webrtc/rtcpeerconnection');
-var { makeSdpWithTracks } = require('../../../lib/sdp');
-var util = require('../../../lib/util');
-var { flatMap, guessBrowser } = require('../../../../lib/util');
+var MediaStream = require('../../../lib/mediastream');
+var RTCIceCandidate = require('../../../lib/rtcicecandidate');
+var RTCSessionDescription = require('../../../lib/rtcsessiondescription');
+var RTCPeerConnection = require('../../../lib/rtcpeerconnection');
+var { makeSdpWithTracks } = require('../../lib/sdp');
+var util = require('../../lib/util');
+var { flatMap, guessBrowser } = require('../../../lib/util');
 
 var sdpTypes = [
   'answer',
