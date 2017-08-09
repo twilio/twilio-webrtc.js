@@ -9,7 +9,8 @@
     "test:integration:native": "karma start karma/integration.conf.js",
     "test:integration:adapter": "karma start karma/integration.adapter.conf.js",
     "test:integration": "npm-run-all test:integration:*",
-    "test": "npm-run-all test:*"
+    "test": "npm-run-all test:*",
+    "travis": "npm-run-all clean lint test"
   },
   "repository": {
     "type": "git",

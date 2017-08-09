@@ -1,0 +1,16 @@
+environment:
+  matrix:
+    - node_version: 7
+    - node_version: 6
+
+install:
+  - ps: Install-Product node $env:nodejs_version
+  - npm install
+
+build_script:
+  - npm run clean
+  - npm run lint
+  - npm run test
+
+test_script:
+  - node --version
