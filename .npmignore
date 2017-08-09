@@ -1,0 +1,9 @@
+.DS_Store
+.idea
+.travis.yml
+*.sw*
+coverage
+karma
+node_modules
+npm-debug.log
+test
