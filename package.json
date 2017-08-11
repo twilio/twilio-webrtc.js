@@ -48,6 +48,7 @@
     "mocha": "^3.5.0",
     "npm-run-all": "^4.0.2",
     "rimraf": "^2.6.1",
+    "travis-multirunner": "^4.2.3",
     "watchify": "^3.9.0",
     "webrtc-adapter": "^4.2.2"
   }

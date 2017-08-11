@@ -48,7 +48,7 @@ describe('RTCPeerConnection', function() {
     signalingStates.forEach(testClose);
   });
 
-  describe('#addStream', testAddStream);
+  (isSafari ? describe.skip : describe)('#addStream', testAddStream);
 
   describe('#createAnswer, called from signaling state', () => {
     signalingStates.forEach(signalingState => {
@@ -66,13 +66,13 @@ describe('RTCPeerConnection', function() {
     });
   });
 
-  describe('#createOffer, called twice from signaling state "stable" without calling #setLocalDescription', () => {
+  (isSafari ? describe.skip : describe)('#createOffer, called twice from signaling state "stable" without calling #setLocalDescription', () => {
     let offer1;
     let offer2;
 
     before(async () => {
       const constraints = { audio: true, video: true };
-      const stream = await navigator.mediaDevices.getUserMedia(constraints);
+      const stream = await makeStream(constraints);
       const pc = new RTCPeerConnection({ iceServers: [] });
       pc.addStream(stream);
       const options = { offerToReceiveAudio: true, offerToReceiveVideo: true };
@@ -111,13 +111,13 @@ describe('RTCPeerConnection', function() {
     });
   });
 
-  describe('#setRemoteDescription, called twice from signaling state "stable" with the same MediaStreamTrack IDs but different SSRCs', () => {
+  (isSafari ? describe.skip : describe)('#setRemoteDescription, called twice from signaling state "stable" with the same MediaStreamTrack IDs but different SSRCs', () => {
     let offer1;
     let offer2;
 
     beforeEach(async () => {
       const constraints = { audio: true, video: true };
-      const stream = await navigator.mediaDevices.getUserMedia(constraints);
+      const stream = await makeStream(constraints);
       const pc = new RTCPeerConnection({ iceServers: [] });
       pc.addStream(stream);
       const options = { offerToReceiveAudio: true, offerToReceiveVideo: true };
@@ -163,13 +163,9 @@ describe('RTCPeerConnection', function() {
     });
   });
 
-  describe('DTLS role negotiation', () => {
-    testDtlsRoleNegotiation();
-  });
+  describe('DTLS role negotiation', testDtlsRoleNegotiation);
 
-  describe('Glare', () => {
-    testGlare();
-  });
+  describe('Glare', testGlare);
 
   describe('"track" event', () => {
     context('when a new MediaStreamTrack is added', () => {
@@ -179,7 +175,8 @@ describe('RTCPeerConnection', function() {
       // failing. So we are skipping the test for now until webrtc-adapter.js
       // lands a fix for this issue.
       // GitHub issue: https://github.com/webrtc/adapter/issues/634
-      (isChrome && typeof adapter !== 'undefined'
+      const isChromeWithAdapter = isChrome && typeof adapter !== 'undefined';
+      (isSafari || isChromeWithAdapter
         ? it.skip
         : it)('should trigger a "track" event on the remote RTCPeerConnection with the added MediaStreamTrack', async () => {
         const pc1 = new RTCPeerConnection({ iceServers: [] });
@@ -586,7 +583,7 @@ function testDtlsRoleNegotiation() {
           });
         });
 
-        it('RTCPeerConnection 1 answers with "a=setup:passive"', () => {
+        (isSafari ? it.skip : it)('RTCPeerConnection 1 answers with "a=setup:passive"', () => {
           return pc1.createAnswer().then(answer => {
             assert(answer.sdp.match(/a=setup:passive/));
           });
@@ -632,7 +629,7 @@ function testGlare() {
           });
         });
 
-        it('RTCPeerConnection 1 calls createOffer and setLocalDescription', () => {
+        (isSafari ? it.skip : it)('RTCPeerConnection 1 calls createOffer and setLocalDescription', () => {
           return pc1.createOffer().then(offer => {
             return pc1.setLocalDescription(offer);
           });
