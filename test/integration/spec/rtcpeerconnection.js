@@ -48,7 +48,7 @@ describe('RTCPeerConnection', function() {
     signalingStates.forEach(testClose);
   });
 
-  describe('#addStream', testAddStream);
+  (isSafari ? describe.skip : describe)('#addStream', testAddStream);
 
   describe('#createAnswer, called from signaling state', () => {
     signalingStates.forEach(signalingState => {
@@ -66,7 +66,7 @@ describe('RTCPeerConnection', function() {
     });
   });
 
-  describe('#createOffer, called twice from signaling state "stable" without calling #setLocalDescription', () => {
+  (isSafari ? describe.skip : describe)('#createOffer, called twice from signaling state "stable" without calling #setLocalDescription', () => {
     let offer1;
     let offer2;
 
@@ -111,7 +111,7 @@ describe('RTCPeerConnection', function() {
     });
   });
 
-  describe('#setRemoteDescription, called twice from signaling state "stable" with the same MediaStreamTrack IDs but different SSRCs', () => {
+  (isSafari ? describe.skip : describe)('#setRemoteDescription, called twice from signaling state "stable" with the same MediaStreamTrack IDs but different SSRCs', () => {
     let offer1;
     let offer2;
 
