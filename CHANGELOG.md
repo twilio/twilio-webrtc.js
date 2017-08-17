@@ -1,7 +1,4 @@
 1.0.0 (in progress)
 ===================
 
-New Features
-------------
-
-- Factored out the WebRTC shims into its own repository.
+- Factored out the WebRTC shims from twilio-video.js 1.2.0 into its own library.
