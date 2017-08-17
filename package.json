@@ -3,14 +3,14 @@
   "version": "1.0.0-dev",
   "description": "WebRTC-related APIs and shims used by twilio-video.js",
   "scripts": {
+    "build": "npm-run-all clean lint test",
     "clean": "rimraf coverage",
     "lint": "eslint ./lib",
     "test:unit": "istanbul cover node_modules/mocha/bin/_mocha -- ./test/unit/index.js",
     "test:integration:native": "karma start karma/integration.conf.js",
     "test:integration:adapter": "karma start karma/integration.adapter.conf.js",
     "test:integration": "npm-run-all test:integration:*",
-    "test": "npm-run-all test:*",
-    "travis": "npm-run-all clean lint test"
+    "test": "npm-run-all test:*"
   },
   "repository": {
     "type": "git",
@@ -47,6 +47,7 @@
     "karma-spec-reporter": "0.0.31",
     "mocha": "^3.5.0",
     "npm-run-all": "^4.0.2",
+    "release-tool": "^0.2.2",
     "rimraf": "^2.6.1",
     "travis-multirunner": "^4.2.3",
     "watchify": "^3.9.0",

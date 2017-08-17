@@ -1,0 +1,42 @@
+{
+  "type": "JavaScript",
+  "travis": true,
+  "slug": "twilio/twilio-webrtc.js",
+  "env": {
+    "GH_REF": "github.com/twilio/twilio-webrtc.js.git"
+  },
+  "plans": {
+    "release": {
+      "env": {
+        "GIT_USER_NAME": "twilio-ci",
+        "GIT_USER_EMAIL": "mroberts+twilio-ci@twilio.com"
+      },
+      "commands": [
+        "node ./node_modules/.bin/release --bump ${CURRENT_VERSION} ${RELEASE_VERSION}",
+        "git config user.name \"${GIT_USER_NAME}\"",
+        "git config user.email \"${GIT_USER_EMAIL}\"",
+        "git add package.json",
+        "git commit -m \"${RELEASE_VERSION}\"",
+        "git tag ${RELEASE_VERSION}",
+        "git remote set-url origin \"https://${GH_TOKEN}@${GH_REF}\"",
+        "git rebase HEAD ${BRANCH}",
+        "git push origin ${BRANCH} --tags"
+      ]
+    },
+    "development": {
+      "commands": [
+        "node ./node_modules/.bin/release --bump ${RELEASE_VERSION} ${DEVELOPMENT_VERSION}",
+        "git add package.json",
+        "git commit -m \"${DEVELOPMENT_VERSION}\"",
+        "git push origin ${BRANCH}"
+      ]
+    },
+    "publish": {
+      "commands": [
+        "git checkout ${RELEASE_VERSION}",
+        "echo \"//registry.npmjs.org/:_authToken=${NPM_AUTH_TOKEN}\" >~/.npmrc",
+        "npm publish"
+      ]
+    }
+  }
+}
