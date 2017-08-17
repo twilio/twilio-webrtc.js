@@ -1,7 +1,7 @@
 twilio-webrtc.js
 ================
 
-"twilio-webrtc.js" contains the various WebRTC shims used by "twilio-video.js".
+twilio-webrtc.js contains the various WebRTC shims used by twilio-video.js.
 It is not intended for general consumption.
 
 ## Installation
