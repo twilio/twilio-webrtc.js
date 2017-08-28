@@ -169,14 +169,7 @@ describe('RTCPeerConnection', function() {
 
   describe('"track" event', () => {
     context('when a new MediaStreamTrack is added', () => {
-      // NOTE(mmalavalli): When running webrtc-adapter.js (v4.2.2) on chrome,
-      // a "track" event is triggered for both audio and video MediaStreamTracks
-      // when the video MediaStreamTrack is added. This results in this test
-      // failing. So we are skipping the test for now until webrtc-adapter.js
-      // lands a fix for this issue.
-      // GitHub issue: https://github.com/webrtc/adapter/issues/634
-      const isChromeWithAdapter = isChrome && typeof adapter !== 'undefined';
-      (isSafari || isChromeWithAdapter
+      (isSafari
         ? it.skip
         : it)('should trigger a "track" event on the remote RTCPeerConnection with the added MediaStreamTrack', async () => {
         const pc1 = new RTCPeerConnection({ iceServers: [] });
