@@ -17,7 +17,6 @@ describe('RTCSessionDescription', () => {
 
     context('called with an invalid .type', () => {
       var descriptionInitDict = { type: 'bogus' };
-
       testErrorMessages('throws the same error as RTCSessionDescription',
         () => new RTCSessionDescription(descriptionInitDict),
         () => new SessionDescription(descriptionInitDict));
@@ -65,7 +64,6 @@ describe('RTCSessionDescription', () => {
         });
 
         testConstructor();
-
         testRollback(sdp);
       });
     });
@@ -93,79 +91,6 @@ describe('RTCSessionDescription', () => {
       it('sets .type to "rollback"', () => {
         assert.equal(description.type, 'rollback');
       });
-
-      (isSafari ? context.skip : context)
-      ('setting .sdp', () => {
-        var newSdp = 'new fake sdp';
-
-        beforeEach(() => {
-          description.sdp = newSdp;
-        });
-
-        it('sets .sdp', () => {
-          assert.equal(description.sdp, newSdp);
-        });
-
-        it('unwraps to null', () => {
-          assert.equal(unwrap(description), null);
-        });
-      });
-
-      (isSafari ? context.skip : context)
-      ('setting .type to', () => {
-        combinationContext([
-          [
-            ['offer', 'answer', 'pranswer', 'rollback'],
-            x => `"${x}"`
-          ]
-        ], ([newType]) => {
-          beforeEach(() => {
-            description.type = newType;
-          });
-
-          it('does not update .sdp', () => {
-            if (!sdp) {
-              if (description.sdp === '') {
-                return;
-              }
-            }
-            assert.equal(description.sdp, sdp);
-          });
-
-          it('sets .type', () => {
-            assert.equal(description.type, newType);
-          });
-
-          it('unwraps to null', () => {
-            assert.equal(unwrap(description), null);
-          });
-        });
-
-        context('an invalid type', () => {
-          var newType = 'bogus';
-
-          beforeEach(() => {
-            description.type = newType;
-          });
-
-          it('does not update .sdp', () => {
-            if (!sdp) {
-              if (description.sdp === '') {
-                return;
-              }
-            }
-            assert.equal(description.sdp, sdp);
-          });
-
-          it('does not set .type', () => {
-            assert.equal(description.type, 'rollback');
-          });
-
-          it('unwraps to null', () => {
-            assert.equal(unwrap(description), null);
-          });
-        });
-      });
     }
 
     combinationContext([
@@ -191,15 +116,10 @@ describe('RTCSessionDescription', () => {
       });
 
       testConstructor();
-
       testRTCSessionDescription(type, hasSdp ? sdp : null);
     });
 
     function testRTCSessionDescription(type, sdp) {
-      // it('sets ._description to an instance of RTCSessionDescription', () => {
-      //   assert(unwrap(description) instanceof RTCSessionDescription);
-      // });
-
       if (sdp) {
         it('sets .sdp', () => {
           assert.equal(description.sdp, sdp);
@@ -221,102 +141,6 @@ describe('RTCSessionDescription', () => {
           assert.equal(unwrap(description).type, description.type);
         });
       }
-
-      (isSafari ? context.skip : context)
-      ('setting .sdp', () => {
-        var newSdp = 'new fake sdp';
-
-        beforeEach(() => {
-          description.sdp = newSdp;
-        });
-
-        it('sets .sdp', () => {
-          assert.equal(description.sdp, newSdp);
-        });
-
-        if (SessionDescription === ChromeRTCSessionDescription) {
-          it('sets .sdp on the unwrapped RTCSessionDescription', () => {
-            assert.equal(unwrap(description).sdp, newSdp);
-          });
-        }
-      });
-
-      (isSafari ? context.skip : context)
-      ('setting .type to', () => {
-        combinationContext([
-          [
-            ['offer', 'answer', 'pranswer'],
-            x => `"${x}"`
-          ]
-        ], ([newType]) => {
-          beforeEach(() => {
-            description.type = newType;
-          });
-
-          it('does not update .sdp', () => {
-            if (description.sdp === '') {
-              return;
-            }
-            assert.equal(description.sdp, sdp);
-          });
-
-          it('sets .type', () => {
-            assert.equal(description.type, newType);
-          });
-
-          if (SessionDescription === ChromeRTCSessionDescription) {
-            it('sets .type on the unwrapped RTCSessionDescription', () => {
-              assert.equal(unwrap(description).type, newType);
-            });
-          }
-        });
-
-        context('"rollback"', () => {
-          var newType = 'rollback';
-
-          beforeEach(() => {
-            description.type = newType;
-          });
-
-          it('unwraps to null', () => {
-            assert.equal(unwrap(description), null);
-          });
-
-          it('does not update .sdp', () => {
-            if (description.sdp === '') {
-              return;
-            }
-            assert.equal(description.sdp, sdp);
-          });
-
-          it('sets .type', () => {
-            assert.equal(description.type, newType);
-          });
-        });
-
-        context('an invalid type', () => {
-          beforeEach(() => {
-            description.type = 'bogus';
-          });
-
-          it('does not update .sdp', () => {
-            if (description.sdp === '') {
-              return;
-            }
-            assert.equal(description.sdp, sdp);
-          });
-
-          it('does not update .type', () => {
-            assert.equal(description.type, type);
-          });
-
-          if (SessionDescription === ChromeRTCSessionDescription) {
-            it('does not set .type on the unwrapped RTCSessionDescription', () => {
-              assert.equal(unwrap(description).type, type);
-            });
-          }
-        });
-      });
     }
   });
 });
