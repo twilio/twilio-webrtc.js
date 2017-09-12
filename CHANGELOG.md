@@ -1,5 +1,5 @@
-1.0.1 (in progress)
-==================
+1.0.1 (September 12, 2017)
+==========================
 
 Bug Fixes
 ---------
@@ -10,3 +10,4 @@ Bug Fixes
 =======================
 
 - Factored out the WebRTC shims from twilio-video.js 1.2.0 into its own library.
+
