@@ -1,3 +1,12 @@
+1.0.2 (in progress)
+===================
+
+Bug Fixes
+---------
+
+- Calling `getUserMedia` in browsers which do not support `getUserMedia` (such
+  as iOS 8) would hang indefinitely. Now we reject with an error.
+
 1.0.1 (September 12, 2017)
 ==========================
 
