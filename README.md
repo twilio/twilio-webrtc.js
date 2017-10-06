@@ -1,6 +1,8 @@
 twilio-webrtc.js
 ================
 
+[![NPM](https://img.shields.io/npm/v/%40twilio/webrtc.svg)](https://www.npmjs.com/package/%40twilio/webrtc) [![Linux Build Status](https://travis-ci.org/twilio/twilio-webrtc.js.svg?branch=master)](https://travis-ci.org/twilio/twilio-webrtc.js) [![Windows Build Status](https://ci.appveyor.com/api/projects/status/u1fh0qnql1a4shuc/branch/master?svg=true)](https://ci.appveyor.com/project/markandrus/twilio-webrtc-js/branch/master)
+
 twilio-webrtc.js contains the various WebRTC shims used by twilio-video.js.
 It is not intended for general consumption.
 
