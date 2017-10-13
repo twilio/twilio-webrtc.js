@@ -1,3 +1,12 @@
+1.0.3 (in progress)
+===================
+
+Bug Fixes
+---------
+
+- Fixed a bug where we created too many MediaStreams in Firefox (one per call to
+  `getLocalStreams` and `getRemoteStreams`). (JSDK-1558)
+
 1.0.2 (October 6, 2017)
 =======================
 
