@@ -72,6 +72,10 @@ browsers.
 * Provides a workaround for the case where, when the SSRC of a `MediaStreamTrack` changes, the
   browser treats this as a removal of the existing `MediaStreamTrack` and the addition of a new
   `MediaStreamTrack`.
+* Adds support for getting and setting `maxPacketLifeTime` on RTCDataChannels by
+  remapping the legacy property `maxRetransmitTime` to `maxPacketLifeTime`. See
+  [this bug](https://bugs.chromium.org/p/chromium/issues/detail?id=696681) for
+  more information.
 
 #### Firefox
 * For new offers, adds support for calling `setLocalDescription` and `setRemoteDescription` in

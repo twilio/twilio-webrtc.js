@@ -1,3 +1,13 @@
+1.1.0 (in progress)
+===================
+
+New Features
+------------
+
+- Adds Chrome support for getting and setting `maxPacketLifeTime` on
+  RTCDataChannels by remapping the legacy property `maxRetransmitTime` to
+  `maxPacketLifeTime`. (JSDK-1572)
+
 1.0.3 (October 13, 2017)
 ========================
 
