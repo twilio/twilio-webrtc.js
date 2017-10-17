@@ -48,6 +48,7 @@ before_script:
       export FIREFOX_BIN=$(pwd)/browsers/bin/firefox-$BVER
     else
       BROWSER=safari ./setup.sh
+      sudo safaridriver --enable
     fi
     cd ../..
     if [ "${TRAVIS_OS_NAME}" == 'linux' ]; then
