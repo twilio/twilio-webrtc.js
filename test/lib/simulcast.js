@@ -1,11 +1,11 @@
 'use strict';
 
-var flatMap = require('./').flatMap;
-var getMediaSections = require('./sdp').getMediaSections;
+var flatMap = require('../../lib/util').flatMap;
+var getMediaSections = require('../../lib/util/sdp').getMediaSections;
 
 /**
- * Create a random SSRC.
- * @returns {string}
+ * Create a random {@link SSRC}.
+ * @returns {SSRC}
  */
 function createSSRC() {
   var ssrcMax = 0xffffffff;
@@ -15,15 +15,15 @@ function createSSRC() {
 /**
  * Construct a {@link MediaStreamTrack} attribute store.
  * @class
- * @param {string} trackId - The MediaStreamTrack ID
+ * @param {Track.ID} trackId - The MediaStreamTrack ID
  * @param {string} streamId - The MediaStream ID
  * @param {string} cName - The MediaStream cname
  * @property {string} cName
  * @property {boolean} isSimulcastEnabled
- * @property {Map<string, string>} rtxPairs
- * @property {Set<string>} primarySSRCs
+ * @property {Map<RtxSSRC, PrimarySSRC>} rtxPairs
+ * @property {Set<PrimarySSRC>} primarySSRCs
  * @property {string} streamId
- * @property {string} trackId
+ * @property {Track.ID} trackId
  */
 function TrackAttributes(trackId, streamId, cName) {
   Object.defineProperties(this, {
@@ -56,7 +56,7 @@ function TrackAttributes(trackId, streamId, cName) {
 }
 
 /**
- * Add Simulcast SSRCs to the {@link TrackAttributes}.
+ * Add {@link SimSSRC}s to the {@link TrackAttributes}.
  * @returns {void}
  */
 TrackAttributes.prototype.addSimulcastSSRCs = function addSimulcastSSRCs() {
@@ -73,6 +73,25 @@ TrackAttributes.prototype.addSimulcastSSRCs = function addSimulcastSSRCs() {
       this.rtxPairs.set(createSSRC(), ssrc);
     }, this);
   }
+};
+
+/**
+ * Add the given {@link PrimarySSRC} or {@link RtxSSRC} to the {@link TrackAttributes}
+ * and update the "isSimulcastEnabled" flag if it is also a {@link SimSSRC}.
+ * @param {SSRC} ssrc - The {@link SSRC} to be added
+ * @param {?PrimarySSRC} primarySSRC - The {@link PrimarySSRC}; if the given
+ *   {@link SSRC} itself is the {@link PrimarySSRC}, then this is set to null
+ * @param {boolean} isSimSSRC - true if the given {@link SSRC} is a
+ *   {@link SimSSRC}; false otherwise
+ * @returns {void}
+ */
+TrackAttributes.prototype.addSSRC = function addSSRC(ssrc, primarySSRC, isSimSSRC) {
+  if (primarySSRC) {
+    this.rtxPairs.set(ssrc, primarySSRC);
+  } else {
+    this.primarySSRCs.add(ssrc);
+  }
+  this.isSimulcastEnabled = this.isSimulcastEnabled || isSimSSRC;
 };
 
 /**
@@ -123,9 +142,9 @@ function getMatches(section, pattern) {
 }
 
 /**
- * Get the SSRCs that belong to a simulcast group.
+ * Get the {@link SimSSRC}s that belong to a simulcast group.
  * @param {string} section - SDP media section
- * @returns {Set<string>} Set of simulcast SSRCs
+ * @returns {Set<SimSSRC>} Set of simulcast {@link SSRC}s
  */
 function getSimulcastSSRCs(section) {
   var simGroupPattern = '^a=ssrc-group:SIM ([0-9]+) ([0-9]+) ([0-9]+)$';
@@ -135,9 +154,9 @@ function getSimulcastSSRCs(section) {
 /**
  * Get the value of the given attribute for an SSRC.
  * @param {string} section - SDP media section
- * @param {string} ssrc - SSRC whose attribute's value is to be determinded
- * @param {string} attribute - SSRC attribute name
- * @param {string} - SSRC attribute value
+ * @param {SSRC} ssrc - {@link SSRC} whose attribute's value is to be determinded
+ * @param {string} attribute - {@link SSRC} attribute name
+ * @param {string} - {@link SSRC} attribute value
  */
 function getSSRCAttribute(section, ssrc, attribute) {
   var pattern = 'a=ssrc:' + ssrc + ' ' + attribute + ':(.+)';
@@ -145,10 +164,10 @@ function getSSRCAttribute(section, ssrc, attribute) {
 }
 
 /**
- * Create a Map of primary SSRCs and their retransmission SSRCs.
+ * Create a Map of {@link PrimarySSRC}s and their {@link RtxSSRC}s.
  * @param {string} section - SDP media section
- * @returns {Map<string, string>} - Map of retransmission SSRCs and their
- *   primary SSRCs
+ * @returns {Map<RtxSSRC, PrimarySSRC>} - Map of {@link RtxSSRC}s and their
+ *   corresponding {@link PrimarySSRC}s
  */
 function getSSRCRtxPairs(section) {
   var rtxPairPattern = '^a=ssrc-group:FID ([0-9]+) ([0-9]+)$';
@@ -177,13 +196,8 @@ function createTrackIdsToAttributes(section) {
       streamId,
       getSSRCAttribute(section, ssrc, 'cname'));
 
-    if (rtxPairs.has(ssrc)) {
-      trackAttributes.rtxPairs.set(ssrc, rtxPairs.get(ssrc));
-    } else {
-      trackAttributes.primarySSRCs.add(ssrc);
-    }
-    trackAttributes.isSimulcastEnabled = trackAttributes.isSimulcastEnabled
-      || simSSRCs.has(ssrc);
+    var primarySSRC = rtxPairs.get(ssrc) || null;
+    trackAttributes.addSSRC(ssrc, primarySSRC, simSSRCs.has(ssrc));
     return trackIdsToSSRCs.set(trackId, trackAttributes);
   }, new Map());
 }
@@ -191,34 +205,64 @@ function createTrackIdsToAttributes(section) {
 /**
  * Apply simulcast settings to the given SDP media section.
  * @param {string} section - SDP media section
+ * @param {Map<Track.ID, TrackAttributes>} trackIdsToAttributes - Existing
+ *   map which will be updated for new MediaStreamTrack IDs
  * @returns {string} - The transformed SDP media section
  */
-function enableSimulcastInMediaSection(section) {
-  var trackIdsToAttributes = createTrackIdsToAttributes(section);
-  trackIdsToAttributes.forEach(function(trackAttributes) {
-    trackAttributes.addSimulcastSSRCs();
+function enableSimulcastInMediaSection(section, trackIdsToAttributes) {
+  var newTrackIdsToAttributes = createTrackIdsToAttributes(section);
+  newTrackIdsToAttributes.forEach(function(trackAttributes) {
+    if (!trackIdsToAttributes.has(trackAttributes.trackId)) {
+      trackAttributes.addSimulcastSSRCs();
+      trackIdsToAttributes.set(trackAttributes.trackId, trackAttributes);
+    }
   });
 
   return [
     section.split('\r\na=ssrc')[0]
   ].concat(flatMap(trackIdsToAttributes, function(trackAttributes) {
-    return trackAttributes.toSdpLines();
-  })).join('\r\n') + (/\r\n$/.test(section) ? '\r\n' : '');
+    return newTrackIdsToAttributes.has(trackAttributes.trackId)
+      ? trackAttributes.toSdpLines()
+      : [];
+  })).join('\r\n');
 }
 
 /**
  * Apply simulcast settings to the given SDP.
  * @param {string} sdp - The SDP
+ * @param {Map<Track.ID, TrackAttributes>} trackIdsToAttributes  - Existing
+ *   map which will be updated for new MediaStreamTrack IDs
  * @returns {string} - The transformed SDP
  */
-function simulcast(sdp) {
+function simulcast(sdp, trackIdsToAttributes) {
   var mediaSections = getMediaSections(sdp);
   var session = sdp.split('\r\nm=')[0];
   return [session].concat(mediaSections.map(function(mediaSection) {
     return /^m=video/.test(mediaSection)
-      ? enableSimulcastInMediaSection(mediaSection)
+      ? enableSimulcastInMediaSection(mediaSection, trackIdsToAttributes)
+        + (/\r\n$/.test(mediaSection) ? '\r\n' : '')
       : mediaSection;
   })).join('\r\n');
 }
+
+/**
+ * String representing the SSRC of a MediaStreamTrack.
+ * @typedef {string} SSRC
+ */
+
+/**
+ * Primary SSRC.
+ * @typedef {SSRC} PrimarySSRC
+ */
+
+/**
+ * Retransmission SSRC.
+ * @typedef {SSRC} RtxSSRC
+ */
+
+/**
+ * Simulcast SSRC.
+ * @typedef {SSRC} SimSSRC
+ */
 
 module.exports = simulcast;
