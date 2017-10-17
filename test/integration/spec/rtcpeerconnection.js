@@ -58,6 +58,67 @@ describe('RTCPeerConnection', function() {
     });
   });
 
+  describe('#createDataChannel', () => {
+    describe('called without setting maxPacketLifeTime', () => {
+      it('sets maxPacketLifeTime to null', () => {
+        const pc = new RTCPeerConnection();
+        const dataChannel = pc.createDataChannel('foo');
+        assert.equal(dataChannel.maxPacketLifeTime, null);
+      });
+    });
+
+    describe('called without setting maxRetransmits', () => {
+      it('sets maxRetransmits to null', () => {
+        const pc = new RTCPeerConnection();
+        const dataChannel = pc.createDataChannel('foo');
+        assert.equal(dataChannel.maxRetransmits, null);
+      });
+    });
+
+    describe('called without setting ordered', () => {
+      const pc = new RTCPeerConnection();
+      const dataChannel = pc.createDataChannel('foo');
+      assert.equal(dataChannel.ordered, true);
+    });
+
+    describe('called setting maxPacketLifeTime', () => {
+      (isFirefox ? it.skip : it)('sets maxPacketLifeTime to the specified value', () => {
+        const maxPacketLifeTime = 3;
+        const pc = new RTCPeerConnection();
+        const dataChannel = pc.createDataChannel('foo', { maxPacketLifeTime });
+        assert.equal(dataChannel.maxPacketLifeTime, maxPacketLifeTime);
+      });
+    });
+
+    describe('called setting maxRetransmits', () => {
+      (isFirefox ? it.skip : it)('sets maxRetransmits to the specified value', () => {
+        const maxRetransmits = 3;
+        const pc = new RTCPeerConnection();
+        const dataChannel = pc.createDataChannel('foo', { maxRetransmits });
+        assert.equal(dataChannel.maxRetransmits, maxRetransmits);
+      });
+    });
+
+    describe('called setting ordered to false', () => {
+      it('sets ordered to false', () => {
+        const ordered = false;
+        const pc = new RTCPeerConnection();
+        const dataChannel = pc.createDataChannel('foo', { ordered });
+        assert.equal(dataChannel.ordered, ordered);
+      });
+    });
+
+    describe('called setting both maxPacketLifeTime and maxRetransmits', () => {
+      it('should throw', () => {
+        const pc = new RTCPeerConnection();
+        assert.throws(() => pc.createDataChannel('foo', {
+          maxPacketLifeTime: 3,
+          maxRetransmits: 3
+        }));
+      });
+    });
+  });
+
   describe('#createOffer, called from signaling state', () => {
     signalingStates.forEach(signalingState => {
       context(JSON.stringify(signalingState), () => {
@@ -166,6 +227,77 @@ describe('RTCPeerConnection', function() {
   describe('DTLS role negotiation', testDtlsRoleNegotiation);
 
   describe('Glare', testGlare);
+
+  describe('"datachannel" event', () => {
+    describe('when maxPacketLifeTime is not set', () => {
+      it('sets maxPacketLifeTime to null', async () => {
+        const [offerer, answerer] = createPeerConnections();
+        offerer.createDataChannel('foo');
+        const dataChannelPromise = waitForDataChannel(answerer);
+        await negotiate(offerer, answerer);
+        const dataChannel = await dataChannelPromise;
+        assert.equal(dataChannel.maxPacketLifeTime, null);
+      });
+    });
+
+    describe('when maxRetransmits is not set', () => {
+      it('sets maxRetransmits to null', async () => {
+        const [offerer, answerer] = createPeerConnections();
+        offerer.createDataChannel('foo');
+        const dataChannelPromise = waitForDataChannel(answerer);
+        await negotiate(offerer, answerer);
+        const dataChannel = await dataChannelPromise;
+        assert.equal(dataChannel.maxRetransmits, null);
+      });
+    });
+
+    describe('when ordered is not set', () => {
+      it('sets ordered to true', async () => {
+        const [offerer, answerer] = createPeerConnections();
+        offerer.createDataChannel('foo');
+        const dataChannelPromise = waitForDataChannel(answerer);
+        await negotiate(offerer, answerer);
+        const dataChannel = await dataChannelPromise;
+        assert.equal(dataChannel.ordered, true);
+      });
+    });
+
+    describe('when maxPacketLifeTime is set', () => {
+      (isFirefox ? it.skip : it)('sets maxPacketLifeTime to the specified value', async () => {
+        const maxPacketLifeTime = 3;
+        const [offerer, answerer] = createPeerConnections();
+        offerer.createDataChannel('foo', { maxPacketLifeTime });
+        const dataChannelPromise = waitForDataChannel(answerer);
+        await negotiate(offerer, answerer);
+        const dataChannel = await dataChannelPromise;
+        assert.equal(dataChannel.maxPacketLifeTime, maxPacketLifeTime);
+      });
+    });
+
+    describe('when maxRetransmits is set', () => {
+      (isFirefox ? it.skip : it)('sets maxRetransmits to the specified value', async () => {
+        const maxRetransmits = 3;
+        const [offerer, answerer] = createPeerConnections();
+        offerer.createDataChannel('foo', { maxRetransmits });
+        const dataChannelPromise = waitForDataChannel(answerer);
+        await negotiate(offerer, answerer);
+        const dataChannel = await dataChannelPromise;
+        assert.equal(dataChannel.maxRetransmits, maxRetransmits);
+      });
+    });
+
+    describe('when ordered is set to false', () => {
+      it('sets ordered to true', async () => {
+        const ordered = false;
+        const [offerer, answerer] = createPeerConnections();
+        offerer.createDataChannel('foo', { ordered });
+        const dataChannelPromise = waitForDataChannel(answerer);
+        await negotiate(offerer, answerer);
+        const dataChannel = await dataChannelPromise;
+        assert.equal(dataChannel.ordered, ordered);
+      });
+    });
+  });
 
   describe('"track" event', () => {
     context('when a new MediaStreamTrack is added', () => {
@@ -1237,4 +1369,35 @@ c=IN IP4 127.0.0.1\r
 function assertMediaStreamTracksEqual(actualTracks, expectedTracks) {
   assert.equal(actualTracks.length, expectedTracks.length);
   actualTracks.forEach((actualTrack, i) => assert.equal(actualTrack, expectedTracks[i]));
+}
+
+function createPeerConnections() {
+  const pc1 = new RTCPeerConnection();
+  const pc2 = new RTCPeerConnection();
+  [[pc1, pc2], [pc1, pc2]].forEach(([pc1, pc2]) => {
+    pc1.addEventListener('icecandidate', event => {
+      if (event.candidate) {
+        pc2.addIceCandidate(event.candidate);
+      }
+    });
+  });
+  return [pc1, pc2];
+}
+
+function waitForDataChannel(pc) {
+  return new Promise(resolve =>
+    pc.addEventListener('datachannel', event => resolve(event.channel)));
+}
+
+async function negotiate(offerer, answerer) {
+  const offer = await offerer.createOffer();
+  await Promise.all([
+    offerer.setLocalDescription(offer),
+    answerer.setRemoteDescription(offer)
+  ]);
+  const answer = await answerer.createAnswer();
+  await Promise.all([
+    answerer.setLocalDescription(answer),
+    offerer.setRemoteDescription(answer)
+  ]);
 }
