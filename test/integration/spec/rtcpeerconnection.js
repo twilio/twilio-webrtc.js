@@ -1,6 +1,7 @@
 'use strict';
 
 var assert = require('assert');
+var simulcast = require('../../lib/simulcast');
 var MediaStream = require('../../../lib/mediastream');
 var RTCIceCandidate = require('../../../lib/rtcicecandidate');
 var RTCSessionDescription = require('../../../lib/rtcsessiondescription');
@@ -220,6 +221,114 @@ describe('RTCPeerConnection', function() {
       tracksAfter.forEach((trackAfter, i) => {
         const trackBefore = tracksBefore[i];
         assert.equal(trackAfter, trackBefore);
+      });
+    });
+  });
+
+  (isChrome ? describe : describe.skip)('Simulcast', () => {
+    let answer1;
+    let answer2;
+    let offer1;
+    let offer2;
+    let pc1;
+    let pc2;
+    let stream;
+    let trackIdsToAttributes;
+
+    ['createOffer', 'createAnswer'].forEach(createSdp => {
+      context(`#${createSdp} called when RTCPeerConnection .signalingState is "stable"`, () => {
+        before(async () => {
+          const constraints = { audio: true, video: true };
+          stream = await makeStream(constraints);
+          pc1 = new RTCPeerConnection({ iceServers: [] });
+          pc1.addStream(stream);
+          pc2 = new RTCPeerConnection({ iceServers: [] });
+          pc2.addStream(stream);
+          trackIdsToAttributes = new Map();
+
+          const offerOptions = { offerToReceiveAudio: true, offerToReceiveVideo: true };
+          const offer = await pc1.createOffer(offerOptions);
+
+          offer1 = createSdp === 'createOffer' ? new RTCSessionDescription({
+            type: offer.type,
+            sdp: simulcast(offer.sdp, trackIdsToAttributes)
+          }) : offer;
+
+          await pc1.setLocalDescription(offer1);
+          await pc2.setRemoteDescription(offer1);
+          const answer = await pc2.createAnswer();
+
+          answer1 = createSdp === 'createAnswer' ? new RTCSessionDescription({
+            type: answer.type,
+            sdp: simulcast(answer.sdp, trackIdsToAttributes)
+          }) : answer;
+
+          await pc2.setLocalDescription(answer1);
+          await pc1.setRemoteDescription(answer1);
+          offer2 = await pc1.createOffer(offerOptions);
+          await pc2.setRemoteDescription(offer2);
+          answer2 = await pc2.createAnswer();
+        });
+
+        it('should preserve simulcast SSRCs during renegotiation', () => {
+          const sdp1 = createSdp === 'createOffer' ? offer1.sdp : answer1.sdp;
+          const sdp2 = createSdp === 'createOffer' ? offer2.sdp : answer2.sdp;
+          const ssrcAttrs1 = sdp1.match(/^a=ssrc:.+ (cname|msid):.+$/gm);
+          const ssrcAttrs2 = sdp2.match(/^a=ssrc:.+ (cname|msid):.+$/gm);
+          const ssrcGroupAttrs1 = sdp1.match(/^a=ssrc-group:.+$/gm);
+          const ssrcGroupAttrs2 = sdp2.match(/^a=ssrc-group:.+$/gm);
+          assert.deepEqual(ssrcAttrs1, ssrcAttrs2);
+          assert.deepEqual(ssrcGroupAttrs1, ssrcGroupAttrs2);
+        });
+
+        after(() => {
+          stream.getTracks().forEach(track => track.stop());
+          pc1.close();
+          pc2.close();
+        });
+      });
+    });
+
+    context('#createOffer called when RTCPeerConnection .signalingState is "have-local-offer"', () => {
+      before(async () => {
+        const constraints = { audio: true, video: true };
+        stream = await makeStream(constraints);
+        pc1 = new RTCPeerConnection({ iceServers: [] });
+        pc1.addStream(stream);
+        trackIdsToAttributes = new Map();
+
+        const offerOptions = { offerToReceiveAudio: true, offerToReceiveVideo: true };
+        const offer = await pc1.createOffer(offerOptions);
+
+        offer1 = new RTCSessionDescription({
+          type: offer.type,
+          sdp: simulcast(offer.sdp, trackIdsToAttributes)
+        });
+
+        await pc1.setLocalDescription(offer1);
+        assert.equal(pc1.signalingState, 'have-local-offer');
+        const _offer = await pc1.createOffer(offerOptions);
+
+        offer2 = new RTCSessionDescription({
+          type: _offer.type,
+          sdp: simulcast(_offer.sdp, trackIdsToAttributes)
+        });
+      });
+
+      it('should preserve simulcast SSRCs during renegotiation', () => {
+        const sdp1 = offer1.sdp;
+        const sdp2 = offer2.sdp;
+        const ssrcAttrs1 = sdp1.match(/^a=ssrc:.+ (cname|msid):.+$/gm);
+        const ssrcAttrs2 = sdp2.match(/^a=ssrc:.+ (cname|msid):.+$/gm);
+        const ssrcGroupAttrs1 = sdp1.match(/^a=ssrc-group:.+$/gm);
+        const ssrcGroupAttrs2 = sdp2.match(/^a=ssrc-group:.+$/gm);
+        assert.deepEqual(ssrcAttrs1, ssrcAttrs2);
+        assert.deepEqual(ssrcGroupAttrs1, ssrcGroupAttrs2);
+      });
+
+      after(() => {
+        stream.getTracks().forEach(track => track.stop());
+        pc1.close();
       });
     });
   });
