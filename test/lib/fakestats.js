@@ -78,4 +78,4 @@ FakeRTCPeerConnection.prototype.getStats = function getStats() {
   }
 };
 
-module.exports.FakeRTCPeerConnection = FakeRTCPeerConnection;
+exports.FakeRTCPeerConnection = FakeRTCPeerConnection;
