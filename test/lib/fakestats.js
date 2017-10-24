@@ -58,8 +58,22 @@ FakeRTCPeerConnection.prototype.getLocalStreams = function getLocalStreams() {
   return this.localStreams;
 };
 
+FakeRTCPeerConnection.prototype.getReceivers = function getReceivers() {
+  return flatMap(this.remoteStreams, stream => stream.getTracks().map(track => {
+    // NOTE(mroberts): This is a _really_ minimal RTCRtpReceiver.
+    return { track };
+  }));
+};
+
 FakeRTCPeerConnection.prototype.getRemoteStreams = function getRemoteStreams() {
   return this.remoteStreams;
+};
+
+FakeRTCPeerConnection.prototype.getSenders = function getSenders() {
+  return flatMap(this.localStreams, stream => stream.getTracks().map(track => {
+    // NOTE(mroberts): This is a _really_ minimal RTCRtpSender.
+    return { track };
+  }));
 };
 
 FakeRTCPeerConnection.prototype.getStats = function getStats() {
