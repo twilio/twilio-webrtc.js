@@ -14,7 +14,6 @@ Bug Fixes
 - Fixed a bug where our `getStats` function returned
   StandardizedTrackStatsReports of the wrong kind in the members of
   StandardizedTrackStatsResponse. (JSKD-1605)
-  
 
 1.0.3 (October 13, 2017)
 ========================
