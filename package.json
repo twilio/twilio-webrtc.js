@@ -51,6 +51,6 @@
     "rimraf": "^2.6.1",
     "travis-multirunner": "^4.2.3",
     "watchify": "^3.9.0",
-    "webrtc-adapter": "^5.0.3"
+    "webrtc-adapter": "^5.0.6"
   }
 }
