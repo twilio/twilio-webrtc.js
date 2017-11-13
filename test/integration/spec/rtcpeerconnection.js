@@ -48,7 +48,7 @@ describe('RTCPeerConnection', function() {
     signalingStates.forEach(testClose);
   });
 
-  (isSafari ? describe.skip : describe)('#addStream', testAddStream);
+  describe('#addTrack', testAddTrack);
 
   describe('#createAnswer, called from signaling state', () => {
     signalingStates.forEach(signalingState => {
@@ -135,7 +135,7 @@ describe('RTCPeerConnection', function() {
       const constraints = { audio: true, video: true };
       const stream = await makeStream(constraints);
       const pc = new RTCPeerConnection({ iceServers: [] });
-      pc.addStream(stream);
+      stream.getTracks().forEach(track => pc.addTrack(track, stream));
       const options = { offerToReceiveAudio: true, offerToReceiveVideo: true };
       offer1 = await pc.createOffer(options);
       offer2 = await pc.createOffer(options);
@@ -180,7 +180,7 @@ describe('RTCPeerConnection', function() {
       const constraints = { audio: true, video: true };
       const stream = await makeStream(constraints);
       const pc = new RTCPeerConnection({ iceServers: [] });
-      pc.addStream(stream);
+      stream.getTracks().forEach(track => pc.addTrack(track, stream));
       const options = { offerToReceiveAudio: true, offerToReceiveVideo: true };
       offer1 = await pc.createOffer(options);
       offer2 = await pc.createOffer(options);
@@ -312,7 +312,7 @@ describe('RTCPeerConnection', function() {
         const [localAudioTrack] = (await makeStream({ audio: true, fake: true })).getAudioTracks();
         stream.addTrack(localAudioTrack);
 
-        pc1.addStream(stream);
+        pc1.addTrack(localAudioTrack, stream);
         const trackEvent1 = waitForEvent(pc2, 'track');
 
         const offer1 = await pc1.createOffer();
@@ -332,15 +332,9 @@ describe('RTCPeerConnection', function() {
         ]);
 
         const [localVideoTrack] = (await makeStream({ video: true, fake: true })).getVideoTracks();
-
-        // NOTE(mroberts): https://bugs.webkit.org/show_bug.cgi?id=174327
-        if (isSafari) {
-          pc1.addTrack(localVideoTrack, stream);
-        } else {
-          pc1.removeStream(stream);
-          stream.addTrack(localVideoTrack);
-          pc1.addStream(stream);
-        }
+        // NOTE(mroberts): https://bugs.webkit.org/show_bug.cgi?id=17432
+        stream.addTrack(localVideoTrack);
+        pc1.addTrack(localVideoTrack, stream);
         const trackEvent2 = waitForEvent(pc2, 'track');
 
         const offer2 = await pc1.createOffer();
@@ -674,8 +668,8 @@ function testDtlsRoleNegotiation() {
       pc1 = new RTCPeerConnection({ iceServers: [] });
       pc2 = new RTCPeerConnection({ iceServers: [] });
       return makeStream().then(stream => {
-        pc1.addStream(stream);
-        pc2.addStream(stream);
+        stream.getTracks().forEach(track => pc1.addTrack(track, stream));
+        stream.getTracks().forEach(track => pc2.addTrack(track, stream));
         return pc1.createOffer();
       }).then(offer => {
         assert(offer.sdp.match(/a=setup:actpass/));
@@ -728,8 +722,8 @@ function testGlare() {
       pc1 = new RTCPeerConnection({ iceServers: [] });
       pc2 = new RTCPeerConnection({ iceServers: [] });
       return makeStream().then(stream => {
-        pc1.addStream(stream);
-        pc2.addStream(stream);
+        stream.getTracks().forEach(track => pc1.addTrack(track, stream));
+        stream.getTracks().forEach(track => pc2.addTrack(track, stream));
         return Promise.all([
           pc1.createOffer(),
           pc2.createOffer()
@@ -786,7 +780,7 @@ function makeStream(constraints) {
   return new Promise((resolve, reject) => getUserMedia(resolve, reject));
 }
 
-function testAddStream() {
+function testAddTrack() {
   var test;
   var stream;
 
@@ -798,30 +792,56 @@ function testAddStream() {
     return makeTest().then(_test => test = _test);
   });
 
-  // NOTE(mroberts): See the comment in lib/webrtc/rtcpeerconnection/firefox.js
-  // for an explanation as to why we test this API the way we do.
-  it('should add each of the MediaStream\'s MediaStreamTracks to the RTCPeerConnection', () => {
-    test.peerConnection.addStream(stream);
-    if (isFirefox) {
-      const expectedTracks = stream.getTracks();
-      const actualTracks = test.peerConnection.getLocalStreams()[0].getTracks();
-      assertMediaStreamTracksEqual(actualTracks, expectedTracks);
-      return;
-    }
-    assert.equal(test.peerConnection.getLocalStreams()[0], stream);
+  context('when the RTCPeerConnection is closed', () => {
+    var exception;
+
+    beforeEach(() => {
+      test.peerConnection.close();
+      try {
+        test.peerConnection.addTrack(stream.getTracks()[0], stream);
+      } catch (e) {
+        exception = e;
+      }
+    });
+
+    it('should throw', () => {
+      assert(!!exception);
+    });
+
+    it('should not add the MediaStreamTrack', () => {
+      const addedTracks = new Set('getSenders' in RTCPeerConnection.prototype
+        ? test.peerConnection.getSenders().map(sender => sender.track)
+        : flatMap(test.peerConnection.getLocalStreams(), stream => stream.getTracks()));
+      assert(!addedTracks.has(stream.getTracks()[0]));
+    });
   });
 
-  context('when adding a stream that is already added', () => {
-    it('should not throw an exception', () => {
-      test.peerConnection.addStream(stream);
-      assert.doesNotThrow(() => test.peerConnection.addStream(stream));
+  context('when the MediaStreamTrack is already added to the RTCPeerConnection', () => {
+    var exception;
+
+    beforeEach(() => {
+      test.peerConnection.addTrack(stream.getTracks()[0], stream);
+      try {
+        test.peerConnection.addTrack(stream.getTracks()[0], stream);
+      } catch (e) {
+        exception = e;
+      }
     });
 
-    it('should not add the stream', () => {
-      test.peerConnection.addStream(stream);
-      test.peerConnection.addStream(stream);
-      assert.equal(test.peerConnection.getLocalStreams().length, 1);
+    it('should throw', () => {
+      assert(!!exception);
     });
+  });
+
+  // NOTE(mroberts): See the comment in lib/webrtc/rtcpeerconnection/firefox.js
+  // for an explanation as to why we test this API the way we do.
+  it('should add each of the MediaStreamTracks to the RTCPeerConnection', () => {
+    const senders = stream.getTracks().map(track => test.peerConnection.addTrack(track, stream));
+    const addedTracks = 'getSenders' in RTCPeerConnection.prototype
+      ? test.peerConnection.getSenders().map(sender => sender.track)
+      : flatMap(test.peerConnection.getLocalStreams(), stream => stream.getTracks());
+    assert.deepEqual(addedTracks, stream.getTracks());
+    assert.deepEqual(senders.map(sender => sender.track), stream.getTracks());
   });
 }
 
