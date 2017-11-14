@@ -297,9 +297,7 @@ describe('RTCPeerConnection', function() {
 
   describe('"track" event', () => {
     context('when a new MediaStreamTrack is added', () => {
-      (isSafari
-        ? it.skip
-        : it)('should trigger a "track" event on the remote RTCPeerConnection with the added MediaStreamTrack', async () => {
+      it('should trigger a "track" event on the remote RTCPeerConnection with the added MediaStreamTrack', async () => {
         const pc1 = new RTCPeerConnection({ iceServers: [] });
         const pc2 = new RTCPeerConnection({ iceServers: [] });
 
