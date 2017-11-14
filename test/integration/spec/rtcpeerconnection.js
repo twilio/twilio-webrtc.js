@@ -36,7 +36,9 @@ describe('RTCPeerConnection', function() {
     signalingStates.forEach(testAddIceCandidate);
   });
 
-  (isChrome ? describe : describe.skip)('#getSenders', testGetSenders);
+  (isChrome ? describe : describe.skip)('#getSenders', () => {
+    signalingStates.forEach(testGetSenders);
+  });
 
   describe('#close, called from signaling state', () => {
     signalingStates.forEach(testClose);
@@ -131,7 +133,7 @@ describe('RTCPeerConnection', function() {
       const constraints = { audio: true, video: true };
       const stream = await makeStream(constraints);
       const pc = new RTCPeerConnection({ iceServers: [] });
-      stream.getTracks().forEach(track => pc.addTrack(track, stream));
+      addStream(pc, stream);
       const options = { offerToReceiveAudio: true, offerToReceiveVideo: true };
       offer1 = await pc.createOffer(options);
       offer2 = await pc.createOffer(options);
@@ -176,7 +178,7 @@ describe('RTCPeerConnection', function() {
       const constraints = { audio: true, video: true };
       const stream = await makeStream(constraints);
       const pc = new RTCPeerConnection({ iceServers: [] });
-      stream.getTracks().forEach(track => pc.addTrack(track, stream));
+      addStream(pc, stream);
       const options = { offerToReceiveAudio: true, offerToReceiveVideo: true };
       offer1 = await pc.createOffer(options);
       offer2 = await pc.createOffer(options);
@@ -326,7 +328,6 @@ describe('RTCPeerConnection', function() {
         ]);
 
         const [localVideoTrack] = (await makeStream({ video: true, fake: true })).getVideoTracks();
-        // NOTE(mroberts): https://bugs.webkit.org/show_bug.cgi?id=17432
         stream.addTrack(localVideoTrack);
         pc1.addTrack(localVideoTrack, stream);
         const trackEvent2 = waitForEvent(pc2, 'track');
@@ -519,20 +520,23 @@ function testAddIceCandidate(signalingState) {
   });
 }
 
-function testGetSenders() {
+function testGetSenders(signalingState) {
   var senders;
   var stream;
   var test;
 
   before(async () => {
     stream = await makeStream({ audio: true, video: true });
-    test = await makeTest();
-    senders = stream.getTracks().map(track => test.peerConnection.addTrack(track, stream));
+    test = signalingState === 'closed' ? await makeTest() : await makeTest({ signalingState });
+    senders = addStream(test.peerConnection, stream);
+    signalingState === 'closed' && test.peerConnection.close();
   });
 
-  it('should return a list of RTCRtpSenders', () => {
-    const actualSenders = test.peerConnection.getSenders();
-    assert.deepEqual(actualSenders, senders);
+  context(`"${signalingState}"`, () => {
+    it('should return a list of senders', () => {
+      const actualSenders = test.peerConnection.getSenders();
+      assert.deepEqual(actualSenders, senders);
+    });
   });
 }
 
@@ -623,8 +627,8 @@ function testDtlsRoleNegotiation() {
       pc1 = new RTCPeerConnection({ iceServers: [] });
       pc2 = new RTCPeerConnection({ iceServers: [] });
       return makeStream().then(stream => {
-        stream.getTracks().forEach(track => pc1.addTrack(track, stream));
-        stream.getTracks().forEach(track => pc2.addTrack(track, stream));
+        addStream(pc1, stream);
+        addStream(pc2, stream);
         return pc1.createOffer();
       }).then(offer => {
         assert(offer.sdp.match(/a=setup:actpass/));
@@ -677,8 +681,8 @@ function testGlare() {
       pc1 = new RTCPeerConnection({ iceServers: [] });
       pc2 = new RTCPeerConnection({ iceServers: [] });
       return makeStream().then(stream => {
-        stream.getTracks().forEach(track => pc1.addTrack(track, stream));
-        stream.getTracks().forEach(track => pc2.addTrack(track, stream));
+        addStream(pc1, stream);
+        addStream(pc2, stream);
         return Promise.all([
           pc1.createOffer(),
           pc2.createOffer()
@@ -738,63 +742,59 @@ function makeStream(constraints) {
 function testAddTrack() {
   var test;
   var stream;
+  var trackToAdd;
 
   before(async () => {
     stream = await makeStream();
+    trackToAdd = stream.getTracks()[0];
   });
 
   beforeEach(async () => {
     test = await makeTest();
   });
 
-  context('when the RTCPeerConnection is closed', () => {
-    var exception;
+  [
+    [
+      'when the RTCPeerConnection is closed',
+      () => test.peerConnection.close()
+    ],
+    [
+      'when the MediaStreamTrack is already added to the RTCPeerConnection',
+      () => test.peerConnection.addTrack(trackToAdd, stream)
+    ]
+  ].forEach(([ scenario, setup ], i) => {
+    context(scenario, () => {
+      var exception;
 
-    beforeEach(() => {
-      test.peerConnection.close();
-      try {
-        test.peerConnection.addTrack(stream.getTracks()[0], stream);
-      } catch (e) {
-        exception = e;
+      beforeEach(() => {
+        setup();
+        try {
+          test.peerConnection.addTrack(trackToAdd, stream);
+        } catch (e) {
+          exception = e;
+        }
+      });
+
+      it('should throw', () => {
+        assert(exception);
+      });
+
+      if (i === 0) {
+        it('should not add the MediaStreamTrack', () => {
+          const addedTracks = new Set(getTracks(test.peerConnection));
+          assert(!addedTracks.has(trackToAdd));
+        });
       }
-    });
 
-    it('should throw', () => {
-      assert(!!exception);
-    });
-
-    it('should not add the MediaStreamTrack', () => {
-      const addedTracks = new Set('getSenders' in RTCPeerConnection.prototype
-        ? test.peerConnection.getSenders().map(sender => sender.track)
-        : flatMap(test.peerConnection.getLocalStreams(), stream => stream.getTracks()));
-      assert(!addedTracks.has(stream.getTracks()[0]));
+      afterEach(() => {
+        exception = null;
+      });
     });
   });
 
-  context('when the MediaStreamTrack is already added to the RTCPeerConnection', () => {
-    var exception;
-
-    beforeEach(() => {
-      test.peerConnection.addTrack(stream.getTracks()[0], stream);
-      try {
-        test.peerConnection.addTrack(stream.getTracks()[0], stream);
-      } catch (e) {
-        exception = e;
-      }
-    });
-
-    it('should throw', () => {
-      assert(!!exception);
-    });
-  });
-
-  // NOTE(mroberts): See the comment in lib/webrtc/rtcpeerconnection/firefox.js
-  // for an explanation as to why we test this API the way we do.
   it('should add each of the MediaStreamTracks to the RTCPeerConnection', () => {
-    const senders = stream.getTracks().map(track => test.peerConnection.addTrack(track, stream));
-    const addedTracks = 'getSenders' in RTCPeerConnection.prototype
-      ? test.peerConnection.getSenders().map(sender => sender.track)
-      : flatMap(test.peerConnection.getLocalStreams(), stream => stream.getTracks());
+    const senders = addStream(test.peerConnection, stream);
+    const addedTracks = getTracks(test.peerConnection);
     assert.deepEqual(addedTracks, stream.getTracks());
     assert.deepEqual(senders.map(sender => sender.track), stream.getTracks());
   });
@@ -804,63 +804,73 @@ function testRemoveTrack() {
   var test;
   var senders;
   var stream;
+  var localAudioSender;
+  var localAudioTrack;
+  var localVideoSender;
 
   before(async () => {
     stream = await makeStream();
+    localAudioTrack = stream.getAudioTracks()[0];
   });
 
   beforeEach(async () => {
     test = await makeTest();
-    senders = stream.getTracks().map(track => test.peerConnection.addTrack(track, stream));
+    senders = addStream(test.peerConnection, stream);
+    localAudioSender = senders.find(sender => sender.track.kind === 'audio');
+    localVideoSender = senders.find(sender => sender.track.kind === 'video');
   });
 
-  context('when the RTCPeerConnection is closed', () => {
-    var exception;
+  [
+    [
+      'when the RTCPeerConnection is closed',
+      () => test.peerConnection.close()
+    ],
+    [
+      'when the MediaStreamTrack is already removed to the RTCPeerConnection',
+      () => test.peerConnection.removeTrack(localAudioSender)
+    ]
+  ].forEach(([ scenario, setup ], i) => {
+    context(scenario, () => {
+      var exception;
 
-    beforeEach(() => {
-      test.peerConnection.close();
-      try {
-        test.peerConnection.removeTrack(senders.find(sender => sender.track.kind === 'audio'));
-      } catch (e) {
-        exception = e;
+      beforeEach(() => {
+        setup();
+        try {
+          test.peerConnection.removeTrack(localAudioSender);
+        } catch (e) {
+          exception = e;
+        }
+      });
+
+      if (i === 1) {
+        it('should not throw', () => {
+          assert(!exception);
+        });
+
+        it('should not change its list of senders', () => {
+          const sendersAfter = test.peerConnection.getSenders();
+          assert.deepEqual(sendersAfter, [localVideoSender]);
+        });
+      } else if (i === 0) {
+        it('should throw', () => {
+          assert(exception);
+        });
+
+        it('should not remove the MediaStreamTrack', () => {
+          const presentTracks = new Set(getTracks(test.peerConnection));
+          assert(presentTracks.has(localAudioTrack));
+        });
       }
-    });
 
-    it('should throw', () => {
-      assert(!!exception);
-    });
-
-    it('should not remove the MediaStreamTrack', () => {
-      const presentTracks = new Set('getSenders' in RTCPeerConnection.prototype
-        ? test.peerConnection.getSenders().map(sender => sender.track)
-        : flatMap(test.peerConnection.getLocalStreams(), stream => stream.getTracks()));
-      assert(presentTracks.has(stream.getAudioTracks()[0]));
-    });
-  });
-
-  context('when the MediaStreamTrack is already removed from the RTCPeerConnection', () => {
-    var exception;
-
-    beforeEach(() => {
-      try {
-        test.peerConnection.removeTrack(senders.find(sender => sender.track.kind === 'audio'));
-      } catch (e) {
-        exception = e;
-      }
-    });
-
-    it('should not throw', () => {
-      assert(!exception);
+      afterEach(() => {
+        exception = null;
+      });
     });
   });
 
   it('should remove the MediaStreamTrack from the RTCPeerConnection', () => {
-    test.peerConnection.removeTrack(senders.find(sender => sender.track.kind === 'audio'));
-
-    const presentTracks = 'getSenders' in RTCPeerConnection.prototype
-      ? test.peerConnection.getSenders().map(sender => sender.track)
-      : flatMap(test.peerConnection.getLocalStreams(), stream => stream.getTracks());
-
+    test.peerConnection.removeTrack(localAudioSender);
+    const presentTracks = getTracks(test.peerConnection);
     assert.deepEqual(presentTracks, stream.getVideoTracks());
   });
 }
@@ -1406,9 +1416,12 @@ c=IN IP4 127.0.0.1\r
   return setup.then(() => test);
 }
 
-function assertMediaStreamTracksEqual(actualTracks, expectedTracks) {
-  assert.equal(actualTracks.length, expectedTracks.length);
-  actualTracks.forEach((actualTrack, i) => assert.equal(actualTrack, expectedTracks[i]));
+function addStream(peerConnection, stream) {
+  return stream.getTracks().map(track => peerConnection.addTrack(track, stream));
+}
+
+function getTracks(peerConnection) {
+  return peerConnection.getSenders().map(sender => sender.track);
 }
 
 function createPeerConnections() {
