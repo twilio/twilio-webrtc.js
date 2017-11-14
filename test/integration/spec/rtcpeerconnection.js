@@ -36,13 +36,7 @@ describe('RTCPeerConnection', function() {
     signalingStates.forEach(testAddIceCandidate);
   });
 
-  describe('#getLocalStreams, called from signaling state', () => {
-    signalingStates.forEach(testGetLocalStreams);
-  });
-
-  describe('#getRemoteStreams, called from signaling state', () => {
-    signalingStates.forEach(testGetRemoteStreams);
-  });
+  (isChrome ? describe : describe.skip)('#getSenders', testGetSenders);
 
   describe('#close, called from signaling state', () => {
     signalingStates.forEach(testClose);
@@ -527,59 +521,20 @@ function testAddIceCandidate(signalingState) {
   });
 }
 
-function testGetLocalStreams(signalingState) {
-  context(JSON.stringify(signalingState), () => {
-    var test;
+function testGetSenders() {
+  var senders;
+  var stream;
+  var test;
 
-    beforeEach(() => {
-      return makeTest({ signalingState: signalingState })
-        .then(_test => test = _test);
-    });
-
-    if (signalingState === 'closed') {
-      it('should return an array', () => {
-        assert.deepEqual(test.peerConnection.getLocalStreams(), []);
-      });
-    } else {
-      // NOTE(mroberts): See the comment in
-      // lib/webrtc/rtcpeerconnection/firefox.js for an explanation as to why
-      // we test this API the way we do.
-      it('should return an array of MediaStreams containing the ' +
-         'MediaStreamTracks added to the underlying RTCPeerConnection', () => {
-        if (isFirefox || isSafari) {
-          return;
-        }
-        assert.deepEqual(test.peerConnection.getLocalStreams(), test.peerConnection._peerConnection.getLocalStreams());
-      });
-    }
+  before(async () => {
+    stream = await makeStream({ audio: true, video: true });
+    test = await makeTest();
+    senders = stream.getTracks().map(track => test.peerConnection.addTrack(track, stream));
   });
-}
 
-function testGetRemoteStreams(signalingState) {
-  context(JSON.stringify(signalingState), () => {
-    var test;
-
-    beforeEach(() => {
-      return makeTest({ signalingState: signalingState })
-        .then(_test => test = _test);
-    });
-
-    if (signalingState === 'closed') {
-      it('should return an empty array', () => {
-        assert.deepEqual(test.peerConnection.getRemoteStreams(), []);
-      });
-    } else {
-      // NOTE(mroberts): See the comment in
-      // lib/webrtc/rtcpeerconnection/firefox.js for an explanation as to why
-      // we test this API the way we do.
-      it('should return an array of MediaStreams containing the ' +
-         'MediaStreamTracks received on the underlying RTCPeerConnection', () => {
-        if (isFirefox || isSafari) {
-          return;
-        }
-        assert.deepEqual(test.peerConnection.getRemoteStreams(), test.peerConnection._peerConnection.getRemoteStreams());
-      });
-    }
+  it('should return a list of RTCRtpSenders', () => {
+    const actualSenders = test.peerConnection.getSenders();
+    assert.deepEqual(actualSenders, senders);
   });
 }
 
