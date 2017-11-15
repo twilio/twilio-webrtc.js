@@ -40,6 +40,10 @@ describe('RTCPeerConnection', function() {
     signalingStates.forEach(testGetSenders);
   });
 
+  describe('#getReceivers', () => {
+    signalingStates.forEach(testGetReceivers);
+  });
+
   describe('#close, called from signaling state', () => {
     signalingStates.forEach(testClose);
   });
@@ -536,6 +540,22 @@ function testGetSenders(signalingState) {
     it('should return a list of senders', () => {
       const actualSenders = test.peerConnection.getSenders();
       assert.deepEqual(actualSenders, senders);
+    });
+  });
+}
+
+function testGetReceivers(signalingState) {
+  var test;
+
+  before(async () => {
+    test = await makeTest({ signalingState });
+  });
+
+  context(`"${signalingState}"`, () => {
+    it(`should return a list of receivers`, () => {
+      const receivers = test.peerConnection.getReceivers();
+      const nativeReceivers = test.peerConnection._peerConnection.getReceivers();
+      assert.deepEqual(receivers, nativeReceivers);
     });
   });
 }
