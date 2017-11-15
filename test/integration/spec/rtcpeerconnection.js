@@ -1433,7 +1433,7 @@ function addStream(peerConnection, stream) {
 }
 
 function getTracks(peerConnection) {
-  return peerConnection.getSenders().map(sender => sender.track);
+  return peerConnection.getSenders().filter(sender => sender.track).map(sender => sender.track);
 }
 
 function createPeerConnections() {
