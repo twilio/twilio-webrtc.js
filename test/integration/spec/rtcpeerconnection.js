@@ -2,6 +2,7 @@
 
 var assert = require('assert');
 var MediaStream = require('../../../lib/mediastream');
+var MediaStreamTrack = require('../../../lib/mediastreamtrack');
 var RTCIceCandidate = require('../../../lib/rtcicecandidate');
 var RTCSessionDescription = require('../../../lib/rtcsessiondescription');
 var RTCPeerConnection = require('../../../lib/rtcpeerconnection');
@@ -545,17 +546,47 @@ function testGetSenders(signalingState) {
 }
 
 function testGetReceivers(signalingState) {
-  var test;
+  var pc2;
+  var stream;
 
   before(async () => {
-    test = await makeTest({ signalingState });
+    const pc1 = new RTCPeerConnection({ iceServers: [] });
+    pc2 = new RTCPeerConnection({ iceServers: [] });
+    stream = await makeStream({ audio: true, video: true });
+    addStream(pc1, stream);
+
+    let offer = await pc1.createOffer({ offerToReceiveAudio: true, offerToReceiveVideo: true });
+    await pc1.setLocalDescription(offer);
+    await pc2.setRemoteDescription(offer);
+    let answer = await pc2.createAnswer();
+    await pc2.setLocalDescription(answer);
+    await pc1.setRemoteDescription(answer);
+
+    switch(signalingState) {
+      case 'closed': {
+        pc2.close();
+        break;
+      }
+      case 'have-local-offer': {
+        offer = await pc2.createOffer({ offerToReceiveAudio: true, offerToReceiveVideo: true });
+        await pc2.setLocalDescription(offer);
+        break;
+      }
+      case 'have-remote-offer': {
+        offer = await pc1.createOffer({ offerToReceiveAudio: true, offerToReceiveVideo: true });
+        await pc2.setRemoteDescription(offer);
+        await pc2.createAnswer();
+        break;
+      }
+    }
   });
 
   context(`"${signalingState}"`, () => {
     it(`should return a list of receivers`, () => {
-      const receivers = test.peerConnection.getReceivers();
-      const nativeReceivers = test.peerConnection._peerConnection.getReceivers();
-      assert.deepEqual(receivers, nativeReceivers);
+      pc2.getReceivers().forEach(receiver => {
+        assert('track' in receiver);
+        assert(!receiver.track || receiver.track instanceof MediaStreamTrack);
+      });
     });
   });
 }
