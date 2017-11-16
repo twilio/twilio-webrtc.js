@@ -584,8 +584,7 @@ function testGetReceivers(signalingState) {
   context(`"${signalingState}"`, () => {
     it(`should return a list of receivers`, () => {
       pc2.getReceivers().forEach(receiver => {
-        assert('track' in receiver);
-        assert(!receiver.track || receiver.track instanceof MediaStreamTrack);
+        assert(receiver.track === null || receiver.track instanceof MediaStreamTrack);
       });
     });
   });
