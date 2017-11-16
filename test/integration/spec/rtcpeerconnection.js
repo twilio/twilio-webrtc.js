@@ -915,6 +915,20 @@ function testRemoveTrack() {
     const presentTracks = getTracks(test.peerConnection);
     assert.deepEqual(presentTracks, stream.getVideoTracks());
   });
+
+  // NOTE(mmalavalli): Once RTCRtpSender is supported in Chrome, and we
+  // actually start using the native RTCPeerConnection's addTrack()/removeTrack()
+  // APIs in Firefox and Safari, these next two tests should be unskipped.
+  it.skip('should set the .track on its corresponding RTCRtpSender to null', () => {
+    test.peerConnection.removeTrack(localAudioSender);
+    assert.equal(localAudioSender.track, null);
+  });
+
+  it.skip('should retain the same RTCRtpSender instance in the list of RTCRtpSenders maintained by the RTCPeerConnection', () => {
+    test.peerConnection.removeTrack(localAudioSender);
+    const senders = new Set(test.peerConnection.getSenders());
+    assert(senders.has(localAudioSender));
+  });
 }
 
 function testCreateAnswer(signalingState) {
