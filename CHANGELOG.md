@@ -4,8 +4,8 @@
 New Features
 ------------
 
-- Added shims for WebRTC 1.0 APIs. The legacy API shims have been
-  removed. (JSDK-1631)
+- Added shims for the `RTCRtpSender/RTCRtpReceiver` based APIs. The legacy `MediaStream`
+  based API shims have been removed. (JSDK-1631)
 
 1.1.0 (October 24, 2017)
 ========================
