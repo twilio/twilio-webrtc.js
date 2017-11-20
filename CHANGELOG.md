@@ -1,3 +1,12 @@
+2.0.0 (In progress)
+===================
+
+New Features
+------------
+
+- Added shims for the `RTCRtpSender/RTCRtpReceiver` based APIs. The legacy `MediaStream`
+  based API shims have been removed. (JSDK-1631)
+
 1.1.0 (October 24, 2017)
 ========================
 

@@ -1,6 +1,6 @@
 {
   "name": "@twilio/webrtc",
-  "version": "1.1.1-dev",
+  "version": "2.0.0-dev",
   "description": "WebRTC-related APIs and shims used by twilio-video.js",
   "scripts": {
     "build": "npm-run-all clean lint test",
@@ -51,6 +51,6 @@
     "rimraf": "^2.6.1",
     "travis-multirunner": "^4.2.3",
     "watchify": "^3.9.0",
-    "webrtc-adapter": "^5.0.6"
+    "webrtc-adapter": "^6.0.1"
   }
 }
