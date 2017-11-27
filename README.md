@@ -100,8 +100,6 @@ browsers.
 * Provides a workaround for the case where, when the SSRC of a `MediaStreamTrack` changes, the
   browser treats this as a removal of the existing `MediaStreamTrack` and the addition of a new
   `MediaStreamTrack`.
-* Provides a workaround for [this bug](https://bugs.webkit.org/show_bug.cgi?id=174519), where
-  the `MediaStreamTrack`s cannot be identified correctly due to the lack of `MID`s in the sdp.
 * Provides a workaround for [this bug](https://bugs.webkit.org/show_bug.cgi?id=174323), where
   trying to access the `localDescription` or `remoteDescription` throws an exception.
 * Provides a shim for the `removeTrack` method in order to work around [this bug](https://bugs.webkit.org/show_bug.cgi?id=174327).

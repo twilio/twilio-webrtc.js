@@ -6,7 +6,6 @@ var MediaStreamTrack = require('../../../lib/mediastreamtrack');
 var RTCIceCandidate = require('../../../lib/rtcicecandidate');
 var RTCSessionDescription = require('../../../lib/rtcsessiondescription');
 var RTCPeerConnection = require('../../../lib/rtcpeerconnection');
-var { makeSdpWithTracks } = require('../../lib/sdp');
 var util = require('../../lib/util');
 var { flatMap, guessBrowser } = require('../../../lib/util');
 
@@ -354,45 +353,6 @@ describe('RTCPeerConnection', function() {
         ]);
       });
     });
-
-    if (isSafari) {
-      it('is raised in the order that new MSIDs are signaled in the SDP', async () => {
-        const tracksByKinds = [
-          { audio: [ { id: 'track1', ssrc: 1 } ] },
-          { audio: [ { id: 'track1', ssrc: 1 },
-                     { id: 'track2', ssrc: 2 },
-                     { id: 'track3', ssrc: 3 } ] },
-          { audio: [ { id: 'track2', ssrc: 2 } ] },
-          { audio: [ { id: 'track1', ssrc: 1 } ] }
-        ];
-
-        const matches = [
-          ['track1'],
-          ['track2', 'track3'],
-          [],
-          ['track1']
-        ];
-
-        const trackEvents = [];
-        const pc = new RTCPeerConnection();
-        pc.ontrack = trackEvent => trackEvents.push(trackEvent);
-
-        for (const i in tracksByKinds) {
-          const tracksByKind = tracksByKinds[i];
-          const sdp = makeSdpWithTracks(tracksByKind);
-          const offer = new RTCSessionDescription({ type: 'offer', sdp });
-
-          await pc.setRemoteDescription(offer);
-          const answer = await pc.createAnswer();
-          await pc.setLocalDescription(answer);
-
-          assert.equal(trackEvents.length, matches[i].length);
-          trackEvents.splice(0).forEach((trackEvent, j) => {
-            assert.equal(trackEvent.track.id, matches[i][j]);
-          });
-        }
-      });
-    }
   });
 });
 
