@@ -4,8 +4,17 @@
 New Features
 ------------
 
-- Added shims for the `RTCRtpSender/RTCRtpReceiver` based APIs. The legacy `MediaStream`
-  based API shims have been removed. (JSDK-1631)
+- Added shims for the `RTCRtpSender/RTCRtpReceiver` based APIs. The legacy
+  `MediaStream` based API shims have been removed. (JSDK-1631)
+
+Bug Fixes
+---------
+
+- Previously, we were overwriting MediaStreamTrack IDs with the values signaled
+  in the SDP's MSID attributes in order to maintain compatibility with
+  pre-WebRTC 1.0 behavior. The particular method we used did not take into
+  account the fact that the actual MediaStreamTrack IDs would continue to show
+  in `getStats` results and has been removed.
 
 1.1.0 (October 24, 2017)
 ========================
