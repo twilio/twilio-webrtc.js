@@ -72,6 +72,13 @@ browsers.
 * Provides a workaround for the case where, when the SSRC of a `MediaStreamTrack` changes, the
   browser treats this as a removal of the existing `MediaStreamTrack` and the addition of a new
   `MediaStreamTrack`.
+* Adds support for getting and setting `maxPacketLifeTime` on RTCDataChannels by
+  remapping the legacy property `maxRetransmitTime` to `maxPacketLifeTime`. See
+  [this bug](https://bugs.chromium.org/p/chromium/issues/detail?id=696681) for
+  more information.
+* Does not depend on the native "track" event (currently behind the flag: `--enable-blink-features=RTCRtpSender`) because
+  of [this bug](https://bugs.chromium.org/p/chromium/issues/detail?id=774303), which partly refers to "ontrack" not firing when expected.
+  We have filed [this bug](https://bugs.chromium.org/p/chromium/issues/detail?id=783433) specifically for this.
 
 #### Firefox
 * For new offers, adds support for calling `setLocalDescription` and `setRemoteDescription` in
@@ -80,25 +87,28 @@ browsers.
 * The above features are implemented using rollback to work around [this bug](https://bugzilla.mozilla.org/show_bug.cgi?id=1072388).
 * Provides a workaround for [this bug](https://bugzilla.mozilla.org/show_bug.cgi?id=1240897), where the browser may
   change the previously negotiated DTLS role in an answer, which breaks Chrome.
-* Adds "track" event support, as per the workaround in [webrtc-adapter](https://github.com/webrtc/adapter/blob/master/src/js/firefox/firefox_shim.js#L14).
-* Implements the legacy `getLocalStreams` and `getRemoteStreams` methods.
-* Provides a workaround for [this bug](https://bugzilla.mozilla.org/show_bug.cgi?id=1154084),
-  where `getLocalStreams` and `getRemoteStreams` throw when called in signaling state `closed`.
 * Provides a workaround for [this bug](https://bugzilla.mozilla.org/show_bug.cgi?id=1363815),
   where the browser throws when `RTCPeerConnection.prototype.peerIdentity` is accessed.
-* The legacy `addStream` method is implemented in terms of the `addTrack` method.
+* Provides a shim for the `removeTrack` method in order to work around [this bug](https://bugzilla.mozilla.org/show_bug.cgi?id=1133874).
+* Provides a shim for the `addTrack` method. Since `removeTrack` is shimmed, there is a necessity to
+  maintain an explicit list of added `RTCRtpSender`s.
+* Provides a shim for the `getSenders` method. Since `removeTrack` is shimmed, there is a necessity to
+  maintain an explicit list of added `RTCRtpSender`s.
 
 #### Safari
 * Adds rollback support, according to the workaround specified [here](https://bugs.chromium.org/p/webrtc/issues/detail?id=5738#c3).
 * Provides a workaround for the case where, when the SSRC of a `MediaStreamTrack` changes, the
   browser treats this as a removal of the existing `MediaStreamTrack` and the addition of a new
   `MediaStreamTrack`.
-* Provides a workaround for [this bug](https://bugs.webkit.org/show_bug.cgi?id=174519), where
-  the `MediaStreamTrack`s cannot be identified correctly due to the lack of `MID`s in the sdp.
 * Provides a workaround for [this bug](https://bugs.webkit.org/show_bug.cgi?id=174323), where
   trying to access the `localDescription` or `remoteDescription` throws an exception.
-* The legacy `addStream` method is implemented in terms of the `addTrack` method.
-* Implements the legacy `getLocalStreams` and `getRemoteStreams` methods.
+* Provides a shim for the `removeTrack` method in order to work around [this bug](https://bugs.webkit.org/show_bug.cgi?id=174327).
+* Provides a shim for the `addTrack` method. Since `removeTrack` is shimmed, there is a necessity to
+  maintain an explicit list of added `RTCRtpSender`s.
+* Provides a workaround for [this bug](https://github.com/webrtc/adapter/issues/714), where webrtc-adapter's shimmed
+  `addTrack` method does not return the `RTCRtpSender` associated with the added track.
+* Provides a shim for the `getSenders` method. Since `removeTrack` is shimmed, there is a necessity to
+  maintain an explicit list of added `RTCRtpSender`s.
 
 ### RTCSessionDescription
 

@@ -2,10 +2,10 @@
 
 var assert = require('assert');
 var MediaStream = require('../../../lib/mediastream');
+var MediaStreamTrack = require('../../../lib/mediastreamtrack');
 var RTCIceCandidate = require('../../../lib/rtcicecandidate');
 var RTCSessionDescription = require('../../../lib/rtcsessiondescription');
 var RTCPeerConnection = require('../../../lib/rtcpeerconnection');
-var { makeSdpWithTracks } = require('../../lib/sdp');
 var util = require('../../lib/util');
 var { flatMap, guessBrowser } = require('../../../lib/util');
 
@@ -36,24 +36,87 @@ describe('RTCPeerConnection', function() {
     signalingStates.forEach(testAddIceCandidate);
   });
 
-  describe('#getLocalStreams, called from signaling state', () => {
-    signalingStates.forEach(testGetLocalStreams);
+  describe('#getSenders', () => {
+    signalingStates.forEach(testGetSenders);
   });
 
-  describe('#getRemoteStreams, called from signaling state', () => {
-    signalingStates.forEach(testGetRemoteStreams);
+  describe('#getReceivers', () => {
+    signalingStates.forEach(testGetReceivers);
   });
 
   describe('#close, called from signaling state', () => {
     signalingStates.forEach(testClose);
   });
 
-  (isSafari ? describe.skip : describe)('#addStream', testAddStream);
+  describe('#addTrack', testAddTrack);
+
+  describe('#removeTrack', testRemoveTrack);
 
   describe('#createAnswer, called from signaling state', () => {
     signalingStates.forEach(signalingState => {
       context(JSON.stringify(signalingState), () => {
         testCreateAnswer(signalingState);
+      });
+    });
+  });
+
+  describe('#createDataChannel', () => {
+    describe('called without setting maxPacketLifeTime', () => {
+      it('sets maxPacketLifeTime to null', () => {
+        const pc = new RTCPeerConnection();
+        const dataChannel = pc.createDataChannel('foo');
+        assert.equal(dataChannel.maxPacketLifeTime, null);
+      });
+    });
+
+    describe('called without setting maxRetransmits', () => {
+      it('sets maxRetransmits to null', () => {
+        const pc = new RTCPeerConnection();
+        const dataChannel = pc.createDataChannel('foo');
+        assert.equal(dataChannel.maxRetransmits, null);
+      });
+    });
+
+    describe('called without setting ordered', () => {
+      const pc = new RTCPeerConnection();
+      const dataChannel = pc.createDataChannel('foo');
+      assert.equal(dataChannel.ordered, true);
+    });
+
+    describe('called setting maxPacketLifeTime', () => {
+      (isFirefox ? it.skip : it)('sets maxPacketLifeTime to the specified value', () => {
+        const maxPacketLifeTime = 3;
+        const pc = new RTCPeerConnection();
+        const dataChannel = pc.createDataChannel('foo', { maxPacketLifeTime });
+        assert.equal(dataChannel.maxPacketLifeTime, maxPacketLifeTime);
+      });
+    });
+
+    describe('called setting maxRetransmits', () => {
+      (isFirefox ? it.skip : it)('sets maxRetransmits to the specified value', () => {
+        const maxRetransmits = 3;
+        const pc = new RTCPeerConnection();
+        const dataChannel = pc.createDataChannel('foo', { maxRetransmits });
+        assert.equal(dataChannel.maxRetransmits, maxRetransmits);
+      });
+    });
+
+    describe('called setting ordered to false', () => {
+      it('sets ordered to false', () => {
+        const ordered = false;
+        const pc = new RTCPeerConnection();
+        const dataChannel = pc.createDataChannel('foo', { ordered });
+        assert.equal(dataChannel.ordered, ordered);
+      });
+    });
+
+    describe('called setting both maxPacketLifeTime and maxRetransmits', () => {
+      it('should throw', () => {
+        const pc = new RTCPeerConnection();
+        assert.throws(() => pc.createDataChannel('foo', {
+          maxPacketLifeTime: 3,
+          maxRetransmits: 3
+        }));
       });
     });
   });
@@ -74,7 +137,7 @@ describe('RTCPeerConnection', function() {
       const constraints = { audio: true, video: true };
       const stream = await makeStream(constraints);
       const pc = new RTCPeerConnection({ iceServers: [] });
-      pc.addStream(stream);
+      addStream(pc, stream);
       const options = { offerToReceiveAudio: true, offerToReceiveVideo: true };
       offer1 = await pc.createOffer(options);
       offer2 = await pc.createOffer(options);
@@ -119,7 +182,7 @@ describe('RTCPeerConnection', function() {
       const constraints = { audio: true, video: true };
       const stream = await makeStream(constraints);
       const pc = new RTCPeerConnection({ iceServers: [] });
-      pc.addStream(stream);
+      addStream(pc, stream);
       const options = { offerToReceiveAudio: true, offerToReceiveVideo: true };
       offer1 = await pc.createOffer(options);
       offer2 = await pc.createOffer(options);
@@ -167,11 +230,80 @@ describe('RTCPeerConnection', function() {
 
   describe('Glare', testGlare);
 
+  describe('"datachannel" event', () => {
+    describe('when maxPacketLifeTime is not set', () => {
+      it('sets maxPacketLifeTime to null', async () => {
+        const [offerer, answerer] = createPeerConnections();
+        offerer.createDataChannel('foo');
+        const dataChannelPromise = waitForDataChannel(answerer);
+        await negotiate(offerer, answerer);
+        const dataChannel = await dataChannelPromise;
+        assert.equal(dataChannel.maxPacketLifeTime, null);
+      });
+    });
+
+    describe('when maxRetransmits is not set', () => {
+      it('sets maxRetransmits to null', async () => {
+        const [offerer, answerer] = createPeerConnections();
+        offerer.createDataChannel('foo');
+        const dataChannelPromise = waitForDataChannel(answerer);
+        await negotiate(offerer, answerer);
+        const dataChannel = await dataChannelPromise;
+        assert.equal(dataChannel.maxRetransmits, null);
+      });
+    });
+
+    describe('when ordered is not set', () => {
+      it('sets ordered to true', async () => {
+        const [offerer, answerer] = createPeerConnections();
+        offerer.createDataChannel('foo');
+        const dataChannelPromise = waitForDataChannel(answerer);
+        await negotiate(offerer, answerer);
+        const dataChannel = await dataChannelPromise;
+        assert.equal(dataChannel.ordered, true);
+      });
+    });
+
+    describe('when maxPacketLifeTime is set', () => {
+      (isFirefox ? it.skip : it)('sets maxPacketLifeTime to the specified value', async () => {
+        const maxPacketLifeTime = 3;
+        const [offerer, answerer] = createPeerConnections();
+        offerer.createDataChannel('foo', { maxPacketLifeTime });
+        const dataChannelPromise = waitForDataChannel(answerer);
+        await negotiate(offerer, answerer);
+        const dataChannel = await dataChannelPromise;
+        assert.equal(dataChannel.maxPacketLifeTime, maxPacketLifeTime);
+      });
+    });
+
+    describe('when maxRetransmits is set', () => {
+      (isFirefox ? it.skip : it)('sets maxRetransmits to the specified value', async () => {
+        const maxRetransmits = 3;
+        const [offerer, answerer] = createPeerConnections();
+        offerer.createDataChannel('foo', { maxRetransmits });
+        const dataChannelPromise = waitForDataChannel(answerer);
+        await negotiate(offerer, answerer);
+        const dataChannel = await dataChannelPromise;
+        assert.equal(dataChannel.maxRetransmits, maxRetransmits);
+      });
+    });
+
+    describe('when ordered is set to false', () => {
+      it('sets ordered to true', async () => {
+        const ordered = false;
+        const [offerer, answerer] = createPeerConnections();
+        offerer.createDataChannel('foo', { ordered });
+        const dataChannelPromise = waitForDataChannel(answerer);
+        await negotiate(offerer, answerer);
+        const dataChannel = await dataChannelPromise;
+        assert.equal(dataChannel.ordered, ordered);
+      });
+    });
+  });
+
   describe('"track" event', () => {
     context('when a new MediaStreamTrack is added', () => {
-      (isSafari
-        ? it.skip
-        : it)('should trigger a "track" event on the remote RTCPeerConnection with the added MediaStreamTrack', async () => {
+      it('should trigger a "track" event on the remote RTCPeerConnection with the added MediaStreamTrack', async () => {
         const pc1 = new RTCPeerConnection({ iceServers: [] });
         const pc2 = new RTCPeerConnection({ iceServers: [] });
 
@@ -180,7 +312,7 @@ describe('RTCPeerConnection', function() {
         const [localAudioTrack] = (await makeStream({ audio: true, fake: true })).getAudioTracks();
         stream.addTrack(localAudioTrack);
 
-        pc1.addStream(stream);
+        pc1.addTrack(localAudioTrack, stream);
         const trackEvent1 = waitForEvent(pc2, 'track');
 
         const offer1 = await pc1.createOffer();
@@ -200,15 +332,8 @@ describe('RTCPeerConnection', function() {
         ]);
 
         const [localVideoTrack] = (await makeStream({ video: true, fake: true })).getVideoTracks();
-
-        // NOTE(mroberts): https://bugs.webkit.org/show_bug.cgi?id=174327
-        if (isSafari) {
-          pc1.addTrack(localVideoTrack, stream);
-        } else {
-          pc1.removeStream(stream);
-          stream.addTrack(localVideoTrack);
-          pc1.addStream(stream);
-        }
+        stream.addTrack(localVideoTrack);
+        pc1.addTrack(localVideoTrack, stream);
         const trackEvent2 = waitForEvent(pc2, 'track');
 
         const offer2 = await pc1.createOffer();
@@ -228,45 +353,6 @@ describe('RTCPeerConnection', function() {
         ]);
       });
     });
-
-    if (isSafari) {
-      it('is raised in the order that new MSIDs are signaled in the SDP', async () => {
-        const tracksByKinds = [
-          { audio: [ { id: 'track1', ssrc: 1 } ] },
-          { audio: [ { id: 'track1', ssrc: 1 },
-                     { id: 'track2', ssrc: 2 },
-                     { id: 'track3', ssrc: 3 } ] },
-          { audio: [ { id: 'track2', ssrc: 2 } ] },
-          { audio: [ { id: 'track1', ssrc: 1 } ] }
-        ];
-
-        const matches = [
-          ['track1'],
-          ['track2', 'track3'],
-          [],
-          ['track1']
-        ];
-
-        const trackEvents = [];
-        const pc = new RTCPeerConnection();
-        pc.ontrack = trackEvent => trackEvents.push(trackEvent);
-
-        for (const i in tracksByKinds) {
-          const tracksByKind = tracksByKinds[i];
-          const sdp = makeSdpWithTracks(tracksByKind);
-          const offer = new RTCSessionDescription({ type: 'offer', sdp });
-
-          await pc.setRemoteDescription(offer);
-          const answer = await pc.createAnswer();
-          await pc.setLocalDescription(answer);
-
-          assert.equal(trackEvents.length, matches[i].length);
-          trackEvents.splice(0).forEach((trackEvent, j) => {
-            assert.equal(trackEvent.track.id, matches[i][j]);
-          });
-        }
-      });
-    }
   });
 });
 
@@ -399,59 +485,68 @@ function testAddIceCandidate(signalingState) {
   });
 }
 
-function testGetLocalStreams(signalingState) {
-  context(JSON.stringify(signalingState), () => {
-    var test;
+function testGetSenders(signalingState) {
+  var senders;
+  var stream;
+  var test;
 
-    beforeEach(() => {
-      return makeTest({ signalingState: signalingState })
-        .then(_test => test = _test);
+  before(async () => {
+    stream = await makeStream({ audio: true, video: true });
+    test = signalingState === 'closed' ? await makeTest() : await makeTest({ signalingState });
+    senders = addStream(test.peerConnection, stream);
+    signalingState === 'closed' && test.peerConnection.close();
+  });
+
+  context(`"${signalingState}"`, () => {
+    it('should return a list of senders', () => {
+      const actualSenders = test.peerConnection.getSenders();
+      assert.deepEqual(actualSenders, senders);
     });
-
-    if (signalingState === 'closed') {
-      it('should return an array', () => {
-        assert.deepEqual(test.peerConnection.getLocalStreams(), []);
-      });
-    } else {
-      // NOTE(mroberts): See the comment in
-      // lib/webrtc/rtcpeerconnection/firefox.js for an explanation as to why
-      // we test this API the way we do.
-      it('should return an array of MediaStreams containing the ' +
-         'MediaStreamTracks added to the underlying RTCPeerConnection', () => {
-        if (isFirefox || isSafari) {
-          return;
-        }
-        assert.deepEqual(test.peerConnection.getLocalStreams(), test.peerConnection._peerConnection.getLocalStreams());
-      });
-    }
   });
 }
 
-function testGetRemoteStreams(signalingState) {
-  context(JSON.stringify(signalingState), () => {
-    var test;
+function testGetReceivers(signalingState) {
+  var pc2;
+  var stream;
 
-    beforeEach(() => {
-      return makeTest({ signalingState: signalingState })
-        .then(_test => test = _test);
-    });
+  before(async () => {
+    const pc1 = new RTCPeerConnection({ iceServers: [] });
+    pc2 = new RTCPeerConnection({ iceServers: [] });
+    stream = await makeStream({ audio: true, video: true });
+    addStream(pc1, stream);
 
-    if (signalingState === 'closed') {
-      it('should return an empty array', () => {
-        assert.deepEqual(test.peerConnection.getRemoteStreams(), []);
-      });
-    } else {
-      // NOTE(mroberts): See the comment in
-      // lib/webrtc/rtcpeerconnection/firefox.js for an explanation as to why
-      // we test this API the way we do.
-      it('should return an array of MediaStreams containing the ' +
-         'MediaStreamTracks received on the underlying RTCPeerConnection', () => {
-        if (isFirefox || isSafari) {
-          return;
-        }
-        assert.deepEqual(test.peerConnection.getRemoteStreams(), test.peerConnection._peerConnection.getRemoteStreams());
-      });
+    let offer = await pc1.createOffer({ offerToReceiveAudio: true, offerToReceiveVideo: true });
+    await pc1.setLocalDescription(offer);
+    await pc2.setRemoteDescription(offer);
+    let answer = await pc2.createAnswer();
+    await pc2.setLocalDescription(answer);
+    await pc1.setRemoteDescription(answer);
+
+    switch(signalingState) {
+      case 'closed': {
+        pc2.close();
+        break;
+      }
+      case 'have-local-offer': {
+        offer = await pc2.createOffer({ offerToReceiveAudio: true, offerToReceiveVideo: true });
+        await pc2.setLocalDescription(offer);
+        break;
+      }
+      case 'have-remote-offer': {
+        offer = await pc1.createOffer({ offerToReceiveAudio: true, offerToReceiveVideo: true });
+        await pc2.setRemoteDescription(offer);
+        await pc2.createAnswer();
+        break;
+      }
     }
+  });
+
+  context(`"${signalingState}"`, () => {
+    it(`should return a list of receivers`, () => {
+      pc2.getReceivers().forEach(receiver => {
+        assert(receiver.track === null || receiver.track instanceof MediaStreamTrack);
+      });
+    });
   });
 }
 
@@ -542,8 +637,8 @@ function testDtlsRoleNegotiation() {
       pc1 = new RTCPeerConnection({ iceServers: [] });
       pc2 = new RTCPeerConnection({ iceServers: [] });
       return makeStream().then(stream => {
-        pc1.addStream(stream);
-        pc2.addStream(stream);
+        addStream(pc1, stream);
+        addStream(pc2, stream);
         return pc1.createOffer();
       }).then(offer => {
         assert(offer.sdp.match(/a=setup:actpass/));
@@ -596,8 +691,8 @@ function testGlare() {
       pc1 = new RTCPeerConnection({ iceServers: [] });
       pc2 = new RTCPeerConnection({ iceServers: [] });
       return makeStream().then(stream => {
-        pc1.addStream(stream);
-        pc2.addStream(stream);
+        addStream(pc1, stream);
+        addStream(pc2, stream);
         return Promise.all([
           pc1.createOffer(),
           pc2.createOffer()
@@ -654,42 +749,145 @@ function makeStream(constraints) {
   return new Promise((resolve, reject) => getUserMedia(resolve, reject));
 }
 
-function testAddStream() {
+function testAddTrack() {
   var test;
   var stream;
+  var tracks;
+  var trackToAdd;
 
-  before(() => {
-    return makeStream().then(_stream => stream = _stream);
+  before(async () => {
+    stream = await makeStream();
+    trackToAdd = stream.getTracks()[0];
   });
 
-  beforeEach(() => {
-    return makeTest().then(_test => test = _test);
+  beforeEach(async () => {
+    test = await makeTest();
+    tracks = getTracks(test.peerConnection);
   });
 
-  // NOTE(mroberts): See the comment in lib/webrtc/rtcpeerconnection/firefox.js
-  // for an explanation as to why we test this API the way we do.
-  it('should add each of the MediaStream\'s MediaStreamTracks to the RTCPeerConnection', () => {
-    test.peerConnection.addStream(stream);
-    if (isFirefox) {
-      const expectedTracks = stream.getTracks();
-      const actualTracks = test.peerConnection.getLocalStreams()[0].getTracks();
-      assertMediaStreamTracksEqual(actualTracks, expectedTracks);
-      return;
-    }
-    assert.equal(test.peerConnection.getLocalStreams()[0], stream);
-  });
+  [
+    [
+      'when the RTCPeerConnection is closed',
+      () => test.peerConnection.close()
+    ],
+    [
+      'when the MediaStreamTrack is already added to the RTCPeerConnection',
+      () => test.peerConnection.addTrack(trackToAdd, stream)
+    ]
+  ].forEach(([scenario, setup]) => {
+    context(scenario, () => {
+      var exception;
 
-  context('when adding a stream that is already added', () => {
-    it('should not throw an exception', () => {
-      test.peerConnection.addStream(stream);
-      assert.doesNotThrow(() => test.peerConnection.addStream(stream));
+      beforeEach(() => {
+        setup();
+        try {
+          test.peerConnection.addTrack(trackToAdd, stream);
+        } catch (e) {
+          exception = e;
+        }
+      });
+
+      it('should throw', () => {
+        assert(exception);
+      });
+
+      it('should not change the RTCPeerConnection\'s MediaStreamTracks', () => {
+        const tracksAfter = new Set(getTracks(test.peerConnection));
+        assert.deepEqual(tracksAfter, tracks);
+      });
+
+      afterEach(() => {
+        exception = null;
+      });
     });
+  });
 
-    it('should not add the stream', () => {
-      test.peerConnection.addStream(stream);
-      test.peerConnection.addStream(stream);
-      assert.equal(test.peerConnection.getLocalStreams().length, 1);
+  it('should add each of the MediaStreamTracks to the RTCPeerConnection', () => {
+    const senders = addStream(test.peerConnection, stream);
+    const addedTracks = getTracks(test.peerConnection);
+    assert.deepEqual(addedTracks, stream.getTracks());
+    assert.deepEqual(senders.map(sender => sender.track), stream.getTracks());
+  });
+}
+
+function testRemoveTrack() {
+  var test;
+  var tracks;
+  var stream;
+  var localAudioSender;
+  var localAudioTrack;
+  var localVideoSender;
+
+  before(async () => {
+    stream = await makeStream();
+    localAudioTrack = stream.getAudioTracks()[0];
+  });
+
+  beforeEach(async () => {
+    test = await makeTest();
+    const senders = addStream(test.peerConnection, stream);
+    localAudioSender = senders.find(sender => sender.track.kind === 'audio');
+    localVideoSender = senders.find(sender => sender.track.kind === 'video');
+  });
+
+  [
+    [
+      'when the RTCPeerConnection is closed',
+      () => test.peerConnection.close(),
+      true
+    ],
+    [
+      'when the MediaStreamTrack is already removed from the RTCPeerConnection',
+      () => test.peerConnection.removeTrack(localAudioSender),
+      false
+    ]
+  ].forEach(([scenario, setup, shouldThrow]) => {
+    context(scenario, () => {
+      var exception;
+
+      beforeEach(() => {
+        setup();
+        tracks = getTracks(test.peerConnection);
+        try {
+          test.peerConnection.removeTrack(localAudioSender);
+        } catch (e) {
+          exception = e;
+        }
+      });
+
+      it(`should ${shouldThrow ? '' : 'not '}throw`, () => {
+        assert(shouldThrow ? exception : !exception);
+      });
+
+      it('should not change the RTCPeerConnection\'s MediaStreamTracks', () => {
+        const tracksAfter = getTracks(test.peerConnection);
+        assert.deepEqual(tracksAfter, tracks);
+      });
+
+      afterEach(() => {
+        exception = null;
+      });
     });
+  });
+
+  it('should remove the MediaStreamTrack from the RTCPeerConnection', () => {
+    test.peerConnection.removeTrack(localAudioSender);
+    const presentTracks = getTracks(test.peerConnection);
+    assert.deepEqual(presentTracks, stream.getVideoTracks());
+  });
+
+  // NOTE(mmalavalli): Once RTCRtpSender is supported in Chrome, and we
+  // actually start using the native RTCPeerConnection's addTrack()/removeTrack()
+  // APIs in Firefox and Safari, these next two tests should be unskipped.
+  it.skip('should set the .track on its corresponding RTCRtpSender to null', () => {
+    test.peerConnection.removeTrack(localAudioSender);
+    assert.equal(localAudioSender.track, null);
+  });
+
+  it.skip('should retain the same RTCRtpSender instance in the list of RTCRtpSenders maintained by the RTCPeerConnection', () => {
+    test.peerConnection.removeTrack(localAudioSender);
+    const senders = new Set(test.peerConnection.getSenders());
+    assert(senders.has(localAudioSender));
   });
 }
 
@@ -1234,7 +1432,41 @@ c=IN IP4 127.0.0.1\r
   return setup.then(() => test);
 }
 
-function assertMediaStreamTracksEqual(actualTracks, expectedTracks) {
-  assert.equal(actualTracks.length, expectedTracks.length);
-  actualTracks.forEach((actualTrack, i) => assert.equal(actualTrack, expectedTracks[i]));
+function addStream(peerConnection, stream) {
+  return stream.getTracks().map(track => peerConnection.addTrack(track, stream));
+}
+
+function getTracks(peerConnection) {
+  return peerConnection.getSenders().filter(sender => sender.track).map(sender => sender.track);
+}
+
+function createPeerConnections() {
+  const pc1 = new RTCPeerConnection();
+  const pc2 = new RTCPeerConnection();
+  [[pc1, pc2], [pc1, pc2]].forEach(([pc1, pc2]) => {
+    pc1.addEventListener('icecandidate', event => {
+      if (event.candidate) {
+        pc2.addIceCandidate(event.candidate);
+      }
+    });
+  });
+  return [pc1, pc2];
+}
+
+function waitForDataChannel(pc) {
+  return new Promise(resolve =>
+    pc.addEventListener('datachannel', event => resolve(event.channel)));
+}
+
+async function negotiate(offerer, answerer) {
+  const offer = await offerer.createOffer();
+  await Promise.all([
+    offerer.setLocalDescription(offer),
+    answerer.setRemoteDescription(offer)
+  ]);
+  const answer = await answerer.createAnswer();
+  await Promise.all([
+    answerer.setLocalDescription(answer),
+    offerer.setRemoteDescription(answer)
+  ]);
 }

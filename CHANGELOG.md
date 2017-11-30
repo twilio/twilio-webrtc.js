@@ -1,3 +1,29 @@
+2.0.0 (In progress)
+===================
+
+New Features
+------------
+
+- Added shims for the `RTCRtpSender/RTCRtpReceiver` based APIs. The legacy `MediaStream`
+  based API shims have been removed. (JSDK-1631)
+
+1.1.0 (October 24, 2017)
+========================
+
+New Features
+------------
+
+- Adds Chrome support for getting and setting `maxPacketLifeTime` on
+  RTCDataChannels by remapping the legacy property `maxRetransmitTime` to
+  `maxPacketLifeTime`. (JSDK-1572)
+
+Bug Fixes
+---------
+
+- Fixed a bug where our `getStats` function returned
+  StandardizedTrackStatsReports of the wrong kind in the members of
+  StandardizedTrackStatsResponse. (JSKD-1605)
+
 1.0.3 (October 13, 2017)
 ========================
 
