@@ -89,7 +89,8 @@ describe('getStats', function() {
         packetsSent: 900,
         audioInputLevel: 80,
         audioOutputLevel: 65
-      }
+      },
+      chromeFakeIceStats: []
     };
     var peerConnection = new FakeRTCPeerConnection(options);
     var localStream = new FakeMediaStream();
@@ -263,5 +264,547 @@ describe('getStats', function() {
             assert.equal(report.packetsSent, fakeOutbound.packetsSent);
           });
       });
+  });
+
+  describe('Active RTCIceCandidate pair stats', () => {
+    context('should be present in StandardizedStatsResponse for', () => {
+      it('chrome', async () => {
+        var options = {
+          chromeFakeStats: {},
+          chromeFakeIceStats: [
+            {
+              id: 'RTCIceCandidatePair_F/5cS67H_6FQI1GQj',
+              timestamp: 1525111897754.9,
+              type: 'candidate-pair',
+              transportId: 'RTCTransport_audio_1',
+              localCandidateId: 'RTCIceCandidate_F/5cS67H',
+              remoteCandidateId: 'RTCIceCandidate_6FQI1GQj',
+              state: 'succeeded',
+              priority: 1.7961621859063e+17,
+              nominated: false,
+              writable: true,
+              bytesSent: 0,
+              bytesReceived: 0,
+              totalRoundTripTime: 3.328,
+              currentRoundTripTime: 0.134,
+              requestsReceived: 0,
+              requestsSent: 1,
+              responsesReceived: 14,
+              responsesSent: 0,
+              consentRequestsSent: 13
+            },
+            {
+              id: 'RTCIceCandidatePair_iAkACmH6_U+HD8VMp',
+              timestamp: 1525111897754.9,
+              type: 'candidate-pair',
+              transportId: 'RTCTransport_audio_1',
+              localCandidateId: 'RTCIceCandidate_iAkACmH6',
+              remoteCandidateId: 'RTCIceCandidate_U+HD8VMp',
+              state: 'waiting',
+              priority: 1.7961621859063e+17,
+              nominated: false,
+              writable: false,
+              bytesSent: 0,
+              bytesReceived: 0,
+              totalRoundTripTime: 0,
+              requestsReceived: 14,
+              requestsSent: 0,
+              responsesReceived: 0,
+              responsesSent: 14,
+              consentRequestsSent: 0
+            },
+            {
+              id: 'RTCIceCandidatePair_rO9TbAZ1_wSP+1iQn',
+              timestamp: 1525111897754.9,
+              type: 'candidate-pair',
+              transportId: 'RTCTransport_audio_1',
+              localCandidateId: 'RTCIceCandidate_rO9TbAZ1',
+              remoteCandidateId: 'RTCIceCandidate_wSP+1iQn',
+              state: 'succeeded',
+              priority: 9.1147567806543e+18,
+              nominated: true,
+              writable: true,
+              bytesSent: 760278,
+              bytesReceived: 754186,
+              totalRoundTripTime: 0.049,
+              currentRoundTripTime: 0.001,
+              availableOutgoingBitrate: 300000,
+              requestsReceived: 65,
+              requestsSent: 1,
+              responsesReceived: 65,
+              responsesSent: 65,
+              consentRequestsSent: 64
+            },
+            {
+              id: 'RTCIceCandidate_6FQI1GQj',
+              timestamp: 1525111897754.9,
+              type: 'remote-candidate',
+              transportId: 'RTCTransport_audio_1',
+              isRemote: true,
+              ip: '34.203.250.85',
+              port: 51850,
+              protocol: 'udp',
+              candidateType: 'relay',
+              priority: 41820159,
+              deleted: false
+            },
+            {
+              id: 'RTCIceCandidate_F/5cS67H',
+              timestamp: 1525111897754.9,
+              type: 'local-candidate',
+              transportId: 'RTCTransport_audio_1',
+              isRemote: false,
+              networkType: 'unknown',
+              ip: '107.20.226.156',
+              port: 57710,
+              protocol: 'udp',
+              candidateType: 'srflx',
+              priority: 1686052607,
+              deleted: false
+            },
+            {
+              id: 'RTCIceCandidate_U+HD8VMp',
+              timestamp: 1525111897754.9,
+              type: 'remote-candidate',
+              transportId: 'RTCTransport_audio_1',
+              isRemote: true,
+              ip: '107.20.226.156',
+              port: 59522,
+              protocol: 'udp',
+              candidateType: 'srflx',
+              priority: 1686052607,
+              deleted: false
+            },
+            {
+              id: 'RTCIceCandidate_iAkACmH6',
+              timestamp: 1525111897754.9,
+              type: 'local-candidate',
+              transportId: 'RTCTransport_audio_1',
+              isRemote: false,
+              networkType: 'wifi',
+              ip: '34.203.250.85',
+              port: 53529,
+              protocol: 'udp',
+              candidateType: 'relay',
+              priority: 41820159,
+              deleted: false
+            },
+            {
+              id: 'RTCIceCandidate_rO9TbAZ1',
+              timestamp: 1525111897754.9,
+              type: 'local-candidate',
+              transportId: 'RTCTransport_audio_1',
+              isRemote: false,
+              networkType: 'wifi',
+              ip: '10.20.64.226',
+              port: 61772,
+              protocol: 'udp',
+              candidateType: 'host',
+              priority: 2122194687,
+              deleted: false
+            },
+            {
+              id: 'RTCIceCandidate_wSP+1iQn',
+              timestamp: 1525111897754.9,
+              type: 'remote-candidate',
+              transportId: 'RTCTransport_audio_1',
+              isRemote: true,
+              ip: '10.20.64.226',
+              port: 61913,
+              protocol: 'udp',
+              candidateType: 'host',
+              priority: 2122194687,
+              deleted: false
+            }
+          ]
+        };
+        var peerConnection = new FakeRTCPeerConnection(options);
+        var { activeIceCandidatePair } = await getStats(peerConnection, { testForChrome: true });
+
+        var expectedActiveIceCandidatePair = options.chromeFakeIceStats.find(stat => {
+          return stat.nominated;
+        });
+        var expectedActiveLocalCandidate = options.chromeFakeIceStats.find(stat => {
+          return stat.id === expectedActiveIceCandidatePair.localCandidateId;
+        });
+        var expectedActiveRemoteCandidate = options.chromeFakeIceStats.find(stat => {
+          return stat.id === expectedActiveIceCandidatePair.remoteCandidateId;
+        });
+
+        [
+          'availableIncomingBitrate',
+          'availableOutgoingBitrate',
+          'bytesReceived',
+          'bytesSent',
+          'consentRequestsSent',
+          'currentRoundTripTime',
+          'lastPacketReceivedTimestamp',
+          'lastPacketSentTimestamp',
+          'nominated',
+          'priority',
+          'readable',
+          'requestsReceived',
+          'requestsSent',
+          'responsesReceived',
+          'responsesSent',
+          'retransmissionsReceived',
+          'retransmissionsSent',
+          'state',
+          'totalRoundTripTime',
+          'transportId',
+          'writable'
+        ].forEach(key => {
+          assert.equal(activeIceCandidatePair[key], typeof expectedActiveIceCandidatePair[key] !== 'undefined'
+            ? expectedActiveIceCandidatePair[key]
+            :null);
+        });
+
+        [
+          'candidateType',
+          'deleted',
+          'ip',
+          'port',
+          'priority',
+          'protocol',
+          'relayProtocol',
+          'url'
+        ].forEach(key => {
+          assert.equal(activeIceCandidatePair.localCandidate[key], typeof expectedActiveLocalCandidate[key] !== 'undefined'
+            ? expectedActiveLocalCandidate[key]
+            : null);
+        });
+
+        [
+          'candidateType',
+          'ip',
+          'port',
+          'priority',
+          'protocol',
+          'url'
+        ].forEach(key => {
+          assert.equal(activeIceCandidatePair.remoteCandidate[key], typeof expectedActiveRemoteCandidate[key] !== 'undefined'
+            ? expectedActiveRemoteCandidate[key]
+            : null);
+        });
+      });
+
+      it('firefox', async () => {
+        var options = {
+          firefoxFakeStats: {
+            'Gmx9': {
+              id: 'Gmx9',
+              timestamp: 1525115247978,
+              type: 'candidatepair',
+              bytesReceived: 591211,
+              bytesSent: 591293,
+              lastPacketReceivedTimestamp: 1525115247973,
+              lastPacketSentTimestamp: 1525115247974,
+              localCandidateId: 'kvar',
+              nominated: true,
+              priority: 9.1150052702823e+18,
+              readable: true,
+              remoteCandidateId: 'xLZB',
+              selected: true,
+              state: 'succeeded',
+              transportId: '0-1525115182222480 (id=6442450948 url=https://simpler-signaling.appspot.com/) aLevel=0',
+              writable: true
+            },
+            '9NHy': {
+              id: '9NHy',
+              timestamp: 1525115247978,
+              type: 'candidatepair',
+              bytesReceived: 0,
+              bytesSent: 0,
+              lastPacketReceivedTimestamp: 0,
+              lastPacketSentTimestamp: 0,
+              localCandidateId: 'eN95',
+              nominated: false,
+              priority: 9.1147237953056e+18,
+              readable: true,
+              remoteCandidateId: 'xLZB',
+              selected: false,
+              state: 'cancelled',
+              transportId: '0-1525115182222480 (id=6442450948 url=https://simpler-signaling.appspot.com/) aLevel=0',
+              writable: true
+            },
+            'Aouc': {
+              id: 'Aouc',
+              timestamp: 1525115247978,
+              type: 'candidatepair',
+              bytesReceived: 0,
+              bytesSent: 0,
+              lastPacketReceivedTimestamp: 0,
+              lastPacketSentTimestamp: 0,
+              localCandidateId: 'QjMi',
+              nominated: false,
+              priority: 3.9607047655352e+17,
+              readable: true,
+              remoteCandidateId: 'xLZB',
+              selected: false,
+              state: 'cancelled',
+              transportId: '0-1525115182222480 (id=6442450948 url=https://simpler-signaling.appspot.com/) aLevel=0',
+              writable: true
+            },
+            '6cOO': {
+              id: '6cOO',
+              timestamp: 1525115247978,
+              type: 'candidatepair',
+              bytesReceived: 0,
+              bytesSent: 0,
+              lastPacketReceivedTimestamp: 0,
+              lastPacketSentTimestamp: 0,
+              localCandidateId: 'kCOL',
+              nominated: false,
+              priority: 3.9578900157681e+17,
+              readable: true,
+              remoteCandidateId: 'xLZB',
+              selected: false,
+              state: 'cancelled',
+              transportId: '0-1525115182222480 (id=6442450948 url=https://simpler-signaling.appspot.com/) aLevel=0',
+              writable: true
+            },
+            'EwbO': {
+              id: 'EwbO',
+              timestamp: 1525115247978,
+              type: 'candidatepair',
+              bytesReceived: 0,
+              bytesSent: 0,
+              lastPacketReceivedTimestamp: 0,
+              lastPacketSentTimestamp: 0,
+              localCandidateId: 'LsHZ',
+              nominated: false,
+              priority: 3.578250636388e+16,
+              readable: true,
+              remoteCandidateId: 'xLZB',
+              selected: false,
+              state: 'cancelled',
+              transportId: '0-1525115182222480 (id=6442450948 url=https://simpler-signaling.appspot.com/) aLevel=0',
+              writable: true
+            },
+            'zTSk': {
+              id: 'zTSk',
+              timestamp: 1525115247978,
+              type: 'candidatepair',
+              bytesReceived: 0,
+              bytesSent: 0,
+              lastPacketReceivedTimestamp: 0,
+              lastPacketSentTimestamp: 0,
+              localCandidateId: 'SwDB',
+              nominated: false,
+              priority: 3.5501031387169e+16,
+              readable: true,
+              remoteCandidateId: 'xLZB',
+              selected: false,
+              state: 'cancelled',
+              transportId: '0-1525115182222480 (id=6442450948 url=https://simpler-signaling.appspot.com/) aLevel=0',
+              writable: true
+            },
+            'wJIN': {
+              id: 'wJIN',
+              timestamp: 1525115247978,
+              type: 'localcandidate',
+              candidateType: 'host',
+              componentId: '0-1525115182222480 (id=6442450948 url=https://simpler-signaling.appspot.com/) aLevel=0',
+              ipAddress: '10.20.64.226',
+              mozLocalTransport: 'udp',
+              portNumber: 63538,
+              transport: 'udp'
+            },
+            'tbSN': {
+              id: 'tbSN',
+              timestamp: 1525115247978,
+              type: 'localcandidate',
+              candidateType: 'serverreflexive',
+              componentId: '0-1525115182222480 (id=6442450948 url=https://simpler-signaling.appspot.com/) aLevel=0',
+              ipAddress: '12.203.65.40',
+              mozLocalTransport: 'udp',
+              portNumber: 38924,
+              transport: 'udp'
+            },
+            'QjMi': {
+              id: 'QjMi',
+              timestamp: 1525115247978,
+              type: 'localcandidate',
+              candidateType: 'relayed',
+              componentId: '0-1525115182222480 (id=6442450948 url=https://simpler-signaling.appspot.com/) aLevel=0',
+              ipAddress: '34.203.250.88',
+              mozLocalTransport: 'udp',
+              portNumber: 20479,
+              transport: 'udp'
+            },
+            'eN95': {
+              id: 'eN95',
+              timestamp: 1525115247978,
+              type: 'localcandidate',
+              candidateType: 'host',
+              componentId: '0-1525115182222480 (id=6442450948 url=https://simpler-signaling.appspot.com/) aLevel=0',
+              ipAddress: '192.168.209.150',
+              mozLocalTransport: 'udp',
+              portNumber: 61844,
+              transport: 'udp'
+            },
+            'kvar': {
+              id: 'kvar',
+              timestamp: 1525115247978,
+              type: 'localcandidate',
+              candidateType: 'serverreflexive',
+              componentId: '0-1525115182222480 (id=6442450948 url=https://simpler-signaling.appspot.com/) aLevel=0',
+              ipAddress: '107.20.226.156',
+              mozLocalTransport: 'udp',
+              portNumber: 61844,
+              transport: 'udp'
+            },
+            'kCOL': {
+              id: 'kCOL',
+              timestamp: 1525115247978,
+              type: 'localcandidate',
+              candidateType: 'relayed',
+              componentId: '0-1525115182222480 (id=6442450948 url=https://simpler-signaling.appspot.com/) aLevel=0',
+              ipAddress: '34.203.250.88',
+              mozLocalTransport: 'udp',
+              portNumber: 18838,
+              transport: 'udp'
+            },
+            'VFPG': {
+              id: 'VFPG',
+              timestamp: 1525115247978,
+              type: 'localcandidate',
+              candidateType: 'host',
+              componentId: '0-1525115182222480 (id=6442450948 url=https://simpler-signaling.appspot.com/) aLevel=0',
+              ipAddress: '10.20.64.226',
+              mozLocalTransport: 'tcp',
+              portNumber: 53403,
+              transport: 'tcp'
+            },
+            'LsHZ': {
+              id: 'LsHZ',
+              timestamp: 1525115247978,
+              type: 'localcandidate',
+              candidateType: 'relayed',
+              componentId: '0-1525115182222480 (id=6442450948 url=https://simpler-signaling.appspot.com/) aLevel=0',
+              ipAddress: '34.203.250.88',
+              mozLocalTransport: 'tls',
+              portNumber: 14806,
+              transport: 'udp'
+            },
+            '8fuV': {
+              id: '8fuV',
+              timestamp: 1525115247978,
+              type: 'localcandidate',
+              candidateType: 'host',
+              componentId: '0-1525115182222480 (id=6442450948 url=https://simpler-signaling.appspot.com/) aLevel=0',
+              ipAddress: '192.168.209.150',
+              mozLocalTransport: 'tcp',
+              portNumber: 58132,
+              transport: 'tcp'
+            },
+            'SwDB': {
+              id: 'SwDB',
+              timestamp: 1525115247978,
+              type: 'localcandidate',
+              candidateType: 'relayed',
+              componentId: '0-1525115182222480 (id=6442450948 url=https://simpler-signaling.appspot.com/) aLevel=0',
+              ipAddress: '34.203.250.88',
+              mozLocalTransport: 'tls',
+              portNumber: 21154,
+              transport: 'udp'
+            },
+            'xLZB': {
+              id: 'xLZB',
+              timestamp: 1525115247978,
+              type: 'remotecandidate',
+              candidateType: 'host',
+              componentId: '0-1525115182222480 (id=6442450948 url=https://simpler-signaling.appspot.com/) aLevel=0',
+              ipAddress: '10.20.64.226',
+              portNumber: 53508,
+              transport: 'udp'
+            }
+          }
+        };
+
+        var peerConnection = new FakeRTCPeerConnection(options);
+        var { activeIceCandidatePair } = await getStats(peerConnection, { testForFirefox: true });
+
+        var expectedActiveIceCandidatePair = Object.values(options.firefoxFakeStats).find(stat => {
+          return stat.nominated;
+        });
+        var expectedActiveLocalCandidate = options.firefoxFakeStats[expectedActiveIceCandidatePair.localCandidateId];
+        var expectedActiveRemoteCandidate = options.firefoxFakeStats[expectedActiveIceCandidatePair.remoteCandidateId];
+
+        [
+          'availableIncomingBitrate',
+          'availableOutgoingBitrate',
+          'bytesReceived',
+          'bytesSent',
+          'consentRequestsSent',
+          'currentRoundTripTime',
+          'lastPacketReceivedTimestamp',
+          'lastPacketSentTimestamp',
+          'nominated',
+          'priority',
+          'readable',
+          'requestsReceived',
+          'requestsSent',
+          'responsesReceived',
+          'responsesSent',
+          'retransmissionsReceived',
+          'retransmissionsSent',
+          'state',
+          'totalRoundTripTime',
+          'transportId',
+          'writable'
+        ].forEach(key => {
+          assert.equal(activeIceCandidatePair[key], typeof expectedActiveIceCandidatePair[key] !== 'undefined'
+            ? expectedActiveIceCandidatePair[key]
+            :null);
+        });
+
+        [
+          ['candidateType'],
+          ['deleted'],
+          ['ip', 'ipAddress'],
+          ['port', 'portNumber'],
+          ['priority'],
+          ['protocol', 'transport'],
+          ['relayProtocol'],
+          ['url']
+        ].forEach(([key, ffKey]) => {
+          if (key === 'candidateType') {
+            assert.equal(activeIceCandidatePair.localCandidate.candidateType, {
+              host: 'host',
+              peerreflexive: 'prflx',
+              relayed: 'relay',
+              serverreflexive: 'srflx'
+            }[expectedActiveLocalCandidate.candidateType]);
+            return;
+          }
+          assert.equal(activeIceCandidatePair.localCandidate[key], typeof expectedActiveLocalCandidate[ffKey || key] !== 'undefined'
+            ? expectedActiveLocalCandidate[ffKey || key]
+            : key === 'deleted' ? false : null);
+        });
+
+        [
+          ['candidateType'],
+          ['ip', 'ipAddress'],
+          ['port', 'portNumber'],
+          ['priority'],
+          ['protocol', 'transport'],
+          ['url']
+        ].forEach(([key, ffKey]) => {
+          if (key === 'candidateType') {
+            assert.equal(activeIceCandidatePair.remoteCandidate.candidateType, {
+              host: 'host',
+              peerreflexive: 'prflx',
+              relayed: 'relay',
+              serverreflexive: 'srflx'
+            }[expectedActiveRemoteCandidate.candidateType]);
+            return;
+          }
+          assert.equal(activeIceCandidatePair.remoteCandidate[key], typeof expectedActiveRemoteCandidate[ffKey || key] !== 'undefined'
+            ? expectedActiveRemoteCandidate[ffKey || key]
+            : null);
+        });
+      });
+    });
   });
 });

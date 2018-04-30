@@ -79,17 +79,29 @@ FakeRTCPeerConnection.prototype.getSenders = function getSenders() {
 FakeRTCPeerConnection.prototype.getStats = function getStats() {
   var args = [].slice.call(arguments);
 
-  if (typeof args[0] === 'function') {
+  if (this._options.chromeFakeStats) {
     var response = new FakeChromeRTCStatsResponse();
     flatMap([ ...this.localStreams, ...this.remoteStreams ], stream => {
       return stream.getTracks();
     }).forEach(track => {
       response._addReport(track.id, 'ssrc', this._options.chromeFakeStats);
     });
-    args[0](response);
-  } else if (typeof args[1] === 'function') {
-    args[1](this._options.firefoxFakeStats);
+    if (typeof args[0] === 'function') {
+      args[0](response);
+    }
+    return Promise.resolve(new Map(response.result().map(function(report) {
+      return [report.id, report];
+    }).concat(this._options.chromeFakeIceStats.map(function(report) {
+      return [report.id, report];
+    }))));
   }
+  if (this._options.firefoxFakeStats) {
+    if (typeof args[1] === 'function') {
+      args[1](this._options.firefoxFakeStats);
+    }
+    return Promise.resolve(this._options.firefoxFakeStats);
+  }
+  return Promise.resolve(null);
 };
 
 exports.FakeRTCPeerConnection = FakeRTCPeerConnection;
