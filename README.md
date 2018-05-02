@@ -30,8 +30,9 @@ const {
 
 ### getStats
 
-`getStats` resolves with normalized WebRTC statistics for each
-`MediaStreamTrack`, local or remote, of a particular `RTCPeerConnection`.
+`getStats` resolves with normalized WebRTC statistics for the active ICE
+candidate pair and each `MediaStreamTrack`, local or remote, of a particular
+`RTCPeerConnection`.
 
 ```javascript
 /**

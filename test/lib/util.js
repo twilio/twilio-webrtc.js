@@ -240,6 +240,44 @@ async function trackStarted(track) {
   await new Promise(resolve => track.once('started', resolve));
 }
 
+const activeIceCandidatePairStatsNullProps = {
+  chrome: new Set([
+    'availableIncomingBitrate',
+    'lastPacketReceivedTimestamp',
+    'lastPacketSentTimestamp',
+    'readable',
+    'retransmissionsReceived',
+    'retransmissionsSent'
+  ]),
+  firefox: new Set([
+    'availableIncomingBitrate',
+    'availableOutgoingBitrate',
+    'consentRequestsSent',
+    'currentRoundTripTime',
+    'requestsReceived',
+    'requestsSent',
+    'responsesReceived',
+    'responsesSent',
+    'retransmissionsReceived',
+    'retransmissionsSent',
+    'totalRoundTripTime'
+  ])
+};
+
+const localCandidateStatsNullProps = {
+  chrome: new Set(['relayProtocol', 'url']),
+  firefox: new Set(['priority', 'relayProtocol', 'url'])
+};
+
+const remoteCandidateStatsNullProps = {
+  chrome: new Set(['url']),
+  firefox: new Set(['priority', 'url'])
+};
+
+exports.activeIceCandidatePairStatsNullProps = activeIceCandidatePairStatsNullProps;
+exports.localCandidateStatsNullProps = localCandidateStatsNullProps;
+exports.remoteCandidateStatsNullProps = remoteCandidateStatsNullProps;
+
 exports.a = a;
 exports.capitalize = capitalize;
 exports.combinationContext = combinationContext;
