@@ -6,5 +6,6 @@ if (typeof adapter !== 'undefined') {
   console.log(adapter);
 }
 
+require('./spec/getstats');
 require('./spec/rtcpeerconnection');
 require('./spec/rtcsessiondescription');
