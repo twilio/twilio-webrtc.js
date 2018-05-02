@@ -1,4 +1,11 @@
 const assert = require('assert');
+
+const {
+  activeIceCandidatePairStatsNullProps,
+  localCandidateStatsNullProps,
+  remoteCandidateStatsNullProps
+} = require('../../lib/util');
+
 const getStats = require('../../../lib/getstats');
 const getUserMedia = require('../../../lib/getusermedia');
 const RTCPeerConnection = require('../../../lib/rtcpeerconnection');
@@ -47,7 +54,7 @@ const { guessBrowser } = require('../../../lib/util');
         pc2.addIceCandidate(e.candidate);
       });
 
-      pc1.addEventListener('icecandidate', e => {
+      pc2.addEventListener('icecandidate', e => {
         if (e.candidate) {
           pc1.addIceCandidate(e.candidate);
         }
@@ -76,8 +83,9 @@ const { guessBrowser } = require('../../../lib/util');
         { key: 'protocol', type: 'string' },
         { key: 'url', type: 'string' }
       ].forEach(({ key, type }) => {
-        [localCandidate, remoteCandidate].forEach(candidate => {
-          if (candidate[key] === null) {
+        [localCandidate, remoteCandidate].forEach((candidate, i) => {
+          if ([localCandidateStatsNullProps, remoteCandidateStatsNullProps][i][guessBrowser()].has(key)) {
+            assert.equal(candidate[key], null);
             return;
           }
           if (key === 'candidateType') {
@@ -106,7 +114,8 @@ const { guessBrowser } = require('../../../lib/util');
         { key: 'deleted', type: 'boolean' },
         { key: 'relayProtocol', type: 'string' }
       ].forEach(({ key, type }) => {
-        if (localCandidate[key] === null) {
+        if (localCandidateStatsNullProps[guessBrowser()].has(key)) {
+          assert.equal(localCandidate[key], null);
           return;
         }
         if (key === 'relayProtocol') {
@@ -143,7 +152,8 @@ const { guessBrowser } = require('../../../lib/util');
         { key: 'transportId', type: 'string' },
         { key: 'writable', type: 'boolean' }
       ].forEach(({ key, type }) => {
-        if (activeIceCandidatePair[key] === null) {
+        if (activeIceCandidatePairStatsNullProps[guessBrowser()].has(key)) {
+          assert.equal(activeIceCandidatePair[key], null);
           return;
         }
         if (key === 'state') {

@@ -1,3 +1,12 @@
+2.0.1 (In progress)
+===================
+
+New Features
+------------
+
+- `StandardizedStatsResponse` has a new property `.activeIceCandidatePair`,
+  which contains the normalized active ICE candidate pair statistics.
+
 2.0.0 (January 9, 2018)
 =======================
 

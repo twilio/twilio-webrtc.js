@@ -269,7 +269,7 @@ describe('getStats', function() {
   describe('Active RTCIceCandidate pair stats', () => {
     context('should be present in StandardizedStatsResponse for', () => {
       it('chrome', async () => {
-        var options = {
+        const options = {
           chromeFakeStats: {},
           chromeFakeIceStats: [
             {
@@ -418,16 +418,16 @@ describe('getStats', function() {
             }
           ]
         };
-        var peerConnection = new FakeRTCPeerConnection(options);
-        var { activeIceCandidatePair } = await getStats(peerConnection, { testForChrome: true });
+        const peerConnection = new FakeRTCPeerConnection(options);
+        const { activeIceCandidatePair } = await getStats(peerConnection, { testForChrome: true });
 
-        var expectedActiveIceCandidatePair = options.chromeFakeIceStats.find(stat => {
+        const expectedActiveIceCandidatePair = options.chromeFakeIceStats.find(stat => {
           return stat.nominated;
         });
-        var expectedActiveLocalCandidate = options.chromeFakeIceStats.find(stat => {
+        const expectedActiveLocalCandidate = options.chromeFakeIceStats.find(stat => {
           return stat.id === expectedActiveIceCandidatePair.localCandidateId;
         });
-        var expectedActiveRemoteCandidate = options.chromeFakeIceStats.find(stat => {
+        const expectedActiveRemoteCandidate = options.chromeFakeIceStats.find(stat => {
           return stat.id === expectedActiveIceCandidatePair.remoteCandidateId;
         });
 
@@ -456,7 +456,7 @@ describe('getStats', function() {
         ].forEach(key => {
           assert.equal(activeIceCandidatePair[key], typeof expectedActiveIceCandidatePair[key] !== 'undefined'
             ? expectedActiveIceCandidatePair[key]
-            :null);
+            : null);
         });
 
         [
@@ -489,7 +489,7 @@ describe('getStats', function() {
       });
 
       it('firefox', async () => {
-        var options = {
+        const options = {
           firefoxFakeStats: {
             'Gmx9': {
               id: 'Gmx9',
@@ -722,14 +722,14 @@ describe('getStats', function() {
           }
         };
 
-        var peerConnection = new FakeRTCPeerConnection(options);
-        var { activeIceCandidatePair } = await getStats(peerConnection, { testForFirefox: true });
+        const peerConnection = new FakeRTCPeerConnection(options);
+        const { activeIceCandidatePair } = await getStats(peerConnection, { testForFirefox: true });
 
-        var expectedActiveIceCandidatePair = Object.values(options.firefoxFakeStats).find(stat => {
+        const expectedActiveIceCandidatePair = Object.values(options.firefoxFakeStats).find(stat => {
           return stat.nominated;
         });
-        var expectedActiveLocalCandidate = options.firefoxFakeStats[expectedActiveIceCandidatePair.localCandidateId];
-        var expectedActiveRemoteCandidate = options.firefoxFakeStats[expectedActiveIceCandidatePair.remoteCandidateId];
+        const expectedActiveLocalCandidate = options.firefoxFakeStats[expectedActiveIceCandidatePair.localCandidateId];
+        const expectedActiveRemoteCandidate = options.firefoxFakeStats[expectedActiveIceCandidatePair.remoteCandidateId];
 
         [
           'availableIncomingBitrate',
@@ -756,7 +756,7 @@ describe('getStats', function() {
         ].forEach(key => {
           assert.equal(activeIceCandidatePair[key], typeof expectedActiveIceCandidatePair[key] !== 'undefined'
             ? expectedActiveIceCandidatePair[key]
-            :null);
+            : null);
         });
 
         [
