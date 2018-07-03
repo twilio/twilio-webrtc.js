@@ -1,11 +1,12 @@
-2.0.1 (In progress)
-===================
+2.1.0 (July 3, 2018)
+====================
 
 New Features
 ------------
 
 - `StandardizedStatsResponse` has a new property `.activeIceCandidatePair`,
   which contains the normalized active ICE candidate pair statistics.
+- Added support for passing Chrome-specific constraints.
 
 2.0.0 (January 9, 2018)
 =======================
