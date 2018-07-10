@@ -80,6 +80,8 @@ browsers.
 * Does not depend on the native "track" event (currently behind the flag: `--enable-blink-features=RTCRtpSender`) because
   of [this bug](https://bugs.chromium.org/p/chromium/issues/detail?id=774303), which partly refers to "ontrack" not firing when expected.
   We have filed [this bug](https://bugs.chromium.org/p/chromium/issues/detail?id=783433) specifically for this.
+* Provides a workaround for [this bug](https://bugs.chromium.org/p/chromium/issues/detail?id=860853), where calling `removeTrack`
+  with an `RTCRtpSender` that is not created by the `RTCPeerConnection` in question throws an exception.
 
 #### Firefox
 * For new offers, adds support for calling `setLocalDescription` and `setRemoteDescription` in
