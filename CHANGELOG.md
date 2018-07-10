@@ -1,3 +1,11 @@
+2.1.1 (in progress)
+===================
+
+Bug Fixes
+---------
+
+- Fixed a bug in the management of SSRCs in Chrome. (JSDK-2032)
+
 2.1.0 (July 3, 2018)
 ====================
 
