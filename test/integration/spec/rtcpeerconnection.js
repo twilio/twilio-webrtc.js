@@ -158,6 +158,39 @@ describe('RTCPeerConnection', function() {
     });
   });
 
+  (isSafari ? describe.skip : describe)('#createAnswer, called twice from signaling state "stable" without calling #setLocalDescription', () => {
+    let answer1;
+    let answer2;
+
+    before(async () => {
+      const constraints = { audio: true, video: true };
+      const stream = await makeStream(constraints);
+      const pc1 = new RTCPeerConnection({ iceServers: [] });
+      const pc2 = new RTCPeerConnection({ iceServers: [] });
+      addStream(pc2, stream);
+      const options = { offerToReceiveAudio: true, offerToReceiveVideo: true };
+      const offer = await pc1.createOffer(options);
+      await pc2.setRemoteDescription(offer);
+      answer1 = await pc2.createAnswer();
+      answer2 = await pc2.createAnswer();
+      pc1.close();
+      pc2.close();
+      stream.getTracks().forEach(track => track.stop());
+    });
+
+    it('does not change the SSRCs for any MediaStreamTrack in the SDP', () => {
+      const ssrcAttrs1 = answer1.sdp.match(/^a=ssrc:.*$/gm);
+      const ssrcAttrs2 = answer2.sdp.match(/^a=ssrc:.*$/gm);
+      assert.deepEqual(ssrcAttrs2, ssrcAttrs1);
+    });
+
+    it('does not change the SSRC groups in the SDP', () => {
+      const ssrcGroups1 = answer1.sdp.match(/^a=ssrc-group:.*$/gm);
+      const ssrcGroups2 = answer2.sdp.match(/^a=ssrc-group:.*$/gm);
+      assert.deepEqual(ssrcGroups2, ssrcGroups1);
+    });
+  });
+
   describe('#setLocalDescription, called from signaling state', () => {
     signalingStates.forEach(signalingState => {
       context(JSON.stringify(signalingState) + ' with a description of type', () => {
