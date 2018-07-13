@@ -142,7 +142,7 @@ describe('getStats', function() {
 
   it('should resolve the promise with a StandardizedStatsResponse in Firefox (outbound)', () => {
     var options = {
-      firefoxFakeStats: {
+      firefoxFakeStats: new Map(Object.entries({
         outbound_rtcp_media_0: {
           timestamp: 12345,
           type: 'inboundrtp',
@@ -163,10 +163,10 @@ describe('getStats', function() {
           packetsSent: 50,
           framerateMean: 28.84
         }
-      }
+      }))
     };
-    var fakeInbound = options.firefoxFakeStats.outbound_rtcp_media_0;
-    var fakeOutbound = options.firefoxFakeStats.outbound_rtp_media_0;
+    var fakeInbound = options.firefoxFakeStats.get('outbound_rtcp_media_0');
+    var fakeOutbound = options.firefoxFakeStats.get('outbound_rtp_media_0');
     var peerConnection = new FakeRTCPeerConnection(options);
     var localStream = new FakeMediaStream();
     var remoteStream = new FakeMediaStream();
@@ -206,7 +206,7 @@ describe('getStats', function() {
 
   it('should resolve the promise with a StandardizedStatsResponse in Firefox (inbound)', () => {
     var options = {
-      firefoxFakeStats: {
+      firefoxFakeStats: new Map(Object.entries({
         inbound_rtcp_media_0: {
           timestamp: 12345,
           type: 'outboundrtp',
@@ -226,10 +226,10 @@ describe('getStats', function() {
           jitter: 0.05,
           framerateMean: 20.45
         }
-      }
+      }))
     };
-    var fakeInbound = options.firefoxFakeStats.inbound_rtp_media_0;
-    var fakeOutbound = options.firefoxFakeStats.inbound_rtcp_media_0;
+    var fakeInbound = options.firefoxFakeStats.get('inbound_rtp_media_0');
+    var fakeOutbound = options.firefoxFakeStats.get('inbound_rtcp_media_0');
     var peerConnection = new FakeRTCPeerConnection(options);
     var localStream = new FakeMediaStream();
     var remoteStream = new FakeMediaStream();
@@ -490,11 +490,11 @@ describe('getStats', function() {
 
       it('firefox', async () => {
         const options = {
-          firefoxFakeStats: {
+          firefoxFakeStats: new Map(Object.entries({
             'Gmx9': {
               id: 'Gmx9',
               timestamp: 1525115247978,
-              type: 'candidatepair',
+              type: 'candidate-pair',
               bytesReceived: 591211,
               bytesSent: 591293,
               lastPacketReceivedTimestamp: 1525115247973,
@@ -512,7 +512,7 @@ describe('getStats', function() {
             '9NHy': {
               id: '9NHy',
               timestamp: 1525115247978,
-              type: 'candidatepair',
+              type: 'candidate-pair',
               bytesReceived: 0,
               bytesSent: 0,
               lastPacketReceivedTimestamp: 0,
@@ -530,7 +530,7 @@ describe('getStats', function() {
             'Aouc': {
               id: 'Aouc',
               timestamp: 1525115247978,
-              type: 'candidatepair',
+              type: 'candidate-pair',
               bytesReceived: 0,
               bytesSent: 0,
               lastPacketReceivedTimestamp: 0,
@@ -548,7 +548,7 @@ describe('getStats', function() {
             '6cOO': {
               id: '6cOO',
               timestamp: 1525115247978,
-              type: 'candidatepair',
+              type: 'candidate-pair',
               bytesReceived: 0,
               bytesSent: 0,
               lastPacketReceivedTimestamp: 0,
@@ -566,7 +566,7 @@ describe('getStats', function() {
             'EwbO': {
               id: 'EwbO',
               timestamp: 1525115247978,
-              type: 'candidatepair',
+              type: 'candidate-pair',
               bytesReceived: 0,
               bytesSent: 0,
               lastPacketReceivedTimestamp: 0,
@@ -584,7 +584,7 @@ describe('getStats', function() {
             'zTSk': {
               id: 'zTSk',
               timestamp: 1525115247978,
-              type: 'candidatepair',
+              type: 'candidate-pair',
               bytesReceived: 0,
               bytesSent: 0,
               lastPacketReceivedTimestamp: 0,
@@ -719,17 +719,17 @@ describe('getStats', function() {
               portNumber: 53508,
               transport: 'udp'
             }
-          }
+          }))
         };
 
         const peerConnection = new FakeRTCPeerConnection(options);
         const { activeIceCandidatePair } = await getStats(peerConnection, { testForFirefox: true });
 
-        const expectedActiveIceCandidatePair = Object.values(options.firefoxFakeStats).find(stat => {
+        const expectedActiveIceCandidatePair = Array.from(options.firefoxFakeStats.values()).find(stat => {
           return stat.nominated;
         });
-        const expectedActiveLocalCandidate = options.firefoxFakeStats[expectedActiveIceCandidatePair.localCandidateId];
-        const expectedActiveRemoteCandidate = options.firefoxFakeStats[expectedActiveIceCandidatePair.remoteCandidateId];
+        const expectedActiveLocalCandidate = options.firefoxFakeStats.get(expectedActiveIceCandidatePair.localCandidateId);
+        const expectedActiveRemoteCandidate = options.firefoxFakeStats.get(expectedActiveIceCandidatePair.remoteCandidateId);
 
         [
           'availableIncomingBitrate',
