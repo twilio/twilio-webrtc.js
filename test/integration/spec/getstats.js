@@ -108,7 +108,7 @@ const { guessBrowser } = require('../../../lib/util');
             assert(protocols.has(candidate[key]));
             return;
           }
-          assert.equal(typeof candidate[key], type);
+          assert.equal(typeof candidate[key], type, `typeof candidate.${key} ("${typeof candidate[key]}") should be "${type}"`);
         });
       });
 
@@ -128,7 +128,7 @@ const { guessBrowser } = require('../../../lib/util');
           ]).has(localCandidate[key]));
           return;
         }
-        assert.equal(typeof localCandidate[key], type);
+        assert.equal(typeof localCandidate[key], type, `typeof localCandidate.${key} ("${typeof localCandidate[key]}") should be "${type}"`);
       });
 
       [
@@ -168,7 +168,7 @@ const { guessBrowser } = require('../../../lib/util');
           ]).has(activeIceCandidatePair[key]));
           return;
         }
-        assert.equal(typeof activeIceCandidatePair[key], type);
+        assert.equal(typeof activeIceCandidatePair[key], type, `typeof activeIceCandidatePair.${key} ("${typeof activeIceCandidatePair[key]}") should be "${type}"`);
       });
     });
 
