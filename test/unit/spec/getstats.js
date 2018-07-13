@@ -494,7 +494,7 @@ describe('getStats', function() {
             'Gmx9': {
               id: 'Gmx9',
               timestamp: 1525115247978,
-              type: 'candidatepair',
+              type: 'candidate-pair',
               bytesReceived: 591211,
               bytesSent: 591293,
               lastPacketReceivedTimestamp: 1525115247973,
@@ -512,7 +512,7 @@ describe('getStats', function() {
             '9NHy': {
               id: '9NHy',
               timestamp: 1525115247978,
-              type: 'candidatepair',
+              type: 'candidate-pair',
               bytesReceived: 0,
               bytesSent: 0,
               lastPacketReceivedTimestamp: 0,
@@ -530,7 +530,7 @@ describe('getStats', function() {
             'Aouc': {
               id: 'Aouc',
               timestamp: 1525115247978,
-              type: 'candidatepair',
+              type: 'candidate-pair',
               bytesReceived: 0,
               bytesSent: 0,
               lastPacketReceivedTimestamp: 0,
@@ -548,7 +548,7 @@ describe('getStats', function() {
             '6cOO': {
               id: '6cOO',
               timestamp: 1525115247978,
-              type: 'candidatepair',
+              type: 'candidate-pair',
               bytesReceived: 0,
               bytesSent: 0,
               lastPacketReceivedTimestamp: 0,
@@ -566,7 +566,7 @@ describe('getStats', function() {
             'EwbO': {
               id: 'EwbO',
               timestamp: 1525115247978,
-              type: 'candidatepair',
+              type: 'candidate-pair',
               bytesReceived: 0,
               bytesSent: 0,
               lastPacketReceivedTimestamp: 0,
@@ -584,7 +584,7 @@ describe('getStats', function() {
             'zTSk': {
               id: 'zTSk',
               timestamp: 1525115247978,
-              type: 'candidatepair',
+              type: 'candidate-pair',
               bytesReceived: 0,
               bytesSent: 0,
               lastPacketReceivedTimestamp: 0,
