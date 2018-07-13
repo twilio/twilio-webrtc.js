@@ -5,6 +5,7 @@ Bug Fixes
 ---------
 
 - Fixed a bug in the management of SSRCs in Chrome. (JSDK-2032)
+- Fixed `getStats` API deprecation warnings in Firefox. (JSDK-1227)
 
 2.1.0 (July 3, 2018)
 ====================
