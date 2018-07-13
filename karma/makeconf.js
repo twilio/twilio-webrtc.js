@@ -62,6 +62,7 @@ function makeConf(defaultFile, browserNoActivityTimeout, requires) {
         ChromeWebRTC: {
           base: 'Chrome',
           flags: [
+            '--no-sandbox',
             '--use-fake-device-for-media-stream',
             '--use-fake-ui-for-media-stream'
           ]
@@ -69,6 +70,7 @@ function makeConf(defaultFile, browserNoActivityTimeout, requires) {
         ChromeWebRTC_1_0: {
           base: 'Chrome',
           flags: [
+            '--no-sandbox',
             '--use-fake-device-for-media-stream',
             '--use-fake-ui-for-media-stream',
             '--enable-blink-features=RTCRtpSender'
