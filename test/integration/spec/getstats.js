@@ -154,8 +154,7 @@ const { guessBrowser } = require('../../../lib/util');
         { key: 'transportId', type: 'string' },
         { key: 'writable', type: 'boolean' }
       ].forEach(({ key, type }) => {
-        if (activeIceCandidatePairStatsNullProps[guessBrowser()].has(key)) {
-          assert.equal(activeIceCandidatePair[key], null);
+        if (activeIceCandidatePairStatsNullProps[guessBrowser()].has(key) && activeIceCandidatePair[key] === null) {
           return;
         }
         if (key === 'state') {
