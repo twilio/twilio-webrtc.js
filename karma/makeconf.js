@@ -65,7 +65,7 @@ function makeConf(defaultFile, browserNoActivityTimeout, requires) {
             '--no-sandbox',
             '--use-fake-device-for-media-stream',
             '--use-fake-ui-for-media-stream',
-            '--enable-blink-features=RTCRtpSender'
+            '--js-flags="--expose-gc"'
           ]
         },
         FirefoxWebRTC: {
