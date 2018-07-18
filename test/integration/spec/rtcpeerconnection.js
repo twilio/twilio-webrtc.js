@@ -34,8 +34,7 @@ const sdpSemanticsIsSupported = checkIfSdpSemanticsIsSupported();
 const sdpSemanticsValues = isFirefox
   ? [null]  // Unified Plan
   : sdpSemanticsIsSupported
-    // ? ['plan-b', 'unified-plan']
-    ? ['unified-plan']
+    ? ['plan-b', 'unified-plan']
     : ['plan-b'];
 
 sdpSemanticsValues.forEach(sdpSemantics => {
@@ -45,6 +44,12 @@ const description = sdpSemantics
   : 'RTCPeerConnection';
 
 describe(description, function() {
+  after(() => {
+    if (typeof gc === 'function') {
+      gc();
+    }
+  });
+
   this.timeout(30000);
 
   describe('constructor', () => testConstructor(sdpSemantics));
