@@ -145,7 +145,7 @@ describe('getStats', function() {
       firefoxFakeStats: new Map(Object.entries({
         outbound_rtcp_media_0: {
           timestamp: 12345,
-          type: 'inboundrtp',
+          type: 'inbound-rtp',
           isRemote: true,
           ssrc: 'foo',
           bytesReceived: 100,
@@ -156,7 +156,7 @@ describe('getStats', function() {
         },
         outbound_rtp_media_0: {
           timestamp: 67890,
-          type: 'outboundrtp',
+          type: 'outbound-rtp',
           isRemote: false,
           ssrc: 'foo',
           bytesSent: 45,
@@ -209,7 +209,7 @@ describe('getStats', function() {
       firefoxFakeStats: new Map(Object.entries({
         inbound_rtcp_media_0: {
           timestamp: 12345,
-          type: 'outboundrtp',
+          type: 'outbound-rtp',
           isRemote: true,
           ssrc: 'foo',
           bytesSent: 100,
@@ -217,7 +217,7 @@ describe('getStats', function() {
         },
         inbound_rtp_media_0: {
           timestamp: 67890,
-          type: 'inboundrtp',
+          type: 'inbound-rtp',
           isRemote: false,
           ssrc: 'foo',
           bytesReceived: 45,
