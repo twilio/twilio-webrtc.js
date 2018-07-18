@@ -21,10 +21,16 @@ matrix:
       env: BROWSER=chrome BVER=beta
 
     - os: linux
+      env: BROWSER=chrome BVER=unstable
+
+    - os: linux
       env: BROWSER=firefox BVER=stable
 
     - os: linux
       env: BROWSER=firefox BVER=beta
+
+    - os: linux
+      env: BROWSER=firefox BVER=unstable
 
     - os: osx
       sudo: required
