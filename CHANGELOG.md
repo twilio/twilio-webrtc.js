@@ -1,3 +1,16 @@
+3.0.0 (in progress)
+===================
+
+Breaking Changes
+----------------
+
+- In 2.0.0, calling `removeTrack` in Firefox or Safari didn't actually remove
+  the RTCRtpSender. We did this because we found bugs in the browsers'
+  `removeTrack` behavior; however, shielding applications from that behavior
+  made it difficult to work around those bugs. For example, `removeTrack` works
+  fine in Safari assuming you don't add back the same MediaStreamTrack. On this
+  principle, we updated `removeTrack` to actually call `removeTrack`.
+
 2.1.1 (July 25, 2018)
 =====================
 
