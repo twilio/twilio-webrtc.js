@@ -18,7 +18,7 @@ function makeConf(defaultFile, browserNoActivityTimeout, requires) {
     }, {});
 
     let browsers = {
-      chrome: ['ChromeWebRTC', 'ChromeWebRTC_1_0'],
+      chrome: ['ChromeWebRTC'],
       firefox: ['FirefoxWebRTC'],
       safari: ['Safari']
     };
@@ -29,9 +29,9 @@ function makeConf(defaultFile, browserNoActivityTimeout, requires) {
         throw new Error('Unknown browser');
       }
     } else if (process.platform === 'darwin') {
-      browsers = ['ChromeWebRTC', 'ChromeWebRTC_1_0', 'FirefoxWebRTC', 'Safari'];
+      browsers = ['ChromeWebRTC', 'FirefoxWebRTC', 'SafariTechPreview'];
     } else {
-      browsers = ['ChromeWebRTC', 'ChromeWebRTC_1_0', 'FirefoxWebRTC'];
+      browsers = ['ChromeWebRTC', 'FirefoxWebRTC'];
     }
 
     config.set({
@@ -62,16 +62,10 @@ function makeConf(defaultFile, browserNoActivityTimeout, requires) {
         ChromeWebRTC: {
           base: 'Chrome',
           flags: [
-            '--use-fake-device-for-media-stream',
-            '--use-fake-ui-for-media-stream'
-          ]
-        },
-        ChromeWebRTC_1_0: {
-          base: 'Chrome',
-          flags: [
+            '--no-sandbox',
             '--use-fake-device-for-media-stream',
             '--use-fake-ui-for-media-stream',
-            '--enable-blink-features=RTCRtpSender'
+            '--js-flags="--expose-gc"'
           ]
         },
         FirefoxWebRTC: {

@@ -11,7 +11,9 @@ const getUserMedia = require('../../../lib/getusermedia');
 const RTCPeerConnection = require('../../../lib/rtcpeerconnection');
 const { guessBrowser } = require('../../../lib/util');
 
-(guessBrowser() === 'safari' ? describe.skip : describe)('getStats', () => {
+(guessBrowser() === 'safari' ? describe.skip : describe)('getStats', function() {
+  this.timeout(10000);
+
   describe('should resolve a Promise that resolves with a StandardizedStatsResponse which has', () => {
     let pc1;
     let pc2;
@@ -106,7 +108,7 @@ const { guessBrowser } = require('../../../lib/util');
             assert(protocols.has(candidate[key]));
             return;
           }
-          assert.equal(typeof candidate[key], type);
+          assert.equal(typeof candidate[key], type, `typeof candidate.${key} ("${typeof candidate[key]}") should be "${type}"`);
         });
       });
 
@@ -126,7 +128,7 @@ const { guessBrowser } = require('../../../lib/util');
           ]).has(localCandidate[key]));
           return;
         }
-        assert.equal(typeof localCandidate[key], type);
+        assert.equal(typeof localCandidate[key], type, `typeof localCandidate.${key} ("${typeof localCandidate[key]}") should be "${type}"`);
       });
 
       [
@@ -152,8 +154,7 @@ const { guessBrowser } = require('../../../lib/util');
         { key: 'transportId', type: 'string' },
         { key: 'writable', type: 'boolean' }
       ].forEach(({ key, type }) => {
-        if (activeIceCandidatePairStatsNullProps[guessBrowser()].has(key)) {
-          assert.equal(activeIceCandidatePair[key], null);
+        if (activeIceCandidatePairStatsNullProps[guessBrowser()].has(key) && activeIceCandidatePair[key] === null) {
           return;
         }
         if (key === 'state') {
@@ -166,7 +167,7 @@ const { guessBrowser } = require('../../../lib/util');
           ]).has(activeIceCandidatePair[key]));
           return;
         }
-        assert.equal(typeof activeIceCandidatePair[key], type);
+        assert.equal(typeof activeIceCandidatePair[key], type, `typeof activeIceCandidatePair.${key} ("${typeof activeIceCandidatePair[key]}") should be "${type}"`);
       });
     });
 

@@ -243,6 +243,7 @@ async function trackStarted(track) {
 const activeIceCandidatePairStatsNullProps = {
   chrome: new Set([
     'availableIncomingBitrate',
+    'availableOutgoingBitrate',
     'lastPacketReceivedTimestamp',
     'lastPacketSentTimestamp',
     'readable',
