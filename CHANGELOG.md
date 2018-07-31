@@ -9,7 +9,7 @@ Breaking Changes
   `removeTrack` behavior; however, shielding applications from that behavior
   made it difficult to work around those bugs. For example, `removeTrack` works
   fine in Safari assuming you don't add back the same MediaStreamTrack. On this
-  principle, we updated `removeTrack` to actually call `removeTrack`.
+  principle, we updated `removeTrack` to actually call `removeTrack`. (JSDK-1980)
 
 2.1.1 (July 25, 2018)
 =====================
