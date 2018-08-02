@@ -95,6 +95,7 @@ browsers.
   maintain an explicit list of added `RTCRtpSender`s.
 * Provides a shim for the `getSenders` method. Since `removeTrack` is shimmed, there is a necessity to
   maintain an explicit list of added `RTCRtpSender`s.
+* Works around Firefox [Bug 1480277](https://bugzilla.mozilla.org/show_bug.cgi?id=1480277).
 
 #### Safari
 * Adds rollback support, according to the workaround specified [here](https://bugs.chromium.org/p/webrtc/issues/detail?id=5738#c3).

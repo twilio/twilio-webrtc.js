@@ -1,3 +1,11 @@
+2.1.2 (in progress)
+===================
+
+Bug Fixes
+---------
+
+- Worked around Firefox [Bug 1480277](https://bugzilla.mozilla.org/show_bug.cgi?id=1480277).
+
 2.1.1 (July 25, 2018)
 =====================
 
