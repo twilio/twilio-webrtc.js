@@ -10,6 +10,8 @@ var util = require('../../lib/util');
 var { flatMap, guessBrowser } = require('../../../lib/util');
 var { checkIfSdpSemanticsIsSupported } = require('../../../lib/util/sdp');
 
+const detectSilence = require('../../lib/detectsilence');
+
 var sdpTypes = [
   'answer',
   'offer',
@@ -417,6 +419,65 @@ describe(description, function() {
           pc2.setLocalDescription(answer2)
         ]);
       });
+    });
+  });
+
+  // NOTE(mroberts): This integration test is ported from the JSFiddle in Bug
+  // 1480277.
+  (isFirefox ? describe : describe.skip)('Bug 1480277', () => {
+    it('is worked around', async () => {
+      const configuration = {
+        bundlePolicy: 'max-bundle',
+        rtcpMuxPolicy: 'required'
+      };
+
+      const [pc1, pc2] = createPeerConnections(sdpSemantics, configuration);
+
+      const audioContext = new AudioContext();
+      const mediaStreamDestinationNode = audioContext.createMediaStreamDestination();
+      const { stream: stream1 } = mediaStreamDestinationNode;
+      const [track1] = stream1.getAudioTracks();
+      pc1.addTrack(track1, stream1);
+
+      const options = {
+        offerToReceiveAudio: true,
+        offerToReceiveVideo: true
+      };
+
+      await negotiate(pc1, pc2, options);
+
+      const constraints = {
+        audio: true,
+        fake: true
+      };
+
+      const stream2 = await navigator.mediaDevices.getUserMedia(constraints);
+      const [track2] = stream2.getAudioTracks();
+      pc2.addTransceiver(track2, { streams: [stream2] });
+
+      await negotiate(pc2, pc1, options);
+
+      const stream3 = await navigator.mediaDevices.getUserMedia(constraints);
+      const [track3] = stream3.getAudioTracks();
+      const sender = pc1.addTrack(track3, stream3);
+
+      await negotiate(pc1, pc2, options);
+
+      const { track: remoteTrack3 } = pc2.getReceivers()[2];
+
+      const isSilent = await detectSilence(audioContext, new MediaStream([remoteTrack3]), 10000);
+
+      try {
+        assert(!isSilent);
+      } catch (error) {
+        throw error;
+      } finally {
+        pc1.close();
+        pc2.close();
+        track1.stop();
+        track2.stop();
+        track3.stop();
+      }
     });
   });
 });
@@ -1519,9 +1580,9 @@ function getTracks(peerConnection) {
   return peerConnection.getSenders().filter(sender => sender.track).map(sender => sender.track);
 }
 
-function createPeerConnections(sdpSemantics) {
-  const pc1 = new RTCPeerConnection({ sdpSemantics });
-  const pc2 = new RTCPeerConnection({ sdpSemantics });
+function createPeerConnections(sdpSemantics, configuration) {
+  const pc1 = new RTCPeerConnection(Object.assign({ sdpSemantics }, configuration));
+  const pc2 = new RTCPeerConnection(Object.assign({ sdpSemantics }, configuration));
   [[pc1, pc2], [pc1, pc2]].forEach(([pc1, pc2]) => {
     pc1.addEventListener('icecandidate', event => {
       if (event.candidate) {
@@ -1537,8 +1598,8 @@ function waitForDataChannel(pc) {
     pc.addEventListener('datachannel', event => resolve(event.channel)));
 }
 
-async function negotiate(offerer, answerer) {
-  const offer = await offerer.createOffer();
+async function negotiate(offerer, answerer, options) {
+  const offer = await offerer.createOffer(options);
   await Promise.all([
     offerer.setLocalDescription(offer),
     answerer.setRemoteDescription(offer)
