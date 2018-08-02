@@ -570,13 +570,6 @@ function testGetSenders(sdpSemantics, signalingState) {
   context(`"${signalingState}"`, () => {
     it('should return a list of senders', () => {
       const actualSenders = test.peerConnection.getSenders();
-      if (isFirefox && signalingState === 'have-remote-offer') {
-        assert.deepEqual(actualSenders.length, senders.length + 1);
-        return;
-      } else if (isSafari && signalingState === 'have-local-offer') {
-        assert.deepEqual(actualSenders.length, senders.length + 1);
-        return;
-      }
       assert.deepEqual(actualSenders, senders);
     });
   });
@@ -948,17 +941,8 @@ function testRemoveTrack(sdpSemantics) {
     });
   });
 
-  (isSafari ? it.skip : it)('should remove the MediaStreamTrack from the RTCPeerConnection', () => {
+  it('should remove the MediaStreamTrack from the RTCPeerConnection', () => {
     test.peerConnection.removeTrack(localAudioSender);
-    const presentTracks = getTracks(test.peerConnection);
-    assert.deepEqual(presentTracks, stream.getVideoTracks());
-  });
-
-  it('should remove the MediaStreamTrack from the RTCPeerConnection after calling createOffer/setLocalDescription', async () => {
-    test.peerConnection.removeTrack(localAudioSender);
-    const offer = await test.peerConnection.createOffer();
-    await test.peerConnection.setLocalDescription(offer);
-
     const presentTracks = getTracks(test.peerConnection);
     assert.deepEqual(presentTracks, stream.getVideoTracks());
   });
