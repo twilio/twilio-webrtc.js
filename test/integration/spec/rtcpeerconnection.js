@@ -480,6 +480,151 @@ describe(description, function() {
       }
     });
   });
+
+  if (RTCPeerConnection.prototype.addTransceiver && sdpSemantics !== 'plan-b') {
+    describe('RTCRtpTransceiver', () => {
+      describe('addTransceiver(kind, init)', () => {
+        const kind = 'audio';
+
+        let pc;
+        let transceiver;
+
+        before(() => {
+          pc = new RTCPeerConnection({ sdpSemantics });
+          transceiver = pc.addTransceiver(kind, {});
+        });
+
+        it('returns an RTCRtpTransceiver', () => {
+          assert(transceiver instanceof RTCRtpTransceiver);
+        });
+
+        it('returns an RTCRtpTransceiver that is present in `getTransceivers()`', () => {
+          assert(pc.getTransceivers().includes(transceiver));
+        });
+
+        it('returns an RTCRtpTransceiver whose `mid` is `null`', () => {
+          assert.equal(transceiver.mid, null);
+        });
+
+        it('returns an RTCRtpTransceiver whose `sender.track` is `null`', () => {
+          assert.equal(transceiver.sender.track, null);
+        });
+
+        it('returns an RTCRtpTransceiver whose `receiver.track.kind` is `kind`', () => {
+          assert.equal(transceiver.receiver.track.kind, kind);
+        });
+
+        it('returns an RTCRtpTransceiver whose `stopped` is `false`', () => {
+          assert(!transceiver.stopped);
+        });
+
+        it('returns an RTCRtpTransceiver whose `direction` is "sendrecv"', () => {
+          assert.equal(transceiver.direction, 'sendrecv');
+        });
+
+        it('returns an RTCRtpTransceiver whose `currentDirection` is `null`', () => {
+          assert.equal(transceiver.currentDirection, null);
+        });
+      });
+
+      describe('addTransceiver(track, init)', () => {
+        let pc;
+        let track;
+        let transceiver;
+
+        before(async () => {
+          pc = new RTCPeerConnection({ sdpSemantics });
+          const stream = await navigator.mediaDevices.getUserMedia({ audio: true, fake: true });
+          [track] = await stream.getAudioTracks();
+          transceiver = pc.addTransceiver(track, {});
+        });
+
+        it('returns an RTCRtpTransceiver', () => {
+          assert(transceiver instanceof RTCRtpTransceiver);
+        });
+
+        it('returns an RTCRtpTransceiver that is present in `getTransceivers()`', () => {
+          assert(pc.getTransceivers().includes(transceiver));
+        });
+
+        it('returns an RTCRtpTransceiver whose `mid` is `null`', () => {
+          assert.equal(transceiver.mid, null);
+        });
+
+        it('returns an RTCRtpTransceiver whose `sender.track` is `track`', () => {
+          assert.equal(transceiver.sender.track, track);
+        });
+
+        it('returns an RTCRtpTransceiver whose `receiver.track.kind` is `track.kind`', () => {
+          assert.equal(transceiver.receiver.track.kind, track.kind);
+        });
+
+        it('returns an RTCRtpTransceiver whose `stopped` is `false`', () => {
+          assert(!transceiver.stopped);
+        });
+
+        it('returns an RTCRtpTransceiver whose `direction` is "sendrecv"', () => {
+          assert.equal(transceiver.direction, 'sendrecv');
+        });
+
+        it('returns an RTCRtpTransceiver whose `currentDirection` is `null`', () => {
+          assert.equal(transceiver.currentDirection, null);
+        });
+      });
+
+      // NOTE(mroberts): `stop` isn't implemented in Chrome yet.
+      (RTCRtpTransceiver.prototype.stop ? describe : describe.skip)('Recycling Behavior', () => {
+        it('Scenario 1', async () => {
+          const configuration = {
+            bundlePolicy: 'max-bundle',
+            rtcpMuxPolicy: 'require'
+          };
+
+          const [pc1, pc2] = createPeerConnections(sdpSemantics, configuration);
+
+          // Round 1
+          const t1 = pc1.addTransceiver('audio');
+          await negotiate(pc1, pc2);
+          assert.equal(pc1.localDescription.sdp.match(/\r\nm=/g).length, 1);
+
+          // Round 2
+          t1.stop();
+          await negotiate(pc1, pc2);
+          assert.equal(pc1.localDescription.sdp.match(/\r\nm=/g).length, 1);
+
+          // Round 3
+          const t2 = pc1.addTransceiver('audio');
+          await negotiate(pc1, pc2);
+          assert.equal(pc1.localDescription.sdp.match(/\r\nm=/g).length, 1);
+        });
+
+        it('Scenario 2', async () => {
+          const configuration = {
+            bundlePolicy: 'max-bundle',
+            rtcpMuxPolicy: 'require'
+          };
+
+          const [pc1, pc2] = createPeerConnections(sdpSemantics, configuration);
+
+          // Round 1
+          const t1 = pc1.addTransceiver('audio');
+          await negotiate(pc1, pc2);
+          assert.equal(pc1.localDescription.sdp.match(/\r\nm=/g).length, 1);
+
+          // Round 2
+          t1.stop();
+          const t2 = pc1.addTransceiver('audio');
+          await negotiate(pc1, pc2);
+          assert.equal(pc1.localDescription.sdp.match(/\r\nm=/g).length, 2);
+
+          // Round 3
+          const t3 = pc1.addTransceiver('audio');
+          await negotiate(pc1, pc2);
+          assert.equal(pc1.localDescription.sdp.match(/\r\nm=/g).length, 2);
+        });
+      });
+    });
+  }
 });
 
 });
