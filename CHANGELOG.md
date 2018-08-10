@@ -1,5 +1,5 @@
-3.0.0 (in progress)
-===================
+3.0.0 (August 10, 2018)
+=======================
 
 Breaking Changes
 ----------------
@@ -10,6 +10,14 @@ Breaking Changes
   made it difficult to work around those bugs. For example, `removeTrack` works
   fine in Safari assuming you don't add back the same MediaStreamTrack. On this
   principle, we updated `removeTrack` to actually call `removeTrack`. (JSDK-1980)
+
+2.1.2 (August 7, 2018)
+======================
+
+Bug Fixes
+---------
+
+- Worked around Firefox [Bug 1480277](https://bugzilla.mozilla.org/show_bug.cgi?id=1480277).
 
 2.1.1 (July 25, 2018)
 =====================
