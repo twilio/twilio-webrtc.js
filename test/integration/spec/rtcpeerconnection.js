@@ -1533,33 +1533,6 @@ s=-\r
 t=0 0\r
 a=group:BUNDLE audio\r
 a=msid-semantic: WMS\r
-m=audio 9 UDP/TLS/RTP/SAVPF 111 103 104 9 0 8 106 105 13 110 112 113 126\r
-c=IN IP4 0.0.0.0\r
-a=rtcp:9 IN IP4 0.0.0.0\r
-a=ice-ufrag:hml5\r
-a=ice-pwd:VSJteFVvAyoewWkSfaxKgU6C\r
-a=ice-options:trickle\r
-a=fingerprint:sha-256 0D:9A:8C:E8:50:B9:0D:7F:88:50:1D:E5:0F:0F:6C:E2:24:EB:6E:D1:5F:57:EE:21:96:FD:E6:45:3C:94:12:77\r
-a=setup:actpass\r
-a=mid:audio\r
-a=extmap:1 urn:ietf:params:rtp-hdrext:ssrc-audio-level\r
-a=recvonly\r
-a=rtcp-mux\r
-a=rtpmap:111 opus/48000/2\r
-a=rtcp-fb:111 transport-cc\r
-a=fmtp:111 minptime=10;useinbandfec=1\r
-a=rtpmap:103 ISAC/16000\r
-a=rtpmap:104 ISAC/32000\r
-a=rtpmap:9 G722/8000\r
-a=rtpmap:0 PCMU/8000\r
-a=rtpmap:8 PCMA/8000\r
-a=rtpmap:106 CN/32000\r
-a=rtpmap:105 CN/16000\r
-a=rtpmap:13 CN/8000\r
-a=rtpmap:110 telephone-event/48000\r
-a=rtpmap:112 telephone-event/32000\r
-a=rtpmap:113 telephone-event/16000\r
-a=rtpmap:126 telephone-event/8000\r
 `;
 
   // NOTE(mroberts): https://bugs.chromium.org/p/webrtc/issues/detail?id=9540
