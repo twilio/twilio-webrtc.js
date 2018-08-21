@@ -11,7 +11,7 @@ const getUserMedia = require('../../../lib/getusermedia');
 const RTCPeerConnection = require('../../../lib/rtcpeerconnection');
 const { guessBrowser } = require('../../../lib/util');
 
-(guessBrowser() === 'safari' ? describe.skip : describe)('getStats', function() {
+(guessBrowser() === 'safari' || guessBrowser() === 'edge' ? describe.skip : describe)('getStats', function() {
   this.timeout(10000);
 
   describe('should resolve a Promise that resolves with a StandardizedStatsResponse which has', () => {

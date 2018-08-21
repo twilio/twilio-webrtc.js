@@ -20,7 +20,8 @@ function makeConf(defaultFile, browserNoActivityTimeout, requires) {
     let browsers = {
       chrome: ['ChromeWebRTC'],
       firefox: ['FirefoxWebRTC'],
-      safari: ['Safari']
+      safari: ['Safari'],
+      edge: ['Edge']
     };
 
     if (process.env.BROWSER) {
