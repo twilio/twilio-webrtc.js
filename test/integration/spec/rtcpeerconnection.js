@@ -1527,22 +1527,43 @@ function testSetDescription(sdpSemantics, local, signalingState, sdpType) {
 }
 
 function makeTest(options) {
+  // NOTE(mroberts): https://bugs.chromium.org/p/webrtc/issues/detail?id=9540
   var dummyOfferSdp = `v=0\r
 o=- 2018425083800689377 2 IN IP4 127.0.0.1\r
 s=-\r
 t=0 0\r
-a=group:BUNDLE audio\r
+a=group:BUNDLE ${options.sdpSemantics === 'unified-plan' ? '0' : 'audio'}\r
 a=msid-semantic: WMS\r
+m=audio 9 UDP/TLS/RTP/SAVPF 111 103 104 9 0 8 106 105 13 110 112 113 126\r
+c=IN IP4 0.0.0.0\r
+a=rtcp:9 IN IP4 0.0.0.0\r
+a=ice-ufrag:hml5\r
+a=ice-pwd:VSJteFVvAyoewWkSfaxKgU6C\r
+a=ice-options:trickle\r
+a=fingerprint:sha-256 0F:F6:1E:6F:88:AC:BA:0F:D1:4D:D7:0C:E2:B7:8E:93:CA:75:C8:8A:A4:59:E4:66:22:3D:B7:4E:9E:E1:AB:E4\r
+a=mid:${options.sdpSemantics === 'unified-plan' ? '0' : 'audio'}\r
+a=extmap:1 urn:ietf:params:rtp-hdrext:ssrc-audio-level\r
+a=recvonly\r
+a=rtcp-mux\r
+a=rtpmap:111 opus/48000/2\r
+a=rtcp-fb:111 transport-cc\r
+a=fmtp:111 minptime=10;useinbandfec=1\r
+a=rtpmap:103 ISAC/16000\r
+a=rtpmap:104 ISAC/32000\r
+a=rtpmap:9 G722/8000\r
+a=rtpmap:0 PCMU/8000\r
+a=rtpmap:8 PCMA/8000\r
+a=rtpmap:106 CN/32000\r
+a=rtpmap:105 CN/16000\r
+a=rtpmap:13 CN/8000\r
+a=rtpmap:110 telephone-event/48000\r
+a=rtpmap:112 telephone-event/32000\r
+a=rtpmap:113 telephone-event/16000\r
+a=rtpmap:126 telephone-event/8000\r
 `;
-
-  // NOTE(mroberts): https://bugs.chromium.org/p/webrtc/issues/detail?id=9540
-  if (options.sdpSemantics === 'unified-plan') {
-    dummyOfferSdp += 'a=mid:0\r\n';
-  }
 
   var dummyAnswerSdp = dummyOfferSdp
     .replace(/a=recvonly/mg, 'a=inactive')
-    .replace(/6/mg, '7');
 
   var test = Object.assign({
     dummyAnswerSdp: dummyAnswerSdp,
