@@ -273,10 +273,12 @@ describe(description, function() {
       const answer1 = await pc.createAnswer();
       await pc.setLocalDescription(answer1);
       const tracksBefore = flatMap(pc.getRemoteStreams(), stream => stream.getTracks());
+
       await pc.setRemoteDescription(offer2);
       const answer2 = await pc.createAnswer();
       await pc.setLocalDescription(answer2);
       const tracksAfter = flatMap(pc.getRemoteStreams(), stream => stream.getTracks());
+
       assert.equal(tracksAfter.length, tracksBefore.length);
       tracksAfter.forEach((trackAfter, i) => {
         const trackBefore = tracksBefore[i];
@@ -783,7 +785,7 @@ function testGetSenders(sdpSemantics, signalingState) {
     it('should return a list of senders', () => {
       const actualSenders = test.peerConnection.getSenders();
       if (isFirefox && signalingState === 'have-remote-offer') {
-        assert.deepEqual(actualSenders.length, senders.length + 1);
+        assert.deepEqual(actualSenders.length, senders.length);
         return;
       } else if (isSafari && signalingState === 'have-local-offer') {
         assert.deepEqual(actualSenders.length, senders.length + 1);
@@ -867,9 +869,7 @@ function testClose(sdpSemantics, signalingState) {
         test.peerConnection.addEventListener('signalingstatechange', onSigalingStateChanged);
         var closePromise = test.close();
         test.peerConnection.removeEventListener('signalingstatechange', onSigalingStateChanged);
-        return closePromise.then(results => {
-          result = results[0]
-        });
+        return closePromise.then(results => result = results[0]);
       });
     });
 
@@ -1517,8 +1517,8 @@ function testSetDescription(sdpSemantics, local, signalingState, sdpType) {
           return test.waitFor('signalingstatechange');
         });
       } else {
-        // Skip test until https://github.com/otalk/rtcpeerconnection-shim/issues/142 is released
-        (isEdge ? it.skip: it)('should not raise a signalingstatechange event', () => {
+        // TODO(syerrapragada): Enable test after https://github.com/otalk/rtcpeerconnection-shim/issues/142 is released
+        (isEdge ? it.skip : it)('should not raise a signalingstatechange event', () => {
           return test.eventIsNotRaised('signalingstatechange');
         });
       }
@@ -1527,12 +1527,11 @@ function testSetDescription(sdpSemantics, local, signalingState, sdpType) {
 }
 
 function makeTest(options) {
-  // NOTE(mroberts): https://bugs.chromium.org/p/webrtc/issues/detail?id=9540
   var dummyOfferSdp = `v=0\r
 o=- 2018425083800689377 2 IN IP4 127.0.0.1\r
 s=-\r
 t=0 0\r
-a=group:BUNDLE ${options.sdpSemantics === 'unified-plan' ? '0' : 'audio'}\r
+a=group:BUNDLE ${options.sdpSemantics === 'unified-plan' ? '0' : isFirefox ? 'sdparta_0' : 'audio'}\r
 a=msid-semantic: WMS\r
 m=audio 9 UDP/TLS/RTP/SAVPF 111 103 104 9 0 8 106 105 13 110 112 113 126\r
 c=IN IP4 0.0.0.0\r
@@ -1540,8 +1539,7 @@ a=rtcp:9 IN IP4 0.0.0.0\r
 a=ice-ufrag:hml5\r
 a=ice-pwd:VSJteFVvAyoewWkSfaxKgU6C\r
 a=ice-options:trickle\r
-a=fingerprint:sha-256 0F:F6:1E:6F:88:AC:BA:0F:D1:4D:D7:0C:E2:B7:8E:93:CA:75:C8:8A:A4:59:E4:66:22:3D:B7:4E:9E:E1:AB:E4\r
-a=mid:${options.sdpSemantics === 'unified-plan' ? '0' : 'audio'}\r
+a=mid:${options.sdpSemantics === 'unified-plan' ? '0' : isFirefox ? 'sdparta_0' : 'audio'}\r
 a=extmap:1 urn:ietf:params:rtp-hdrext:ssrc-audio-level\r
 a=recvonly\r
 a=rtcp-mux\r
@@ -1560,10 +1558,15 @@ a=rtpmap:110 telephone-event/48000\r
 a=rtpmap:112 telephone-event/32000\r
 a=rtpmap:113 telephone-event/16000\r
 a=rtpmap:126 telephone-event/8000\r
+a=fingerprint:sha-256 0F:F6:1E:6F:88:AC:BA:0F:D1:4D:D7:0C:E2:B7:8E:93:CA:75:C8:8A:A4:59:E4:66:22:3D:B7:4E:9E:E1:AB:E4\r
 `;
 
-  var dummyAnswerSdp = dummyOfferSdp
-    .replace(/a=recvonly/mg, 'a=inactive')
+  var dummyAnswerSdp = dummyOfferSdp.replace(/a=recvonly/mg, 'a=inactive');
+
+  if (isFirefox) {
+    dummyOfferSdp += 'a=setup:actpass\r\n';
+    dummyAnswerSdp.replace(/a=setup:actpass\r/mg, '');
+  }
 
   var test = Object.assign({
     dummyAnswerSdp: dummyAnswerSdp,
@@ -1692,9 +1695,7 @@ a=rtpmap:126 telephone-event/8000\r
       test.events.set(event, []);
     }
     var events = test.events.get(event);
-    test.peerConnection.addEventListener(event, event => {
-      events.push(event)
-    });
+    test.peerConnection.addEventListener(event, event => events.push(event));
   });
 
   test.resetEvent = function resetEvent(event) {
@@ -1711,9 +1712,7 @@ a=rtpmap:126 telephone-event/8000\r
       return Promise.resolve(events[0]);
     }
     return new Promise(resolve => {
-      test.peerConnection.addEventListener(event, event =>  {
-        resolve(event);
-      });
+      test.peerConnection.addEventListener(event, event => resolve(event));
     });
   };
 

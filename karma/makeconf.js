@@ -30,7 +30,7 @@ function makeConf(defaultFile, browserNoActivityTimeout, requires) {
         throw new Error('Unknown browser');
       }
     } else if (process.platform === 'darwin') {
-      browsers = ['ChromeWebRTC', 'FirefoxWebRTC', 'SafariTechPreview'];
+      browsers = ['ChromeWebRTC', 'FirefoxWebRTC', 'Safari'];
     } else {
       browsers = ['ChromeWebRTC', 'FirefoxWebRTC'];
     }
