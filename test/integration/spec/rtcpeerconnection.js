@@ -74,6 +74,8 @@ describe(description, function() {
 
   describe('#addTrack', () => testAddTrack(sdpSemantics));
 
+  (isFirefox && RTCPeerConnection.prototype.addTransceiver ? describe.only : describe.skip)('#addTransceiver', () => testAddTransceiver());
+
   describe('#removeTrack', () => testRemoveTrack(sdpSemantics));
 
   describe('#createAnswer, called from signaling state', () => {
@@ -939,6 +941,27 @@ function testAddTrack(sdpSemantics) {
     const addedTracks = getTracks(test.peerConnection);
     assert.deepEqual(addedTracks, stream.getTracks());
     assert.deepEqual(senders.map(sender => sender.track), stream.getTracks());
+  });
+}
+
+function testAddTransceiver() {
+  let test;
+  let track;
+
+  before(async () => {
+    const stream = await makeStream();
+    [track] = stream.getTracks();
+    test = await makeTest({});
+  });
+
+  it('should add each of the MediaStreamTracks to the RTCPeerConnection', () => {
+    const transceiver = test.peerConnection.addTransceiver(track);
+    assert.equal(transceiver.sender.track, track);
+    assert.equal(test.peerConnection.getTransceivers().length, 1);
+    assert(test.peerConnection.getTransceivers().includes(transceiver));
+    const senders = test.peerConnection.getSenders();
+    assert.equal(senders.length, 1);
+    assert(senders.includes(transceiver.sender));
   });
 }
 
