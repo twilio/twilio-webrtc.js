@@ -1,3 +1,12 @@
+2.1.3 (August 8, 2018)
+======================
+
+Bug Fixes
+---------
+
+- Fixed a bug in Firefox where calling `addTransceiver` wouldn't update the
+  result of `getSenders`.
+
 2.1.2 (August 7, 2018)
 ======================
 
