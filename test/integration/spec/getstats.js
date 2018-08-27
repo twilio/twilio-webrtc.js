@@ -11,6 +11,7 @@ const getUserMedia = require('../../../lib/getusermedia');
 const RTCPeerConnection = require('../../../lib/rtcpeerconnection');
 const { guessBrowser } = require('../../../lib/util');
 
+// NOTE(syerrapragada): Edge's stats report doesn't have 'candidate-pair'
 (guessBrowser() === 'safari' || guessBrowser() === 'edge' ? describe.skip : describe)('getStats', function() {
   this.timeout(10000);
 

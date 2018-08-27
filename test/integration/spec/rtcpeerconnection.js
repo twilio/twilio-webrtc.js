@@ -295,7 +295,7 @@ describe(description, function() {
 
   describe('DTLS role negotiation', () => testDtlsRoleNegotiation(sdpSemantics));
 
-  (isEdge ? describe.skip : describe)('Glare', () => testGlare(sdpSemantics));
+  describe('Glare', () => testGlare(sdpSemantics));
 
   (isEdge ? describe.skip : describe)('"datachannel" event', () => {
     describe('when maxPacketLifeTime is not set', () => {
@@ -424,7 +424,7 @@ describe(description, function() {
           assert.equal(remoteVideoTrack.id, localVideoTrack.id);
         }
 
-        // TODO: Edge: This test throws InvalidState Error on setRemoteDescription/setLocalDescription
+        // TODO(syerrapragada): Edge: This test throws InvalidState Error on setRemoteDescription/setLocalDescription
         if (isEdge) {
           return;
         }
@@ -720,7 +720,7 @@ function testAddIceCandidate(sdpSemantics, signalingState) {
     'have-remote-offer': true
   }[signalingState] || false;
 
-  (signalingState === 'closed' && (isSafari || isEdge) ? context.skip : context)
+  (signalingState === 'closed' && isSafari ? context.skip : context)
   (JSON.stringify(signalingState), () => {
     var error;
     var result;
@@ -1724,7 +1724,7 @@ a=fingerprint:sha-256 0F:F6:1E:6F:88:AC:BA:0F:D1:4D:D7:0C:E2:B7:8E:93:CA:75:C8:8
       return Promise.resolve(events[0]);
     }
     return new Promise(resolve => {
-      test.peerConnection.addEventListener(event, event => resolve(event));
+      test.peerConnection.addEventListener(event, resolve);
     });
   };
 
