@@ -27,9 +27,6 @@ var signalingStates = [
 
 const guess = guessBrowser();
 const isChrome = guess === 'chrome';
-const chromeVersion = isChrome && typeof navigator === 'object'
-  ? navigator.userAgent.match(/Chrom(e|ium)\/(\d+)\./)[2]
-  : null;
 const isFirefox = guess === 'firefox';
 const firefoxVersion = isFirefox && typeof navigator === 'object'
   ? navigator.userAgent.match(/Firefox\/(\d+)\./)[1]
@@ -37,6 +34,7 @@ const firefoxVersion = isFirefox && typeof navigator === 'object'
 const isSafari = guess === 'safari';
 const isEdge = guess === 'edge';
 const sdpSemanticsIsSupported = checkIfSdpSemanticsIsSupported();
+const localDescription = new RTCPeerConnection().localDescription;
 
 // NOTE(mroberts): In Chrome, we run these tests twice if `sdpSemantics` is
 // supported: once for "plan-b" and once for "unified-plan".
@@ -147,7 +145,6 @@ describe(description, function() {
       it('should throw', () => {
         const pc = new RTCPeerConnection({ sdpSemantics });
         assert.throws(() => pc.createDataChannel('foo', {
-          maxPacketLifeTime: 3,
           maxPacketLifeTime: 3,
           maxRetransmits: 3
         }));
@@ -659,10 +656,7 @@ function assertEqualDescriptions(actual, expected) {
 };
 
 function emptyDescription() {
-  if (isChrome && chromeVersion < 70) {
-    return { type: '', sdp: '' };
-  }
-  return null;
+  return localDescription && { type: '', sdp: '' };
 }
 
 function testConstructor(sdpSemantics) {
@@ -1533,14 +1527,15 @@ function testSetDescription(sdpSemantics, local, signalingState, sdpType) {
 }
 
 function makeTest(options) {
+  const mid = isFirefox && firefoxVersion < 63
+    ? 'sdparta_0'
+    : options.sdpSemantics === 'unified-plan' || isFirefox
+      ? '0' : 'audio';
   var dummyOfferSdp = `v=0\r
 o=- 2018425083800689377 2 IN IP4 127.0.0.1\r
 s=-\r
 t=0 0\r
-a=group:BUNDLE ${isFirefox && firefoxVersion < 63 
-    ? 'sdparta_0' 
-    : options.sdpSemantics === 'unified-plan' || isFirefox 
-      ? '0' : 'audio'}\r
+a=group:BUNDLE ${mid}\r
 a=msid-semantic: WMS\r
 m=audio 9 UDP/TLS/RTP/SAVPF 111 103 104 9 0 8 106 105 13 110 112 113 126\r
 c=IN IP4 0.0.0.0\r
@@ -1548,10 +1543,7 @@ a=rtcp:9 IN IP4 0.0.0.0\r
 a=ice-ufrag:hml5\r
 a=ice-pwd:VSJteFVvAyoewWkSfaxKgU6C\r
 a=ice-options:trickle\r
-a=mid:${isFirefox && firefoxVersion < 63
-    ? 'sdparta_0'
-    : options.sdpSemantics === 'unified-plan' || isFirefox
-      ? '0' : 'audio'}\r
+a=mid:${mid}\r
 a=extmap:1 urn:ietf:params:rtp-hdrext:ssrc-audio-level\r
 a=recvonly\r
 a=rtcp-mux\r

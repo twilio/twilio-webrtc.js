@@ -11,8 +11,7 @@ const getUserMedia = require('../../../lib/getusermedia');
 const RTCPeerConnection = require('../../../lib/rtcpeerconnection');
 const { guessBrowser } = require('../../../lib/util');
 
-// NOTE(syerrapragada): Edge's stats report doesn't have 'candidate-pair'
-(guessBrowser() === 'safari' || guessBrowser() === 'edge' ? describe.skip : describe)('getStats', function() {
+(guessBrowser() === 'safari' ? describe.skip : describe)('getStats', function() {
   this.timeout(10000);
 
   describe('should resolve a Promise that resolves with a StandardizedStatsResponse which has', () => {
@@ -74,7 +73,8 @@ const { guessBrowser } = require('../../../lib/util');
       stats = await getStats(pc1);
     });
 
-    it('.activeIceCandidatePair', () => {
+    // NOTE(syerrapragada): Edge's stats report doesn't have 'candidate-pair'
+    (guessBrowser() === 'edge' ? it.skip : it)('.activeIceCandidatePair', () => {
       const { activeIceCandidatePair } = stats;
       const { localCandidate, remoteCandidate } = activeIceCandidatePair;
 
