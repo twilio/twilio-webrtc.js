@@ -29,7 +29,9 @@ const guess = guessBrowser();
 const isChrome = guess === 'chrome';
 const isFirefox = guess === 'firefox';
 const isSafari = guess === 'safari';
+const isEdge = guess === 'edge';
 const sdpSemanticsIsSupported = checkIfSdpSemanticsIsSupported();
+const localDescription = new RTCPeerConnection().localDescription;
 
 const chromeVersion = isChrome && typeof navigator === 'object'
   ? navigator.userAgent.match(/Chrom(e|ium)\/(\d+)\./)[2]
@@ -41,7 +43,7 @@ const firefoxVersion = isFirefox && typeof navigator === 'object'
 
 // NOTE(mroberts): In Chrome, we run these tests twice if `sdpSemantics` is
 // supported: once for "plan-b" and once for "unified-plan".
-const sdpSemanticsValues = isFirefox
+const sdpSemanticsValues = isFirefox || isEdge
   ? [null]  // Unified Plan
   : sdpSemanticsIsSupported
     ? ['plan-b', 'unified-plan']
@@ -92,7 +94,7 @@ describe(description, function() {
     });
   });
 
-  describe('#createDataChannel', () => {
+  (isEdge ? describe.skip : describe)('#createDataChannel', () => {
     describe('called without setting maxPacketLifeTime', () => {
       it('sets maxPacketLifeTime to null', () => {
         const pc = new RTCPeerConnection({ sdpSemantics });
@@ -110,9 +112,11 @@ describe(description, function() {
     });
 
     describe('called without setting ordered', () => {
-      const pc = new RTCPeerConnection({ sdpSemantics });
-      const dataChannel = pc.createDataChannel('foo');
-      assert.equal(dataChannel.ordered, true);
+      it('sets ordered to true', () => {
+        const pc = new RTCPeerConnection({sdpSemantics});
+        const dataChannel = pc.createDataChannel('foo');
+        assert.equal(dataChannel.ordered, true);
+      });
     });
 
     describe('called setting maxPacketLifeTime', () => {
@@ -239,7 +243,7 @@ describe(description, function() {
     });
   });
 
-  (isSafari ? describe.skip : describe)('#setRemoteDescription, called twice from signaling state "stable" with the same MediaStreamTrack IDs but different SSRCs', () => {
+  (isSafari || isEdge ? describe.skip : describe)('#setRemoteDescription, called twice from signaling state "stable" with the same MediaStreamTrack IDs but different SSRCs', () => {
     let offer1;
     let offer2;
 
@@ -267,7 +271,7 @@ describe(description, function() {
     //   the right thing to do (especially when we go to Unified Plan SDP) but it's
     //   the way it's worked for a while.
     //
-    (isFirefox || isSafari
+    (isFirefox || isSafari || isEdge
       ? it
       : it.skip
     )('should create a single MediaStreamTrack for each MediaStreamTrack ID in the SDP, regardless of SSRC changes', async () => {
@@ -295,7 +299,7 @@ describe(description, function() {
 
   describe('Glare', () => testGlare(sdpSemantics));
 
-  describe('"datachannel" event', () => {
+  (isEdge ? describe.skip : describe)('"datachannel" event', () => {
     describe('when maxPacketLifeTime is not set', () => {
       it('sets maxPacketLifeTime to null', async () => {
         const [offerer, answerer] = createPeerConnections(sdpSemantics);
@@ -422,6 +426,10 @@ describe(description, function() {
           assert.equal(remoteVideoTrack.id, localVideoTrack.id);
         }
 
+        // TODO(syerrapragada): Edge: This test throws InvalidState Error on setRemoteDescription/setLocalDescription
+        if (isEdge) {
+          return;
+        }
         await Promise.all([
           pc1.setRemoteDescription(answer2),
           pc2.setLocalDescription(answer2)
@@ -653,10 +661,7 @@ function assertEqualDescriptions(actual, expected) {
 };
 
 function emptyDescription() {
-  if (isChrome && chromeVersion < 70) {
-    return { type: '', sdp: '' };
-  }
-  return null;
+  return localDescription && { type: '', sdp: '' };
 }
 
 function testConstructor(sdpSemantics) {
@@ -884,7 +889,7 @@ function testClose(sdpSemantics, signalingState) {
     };
 
     Object.keys(expected).forEach(property => {
-      (property === 'iceGatheringState' && isChrome
+      (property === 'iceGatheringState' && (isChrome || isEdge)
         ? it.skip
         : it
       )('should set .' + property + ' to ' + JSON.stringify(expected[property]), () => {
@@ -1517,7 +1522,8 @@ function testSetDescription(sdpSemantics, local, signalingState, sdpType) {
           return test.waitFor('signalingstatechange');
         });
       } else {
-        it('should not raise a signalingstatechange event', () => {
+        // TODO(syerrapragada): Enable test after https://github.com/otalk/rtcpeerconnection-shim/issues/142 is released
+        (isEdge ? it.skip : it)('should not raise a signalingstatechange event', () => {
           return test.eventIsNotRaised('signalingstatechange');
         });
       }
@@ -1526,14 +1532,15 @@ function testSetDescription(sdpSemantics, local, signalingState, sdpType) {
 }
 
 function makeTest(options) {
+  const mid = isFirefox && firefoxVersion < 63
+    ? 'sdparta_0'
+    : options.sdpSemantics === 'unified-plan' || isFirefox
+      ? '0' : 'audio';
   var dummyOfferSdp = `v=0\r
 o=- 2018425083800689377 2 IN IP4 127.0.0.1\r
 s=-\r
 t=0 0\r
-a=group:BUNDLE ${isFirefox && firefoxVersion < 63
-    ? 'sdparta_0'
-    : options.sdpSemantics === 'unified-plan' || isFirefox
-      ? '0' : 'audio'}\r
+a=group:BUNDLE ${mid}\r
 a=msid-semantic: WMS\r
 m=audio 9 UDP/TLS/RTP/SAVPF 111 103 104 9 0 8 106 105 13 110 112 113 126\r
 c=IN IP4 0.0.0.0\r
@@ -1541,10 +1548,7 @@ a=rtcp:9 IN IP4 0.0.0.0\r
 a=ice-ufrag:hml5\r
 a=ice-pwd:VSJteFVvAyoewWkSfaxKgU6C\r
 a=ice-options:trickle\r
-a=mid:${isFirefox && firefoxVersion < 63
-    ? 'sdparta_0'
-    : options.sdpSemantics === 'unified-plan' || isFirefox
-      ? '0' : 'audio'}\r
+a=mid:${mid}\r
 a=extmap:1 urn:ietf:params:rtp-hdrext:ssrc-audio-level\r
 a=recvonly\r
 a=rtcp-mux\r
