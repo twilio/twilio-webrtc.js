@@ -73,7 +73,8 @@ const { guessBrowser } = require('../../../lib/util');
       stats = await getStats(pc1);
     });
 
-    it('.activeIceCandidatePair', () => {
+    // NOTE(syerrapragada): Edge's stats report doesn't have 'candidate-pair'
+    (guessBrowser() === 'edge' ? it.skip : it)('.activeIceCandidatePair', () => {
       const { activeIceCandidatePair } = stats;
       const { localCandidate, remoteCandidate } = activeIceCandidatePair;
 
