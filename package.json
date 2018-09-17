@@ -50,7 +50,7 @@
     "npm-run-all": "^4.0.2",
     "release-tool": "^0.2.2",
     "rimraf": "^2.6.1",
-    "rtcpeerconnection-shim": "twilio/rtcpeerconnection-shim#1.2.14-rc1",
+    "@twilio/rtcpeerconnection-shim": "twilio/rtcpeerconnection-shim#1.2.14-rc1",
     "travis-multirunner": "^4.2.3",
     "watchify": "^3.9.0",
     "webrtc-adapter": "^6.1.5"
