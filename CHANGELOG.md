@@ -1,3 +1,12 @@
+3.1.0 (in progress)
+===================
+
+New Features
+------------
+
+- Removed workaround for this Chrome [bug](https://bugs.chromium.org/p/chromium/issues/detail?id=774303).
+  Now, we expose RTCPeerConnection's native `ontrack` event.
+
 3.0.0 (August 10, 2018)
 =======================
 
