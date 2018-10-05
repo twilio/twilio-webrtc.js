@@ -1,3 +1,12 @@
+3.1.0 (in progress)
+===================
+
+New Features
+------------
+
+- Removed workaround for this Chrome [bug](https://bugs.chromium.org/p/chromium/issues/detail?id=774303).
+  Now, we no longer suppress the RTCPeerConnection's native `RTCTrackEvent`.
+
 3.0.0 (August 10, 2018)
 =======================
 
