@@ -77,9 +77,6 @@ browsers.
   remapping the legacy property `maxRetransmitTime` to `maxPacketLifeTime`. See
   [this bug](https://bugs.chromium.org/p/chromium/issues/detail?id=696681) for
   more information.
-* Does not depend on the native "track" event (currently behind the flag: `--enable-blink-features=RTCRtpSender`) because
-  of [this bug](https://bugs.chromium.org/p/chromium/issues/detail?id=774303), which partly refers to "ontrack" not firing when expected.
-  We have filed [this bug](https://bugs.chromium.org/p/chromium/issues/detail?id=783433) specifically for this.
 
 #### Firefox
 * For new offers, adds support for calling `setLocalDescription` and `setRemoteDescription` in
