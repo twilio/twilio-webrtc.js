@@ -1,4 +1,4 @@
-2.1.4 (in progress)
+2.2.0 (in progress)
 ===================
 
 New Features
