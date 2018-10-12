@@ -1,6 +1,6 @@
 {
   "name": "@twilio/webrtc",
-  "version": "2.2.0-rc1",
+  "version": "2.2.0-dev",
   "description": "WebRTC-related APIs and shims used by twilio-video.js",
   "scripts": {
     "build": "npm-run-all clean lint test",
