@@ -34,7 +34,7 @@
   },
   "homepage": "https://github.com/twilio/twilio-webrtc.js#readme",
   "dependencies": {
-    "@twilio/rtcpeerconnection-shim": "twilio/rtcpeerconnection-shim#1.2.14-rc1"
+    "@twilio/rtcpeerconnection-shim": "twilio/rtcpeerconnection-shim#stable-twilio"
   },
   "devDependencies": {
     "browserify": "^14.4.0",
