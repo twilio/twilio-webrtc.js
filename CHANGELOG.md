@@ -1,7 +1,9 @@
 3.2.0 (in progress)
 ===================
+
 New Features
 ------------
+
 - Added support for Edge browser.
 
 3.1.0 (in progress)
