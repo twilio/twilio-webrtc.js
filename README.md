@@ -102,10 +102,10 @@ browsers.
   `addTrack` method does not return the `RTCRtpSender` associated with the added track.
 
 #### Edge
-* Uses `otalk/rtcpeerconnection-shim` for WebRTC API implementation
+* Uses [otalk/rtcpeerconnection-shim](https://github.com/twilio/rtcpeerconnection-shim) to implement WebRTC APIs on top of ORTC.
 * Adds rollback support, according to the workaround specified [here](https://bugs.chromium.org/p/webrtc/issues/detail?id=5738#c3).
-* Provides a workaround for [this bug](https://github.com/otalk/rtcpeerconnection-shim/issues/154), where calling `removeTrack` twice throws `InvalidAccessError`
-* Provides a workaround for [this bug](https://github.com/w3c/webrtc-pc/issues/1883), where calling `close` method does not set `iceConnectionState` to `close`
+* Provides a workaround for [this bug](https://github.com/otalk/rtcpeerconnection-shim/issues/154), where calling `removeTrack` twice throws `InvalidAccessError`.
+* Provides a workaround for [this bug](https://github.com/w3c/webrtc-pc/issues/1883), where calling `close` method does not set `iceConnectionState` to `closed`.
 
 ### RTCSessionDescription
 
