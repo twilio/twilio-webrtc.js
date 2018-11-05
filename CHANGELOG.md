@@ -1,3 +1,7 @@
+3.2.0 (in progress)
+===================
+This release introduces experiemental support for Edge. Support for Edge is "experiemental" because, at the time of writing, Edge does not support Data channels. This means you may experience issues using data tracks.
+
 3.1.0 (in progress)
 ===================
 
