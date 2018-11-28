@@ -82,7 +82,8 @@ describe(description, function() {
 
   describe('#addTrack', () => testAddTrack(sdpSemantics));
 
-  (isFirefox && RTCPeerConnection.prototype.addTransceiver ? describe : describe.skip)('#addTransceiver', () => testAddTransceiver());
+  const isUnifiedPlan = sdpSemantics === null || sdpSemantics === 'unified-plan';
+  (isUnifiedPlan && RTCPeerConnection.prototype.addTransceiver ? describe : describe.skip)('#addTransceiver', () => testAddTransceiver(sdpSemantics));
 
   describe('#removeTrack', () => testRemoveTrack(sdpSemantics));
 
@@ -952,14 +953,14 @@ function testAddTrack(sdpSemantics) {
   });
 }
 
-function testAddTransceiver() {
+function testAddTransceiver(sdpSemantics) {
   let test;
   let track;
 
   before(async () => {
     const stream = await makeStream();
     [track] = stream.getTracks();
-    test = await makeTest({});
+    test = await makeTest({ sdpSemantics });
   });
 
   it('should add each of the MediaStreamTracks to the RTCPeerConnection', () => {
