@@ -77,6 +77,9 @@ browsers.
   remapping the legacy property `maxRetransmitTime` to `maxPacketLifeTime`. See
   [this bug](https://bugs.chromium.org/p/chromium/issues/detail?id=696681) for
   more information.
+* Works around a [this bug](https://bugs.chromium.org/p/chromium/issues/detail?id=894231)
+  in "unified-plan" SDPs where adding a `MediaStreamTrack` that was previously added and
+  removed generates an SDP where the MSID does not match the `MediaStreamTrack` ID.
 
 #### Firefox
 * For new offers, adds support for calling `setLocalDescription` and `setRemoteDescription` in
