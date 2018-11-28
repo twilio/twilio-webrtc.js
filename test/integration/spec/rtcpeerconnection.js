@@ -82,7 +82,7 @@ describe(description, function() {
 
   describe('#addTrack', () => testAddTrack(sdpSemantics));
 
-  (isFirefox && RTCPeerConnection.prototype.addTransceiver ? describe.only : describe.skip)('#addTransceiver', () => testAddTransceiver());
+  (isFirefox && RTCPeerConnection.prototype.addTransceiver ? describe : describe.skip)('#addTransceiver', () => testAddTransceiver());
 
   describe('#removeTrack', () => testRemoveTrack(sdpSemantics));
 
