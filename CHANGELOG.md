@@ -3,8 +3,12 @@
 
 New Features
 ------------
+
  - Removed workaround for this Chrome [bug](https://bugs.chromium.org/p/chromium/issues/detail?id=774303).
   Now, we no longer suppress the RTCPeerConnection's native `RTCTrackEvent`.
+ 
+ - Worked around the [deprecation](https://blog.mozilla.org/webrtc/getstats-isremote-65/) of the
+   `isRemote` property in `RTCInboundRTPStreamStats` and `RTCOutboundRTPStreamStats` in Firefox.
 
 Bug Fixes
 ---------
