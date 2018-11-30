@@ -153,7 +153,7 @@ describe('getStats', function() {
           packetsLost: 10,
           packetsReceived: 25,
           jitter: 0.03,
-          mozRtt: 2
+          roundTripTime: 2
         },
         outbound_rtp_media_0: {
           timestamp: 67890,
@@ -201,7 +201,7 @@ describe('getStats', function() {
             assert.equal(report.packetsReceived, fakeInbound.packetsReceived);
             assert.equal(report.packetsLost, fakeInbound.packetsLost);
             assert.equal(report.jitter, Math.round(fakeInbound.jitter * 1000));
-            assert.equal(report.roundTripTime, fakeInbound.mozRtt);
+            assert.equal(report.roundTripTime, fakeInbound.roundTripTime);
           });
       });
   });
