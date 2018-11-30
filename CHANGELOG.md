@@ -1,3 +1,12 @@
+3.2.0 (in progress)
+===================
+
+New Features
+------------
+
+ - Worked around the [deprecation](https://blog.mozilla.org/webrtc/getstats-isremote-65/) of the
+   `isRemote` property in `RTCInboundRTPStreamStats` and `RTCOutboundRTPStreamStats` in Firefox.
+
 3.1.1 (November 29, 2018)
 =========================
 
