@@ -148,7 +148,7 @@ describe('getStats', function() {
           type: 'inbound-rtp',
           isRemote: true,
           remoteId: 'outbound_rtp_media_0',
-          ssrc: 'foo',
+          ssrc: 200,
           bytesReceived: 100,
           packetsLost: 10,
           packetsReceived: 25,
@@ -160,7 +160,7 @@ describe('getStats', function() {
           type: 'outbound-rtp',
           isRemote: false,
           remoteId: 'outbound_rtcp_media_0',
-          ssrc: 'foo',
+          ssrc: 200,
           bytesSent: 45,
           packetsSent: 50,
           framerateMean: 28.84
@@ -194,7 +194,7 @@ describe('getStats', function() {
             assert(report.trackId);
             assert(report.timestamp);
             assert.equal(report.frameRateSent, Math.round(fakeOutbound.framerateMean));
-            assert.equal(report.ssrc, fakeOutbound.ssrc);
+            assert.equal(report.ssrc, String(fakeOutbound.ssrc));
             assert.equal(report.bytesSent, fakeOutbound.bytesSent);
             assert.equal(report.packetsSent, fakeOutbound.packetsSent);
             assert.equal(report.bytesReceived, fakeInbound.bytesReceived);
@@ -214,7 +214,7 @@ describe('getStats', function() {
           type: 'outbound-rtp',
           isRemote: true,
           remoteId: 'inbound_rtp_media_0',
-          ssrc: 'foo',
+          ssrc: 200,
           bytesSent: 100,
           packetsSent: 25
         },
@@ -223,7 +223,7 @@ describe('getStats', function() {
           type: 'inbound-rtp',
           isRemote: false,
           remoteId: 'inbound_rtcp_media_0',
-          ssrc: 'foo',
+          ssrc: 200,
           bytesReceived: 45,
           packetsReceived: 50,
           packetsLost: 5,
@@ -259,7 +259,7 @@ describe('getStats', function() {
             assert(report.trackId);
             assert(report.timestamp);
             assert.equal(report.frameRateReceived, Math.round(fakeInbound.framerateMean));
-            assert.equal(report.ssrc, fakeInbound.ssrc);
+            assert.equal(report.ssrc, String(fakeInbound.ssrc));
             assert.equal(report.bytesReceived, fakeInbound.bytesReceived);
             assert.equal(report.packetsReceived, fakeInbound.packetsReceived);
             assert.equal(report.packetsLost, fakeInbound.packetsLost);
