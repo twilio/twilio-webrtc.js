@@ -49,11 +49,9 @@ const { guessBrowser } = require('../../../lib/util');
       });
 
       pc1.addEventListener('icecandidate', e => {
-        if (!e.candidate) {
-          deferred.resolve();
-          return;
+        if (e.candidate) {
+          pc2.addIceCandidate(e.candidate);
         }
-        pc2.addIceCandidate(e.candidate);
       });
 
       pc2.addEventListener('icecandidate', e => {
@@ -61,6 +59,12 @@ const { guessBrowser } = require('../../../lib/util');
           pc1.addIceCandidate(e.candidate);
         }
       });
+
+      pc1.addEventListener('iceconnectionstatechange', e => {
+        if (pc1.iceConnectionState === 'connected') {
+          deferred.resolve();
+        }
+      })
 
       const offer = await pc1.createOffer();
       await pc1.setLocalDescription(offer);
