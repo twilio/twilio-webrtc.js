@@ -31,6 +31,10 @@ const isFirefox = guess === 'firefox';
 const isSafari = guess === 'safari';
 const sdpSemanticsIsSupported = checkIfSdpSemanticsIsSupported();
 
+const chromeVersion = isChrome && typeof navigator === 'object'
+  ? navigator.userAgent.match(/Chrom(e|ium)\/(\d+)\./)[2]
+  : null;
+
 // NOTE(mroberts): In Chrome, we run these tests twice if `sdpSemantics` is
 // supported: once for "plan-b" and once for "unified-plan".
 const sdpSemanticsValues = isFirefox
@@ -74,7 +78,7 @@ describe(description, function() {
 
   describe('#addTrack', () => testAddTrack(sdpSemantics));
 
-  (isFirefox && RTCPeerConnection.prototype.addTransceiver ? describe.only : describe.skip)('#addTransceiver', () => testAddTransceiver());
+  (isFirefox && RTCPeerConnection.prototype.addTransceiver ? describe : describe.skip)('#addTransceiver', () => testAddTransceiver());
 
   describe('#removeTrack', () => testRemoveTrack(sdpSemantics));
 
@@ -502,7 +506,7 @@ function assertEqualDescriptions(actual, expected) {
 };
 
 function emptyDescription() {
-  if (typeof webkitRTCPeerConnection !== 'undefined') {
+  if (isChrome && chromeVersion < 70) {
     return { type: '', sdp: '' };
   }
   return null;

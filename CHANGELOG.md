@@ -1,3 +1,13 @@
+2.1.4 (in progress)
+=========================
+
+Bug Fixes
+---------
+
+- Fixed a bug in SafariRTCPeerConnection where `remoteDescription`,
+  when accessed in an RTCTrackEvent listener returned pending remote description
+  even though a new RTCSessionDescription had already been applied. (JSDK-2224)
+
 2.1.3 (August 28, 2018)
 =======================
 
