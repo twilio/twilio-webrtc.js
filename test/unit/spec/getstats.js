@@ -143,7 +143,6 @@ describe('getStats', function() {
             assert(report.timestamp);
             assert.equal(report.codecName, fakeCodecStat.mimeType.split('/')[1]);
             assert.equal(report.jitter, Math.round(fakeInboundStat.jitter * 1000));
-            assert.equal(report.frameWidthInput, );
             assert.equal(report.frameWidthReceived, fakeTrackStat.frameWidth);
             assert.equal(report.frameHeightReceived, fakeTrackStat.frameHeight);
             assert.equal(report.ssrc, fakeInboundStat.ssrc);
@@ -231,7 +230,6 @@ describe('getStats', function() {
             assert(report.trackId);
             assert(report.timestamp);
             assert.equal(report.codecName, fakeCodecStat.mimeType.split('/')[1]);
-            assert.equal(report.frameWidthInput, );
             assert.equal(report.frameWidthSent, fakeTrackStat.frameWidth);
             assert.equal(report.frameHeightSent, fakeTrackStat.frameHeight);
             assert.equal(report.ssrc, String(fakeOutboundStat.ssrc));
