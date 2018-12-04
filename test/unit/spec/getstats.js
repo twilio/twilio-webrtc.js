@@ -65,33 +65,58 @@ describe('getStats', function() {
     });
   });
 
-  it('should resolve the promise with a StandardizedStatsResponse in Chrome', () => {
+  it('should resolve the promise with a StandardizedStatsResponse in Chrome (inbound)', () => {
     var options = {
-      chromeFakeStats: {
-        googCodecName: 'codec',
-        googRtt: 1,
-        googJitterReceived: 5,
-        googFrameWidthInput: 160,
-        googFrameHeightInput: 120,
-        googFrameWidthSent: 320,
-        googFrameHeightSent: 240,
-        googFrameWidthReceived: 640,
-        googFrameHeightReceived: 480,
-        googFrameRateInput: 30,
-        googFrameRateSent: 29,
-        googFrameRateReceived: 25,
-        googJitterBufferMs: 44,
-        ssrc: 'foo',
-        bytesReceived: 99,
-        bytesSent: 101,
-        packetsLost: 0,
-        packetsReceived: 434,
-        packetsSent: 900,
-        audioInputLevel: 80,
-        audioOutputLevel: 65
-      },
-      chromeFakeIceStats: []
+      chromeFakeStats: new Map(Object.entries({
+        RTCInboundRTPAudioStream_3265672822: {
+          bytesReceived: 5845447,
+          codecId: "RTCCodec_audio_Inbound_109",
+          fractionLost: 0,
+          id: "RTCInboundRTPAudioStream_3265672822",
+          isRemote: false,
+          jitter: 0.004,
+          mediaType: "audio",
+          packetsLost: 0,
+          packetsReceived: 89930,
+          ssrc: 3265672822,
+          timestamp: 1543604205208.696,
+          trackId: "RTCMediaStreamTrack_receiver_1",
+          transportId: "RTCTransport_audio_1",
+          type: "inbound-rtp"
+        },
+        RTCMediaStreamTrack_receiver_1: {
+          audioLevel: 0,
+          frameHeight: 360,
+          frameWidth: 640,
+          audioLevel: 0,
+          concealedSamples: 62440,
+          concealmentEvents: 91,
+          detached: false,
+          ended: false,
+          id: "RTCMediaStreamTrack_receiver_1",
+          jitterBufferDelay: 2809036.8,
+          kind: "audio",
+          remoteSource: true,
+          timestamp: 1543604205208.696,
+          totalAudioEnergy: 0,
+          totalSamplesDuration: 1799.0699999985088,
+          totalSamplesReceived: 86342560,
+          trackIdentifier: "{e6519108-5d27-534c-961b-418c82f38302}",
+          type: "track"
+        },
+        RTCCodec_audio_Inbound_109: {
+          clockRate: 48000,
+          id: "RTCCodec_audio_Inbound_109",
+          mimeType: "audio/opus",
+          payloadType: 109,
+          timestamp: 1543604205208.696,
+          type: "codec"
+        }
+      }))
     };
+    var fakeInboundStat = options.chromeFakeStats.get('RTCInboundRTPAudioStream_3265672822');
+    var fakeTrackStat = options.chromeFakeStats.get('RTCMediaStreamTrack_receiver_1');
+    var fakeCodecStat = options.chromeFakeStats.get('RTCCodec_audio_Inbound_109');
     var peerConnection = new FakeRTCPeerConnection(options);
     var localStream = new FakeMediaStream();
     var remoteStream = new FakeMediaStream();
@@ -116,26 +141,104 @@ describe('getStats', function() {
           .forEach(report => {
             assert(report.trackId);
             assert(report.timestamp);
-            assert.equal(report.codecName, options.chromeFakeStats.googCodecName);
-            assert.equal(report.roundTripTime, options.chromeFakeStats.googRtt);
-            assert.equal(report.jitter, options.chromeFakeStats.googJitterReceived);
-            assert.equal(report.frameWidthInput, options.chromeFakeStats.googFrameWidthInput);
-            assert.equal(report.frameHeightInput, options.chromeFakeStats.googFrameHeightInput);
-            assert.equal(report.frameWidthSent, options.chromeFakeStats.googFrameWidthSent);
-            assert.equal(report.frameHeightSent, options.chromeFakeStats.googFrameHeightSent);
-            assert.equal(report.frameWidthReceived, options.chromeFakeStats.googFrameWidthReceived);
-            assert.equal(report.frameHeightReceived, options.chromeFakeStats.googFrameHeightReceived);
-            assert.equal(report.frameRateInput, options.chromeFakeStats.googFrameRateInput);
-            assert.equal(report.frameRateSent, options.chromeFakeStats.googFrameRateSent);
-            assert.equal(report.frameRateReceived, options.chromeFakeStats.googFrameRateReceived);
-            assert.equal(report.ssrc, options.chromeFakeStats.ssrc);
-            assert.equal(report.bytesReceived, options.chromeFakeStats.bytesReceived);
-            assert.equal(report.bytesSent, options.chromeFakeStats.bytesSent);
-            assert.equal(report.packetsLost, options.chromeFakeStats.packetsLost);
-            assert.equal(report.packetsReceived, options.chromeFakeStats.packetsReceived);
-            assert.equal(report.packetsSent, options.chromeFakeStats.packetsSent);
-            assert.equal(report.audioInputLevel, options.chromeFakeStats.audioInputLevel);
-            assert.equal(report.audioOutputLevel, options.chromeFakeStats.audioOutputLevel);
+            assert.equal(report.codecName, fakeCodecStat.mimeType.split('/')[1]);
+            assert.equal(report.jitter, Math.round(fakeInboundStat.jitter * 1000));
+            assert.equal(report.frameWidthReceived, fakeTrackStat.frameWidth);
+            assert.equal(report.frameHeightReceived, fakeTrackStat.frameHeight);
+            assert.equal(report.ssrc, fakeInboundStat.ssrc);
+            assert.equal(report.bytesReceived, fakeInboundStat.bytesReceived);
+            assert.equal(report.bytesSent, fakeInboundStat.bytesSent);
+            assert.equal(report.packetsLost, fakeInboundStat.packetsLost);
+            assert.equal(report.packetsReceived, fakeInboundStat.packetsReceived);
+            assert.equal(report.packetsSent, fakeInboundStat.packetsSent);
+            assert.equal(report.audioOutputLevel, fakeTrackStat.audioLevel);
+          });
+      });
+  });
+
+  it('should resolve the promise with a StandardizedStatsResponse in Chrome (outbound)', () => {
+    var options = {
+      chromeFakeStats: new Map(Object.entries({
+        RTCOutboundRTPVideoStream_4003256843: {
+          bytesSent: 425592592,
+          codecId: "RTCCodec_video_Outbound_120",
+          firCount: 0,
+          framesEncoded: 34221,
+          id: "RTCOutboundRTPVideoStream_4003256843",
+          isRemote: false,
+          mediaType: "video",
+          nackCount: 0,
+          packetsSent: 371331,
+          pliCount: 0,
+          qpSum: 572871,
+          ssrc: 4003256843,
+          timestamp: 1543604170954.952,
+          trackId: "RTCMediaStreamTrack_sender_3",
+          transportId: "RTCTransport_audio_1",
+          type: "outbound-rtp"
+        },
+        RTCMediaStreamTrack_sender_3: {
+          audioLevel: 0,
+          detached: false,
+          ended: false,
+          frameHeight: 540,
+          frameWidth: 960,
+          framesSent: 34221,
+          hugeFramesSent: 73,
+          id: "RTCMediaStreamTrack_sender_3",
+          kind: "video",
+          remoteSource: false,
+          timestamp: 1543604170954.952,
+          trackIdentifier: "ffdd22d1-4fab-4042-969d-a568aabeb614",
+          type: "track"
+        },
+        RTCCodec_video_Outbound_120: {
+          clockRate: 90000,
+          id: "RTCCodec_video_Outbound_120",
+          mimeType: "video/VP8",
+          payloadType: 120,
+          timestamp: 1543604170954.952,
+          type: "codec",
+        }
+      }))
+    };
+    var fakeOutboundStat = options.chromeFakeStats.get('RTCOutboundRTPVideoStream_4003256843');
+    var fakeTrackStat = options.chromeFakeStats.get('RTCMediaStreamTrack_sender_3');
+    var fakeCodecStat = options.chromeFakeStats.get('RTCCodec_video_Outbound_120');
+    var peerConnection = new FakeRTCPeerConnection(options);
+    var localStream = new FakeMediaStream();
+    var remoteStream = new FakeMediaStream();
+
+    localStream.addTrack(new FakeMediaStreamTrack('audio'));
+    localStream.addTrack(new FakeMediaStreamTrack('video'));
+    remoteStream.addTrack(new FakeMediaStreamTrack('audio'));
+    remoteStream.addTrack(new FakeMediaStreamTrack('video'));
+    peerConnection._addLocalStream(localStream);
+    peerConnection._addRemoteStream(remoteStream);
+
+    return getStats(peerConnection, { testForChrome: true })
+      .then(response => {
+        assert.equal(response.localAudioTrackStats.length, 1);
+        assert.equal(response.localVideoTrackStats.length, 1);
+        assert.equal(response.remoteAudioTrackStats.length, 1);
+        assert.equal(response.remoteVideoTrackStats.length, 1);
+
+        response.localAudioTrackStats.concat(response.localVideoTrackStats)
+          .concat(response.remoteAudioTrackStats)
+          .concat(response.remoteVideoTrackStats)
+          .forEach(report => {
+            assert(report.trackId);
+            assert(report.timestamp);
+            assert.equal(report.codecName, fakeCodecStat.mimeType.split('/')[1]);
+            assert.equal(report.frameWidthSent, fakeTrackStat.frameWidth);
+            assert.equal(report.frameHeightSent, fakeTrackStat.frameHeight);
+            assert.equal(report.ssrc, String(fakeOutboundStat.ssrc));
+            assert.equal(report.bytesSent, fakeOutboundStat.bytesSent);
+            assert.equal(report.bytesSent, fakeOutboundStat.bytesSent);
+            assert.equal(report.packetsLost, fakeOutboundStat.packetsLost);
+            assert.equal(report.packetsReceived, fakeOutboundStat.packetsReceived);
+            assert.equal(report.packetsSent, fakeOutboundStat.packetsSent);
+            assert.equal(report.audioInputLevel, fakeTrackStat.audioLevel);
           });
       });
   });
@@ -274,166 +377,347 @@ describe('getStats', function() {
     context('should be present in StandardizedStatsResponse for', () => {
       it('chrome', async () => {
         const options = {
-          chromeFakeStats: {},
-          chromeFakeIceStats: [
-            {
-              id: 'RTCIceCandidatePair_F/5cS67H_6FQI1GQj',
-              timestamp: 1525111897754.9,
-              type: 'candidate-pair',
-              transportId: 'RTCTransport_audio_1',
-              localCandidateId: 'RTCIceCandidate_F/5cS67H',
-              remoteCandidateId: 'RTCIceCandidate_6FQI1GQj',
-              state: 'succeeded',
-              priority: 1.7961621859063e+17,
-              nominated: false,
-              writable: true,
-              bytesSent: 0,
-              bytesReceived: 0,
-              totalRoundTripTime: 3.328,
-              currentRoundTripTime: 0.134,
-              requestsReceived: 0,
-              requestsSent: 1,
-              responsesReceived: 14,
-              responsesSent: 0,
-              consentRequestsSent: 13
+          chromeFakeStats: new Map(Object.entries({
+            "RTCIceCandidatePair_4OFKCmYa_Mi4ThK96": {
+              "id":"RTCIceCandidatePair_4OFKCmYa_Mi4ThK96",
+              "timestamp":1543863871950.097,
+              "type":"candidate-pair",
+              "transportId":"RTCTransport_audio_1",
+              "localCandidateId":"RTCIceCandidate_4OFKCmYa",
+              "remoteCandidateId":"RTCIceCandidate_Mi4ThK96",
+              "state":"waiting",
+              "priority":395789001576824300,
+              "nominated":false,
+              "writable":false,
+              "bytesSent":0,
+              "bytesReceived":0,
+              "totalRoundTripTime":0,
+              "requestsReceived":0,
+              "requestsSent":0,
+              "responsesReceived":0,
+              "responsesSent":0,
+              "consentRequestsSent":0
             },
-            {
-              id: 'RTCIceCandidatePair_iAkACmH6_U+HD8VMp',
-              timestamp: 1525111897754.9,
-              type: 'candidate-pair',
-              transportId: 'RTCTransport_audio_1',
-              localCandidateId: 'RTCIceCandidate_iAkACmH6',
-              remoteCandidateId: 'RTCIceCandidate_U+HD8VMp',
-              state: 'waiting',
-              priority: 1.7961621859063e+17,
-              nominated: false,
-              writable: false,
-              bytesSent: 0,
-              bytesReceived: 0,
-              totalRoundTripTime: 0,
-              requestsReceived: 14,
-              requestsSent: 0,
-              responsesReceived: 0,
-              responsesSent: 14,
-              consentRequestsSent: 0
+            "RTCIceCandidatePair_4OFKCmYa_Y0FHsxUI": {
+              "id":"RTCIceCandidatePair_4OFKCmYa_Y0FHsxUI",
+              "timestamp":1543863871950.097,
+              "type":"candidate-pair",
+              "transportId":"RTCTransport_audio_1",
+              "localCandidateId":"RTCIceCandidate_4OFKCmYa",
+              "remoteCandidateId":"RTCIceCandidate_Y0FHsxUI",
+              "state":"in-progress",
+              "priority":9114723795305643000,
+              "nominated":false,
+              "writable":false,
+              "bytesSent":0,
+              "bytesReceived":0,
+              "totalRoundTripTime":0,
+              "requestsReceived":0,
+              "requestsSent":2,
+              "responsesReceived":0,
+              "responsesSent":0,
+              "consentRequestsSent":0
             },
-            {
-              id: 'RTCIceCandidatePair_rO9TbAZ1_wSP+1iQn',
-              timestamp: 1525111897754.9,
-              type: 'candidate-pair',
-              transportId: 'RTCTransport_audio_1',
-              localCandidateId: 'RTCIceCandidate_rO9TbAZ1',
-              remoteCandidateId: 'RTCIceCandidate_wSP+1iQn',
-              state: 'succeeded',
-              priority: 9.1147567806543e+18,
-              nominated: true,
-              writable: true,
-              bytesSent: 760278,
-              bytesReceived: 754186,
-              totalRoundTripTime: 0.049,
-              currentRoundTripTime: 0.001,
-              availableOutgoingBitrate: 300000,
-              requestsReceived: 65,
-              requestsSent: 1,
-              responsesReceived: 65,
-              responsesSent: 65,
-              consentRequestsSent: 64
+            "RTCIceCandidatePair_4OFKCmYa_gvROlq28": {
+              "id":"RTCIceCandidatePair_4OFKCmYa_gvROlq28",
+              "timestamp":1543863871950.097,
+              "type":"candidate-pair",
+              "transportId":"RTCTransport_audio_1",
+              "localCandidateId":"RTCIceCandidate_4OFKCmYa",
+              "remoteCandidateId":"RTCIceCandidate_gvROlq28",
+              "state":"waiting",
+              "priority":35501031387184640,
+              "nominated":false,
+              "writable":false,
+              "bytesSent":0,
+              "bytesReceived":0,
+              "totalRoundTripTime":0,
+              "requestsReceived":0,
+              "requestsSent":0,
+              "responsesReceived":0,
+              "responsesSent":0,
+              "consentRequestsSent":0
             },
-            {
-              id: 'RTCIceCandidate_6FQI1GQj',
-              timestamp: 1525111897754.9,
-              type: 'remote-candidate',
-              transportId: 'RTCTransport_audio_1',
-              isRemote: true,
-              ip: '34.203.250.85',
-              port: 51850,
-              protocol: 'udp',
-              candidateType: 'relay',
-              priority: 41820159,
-              deleted: false
+            "RTCIceCandidatePair_4OFKCmYa_tHHbudxA": {
+              "id":"RTCIceCandidatePair_4OFKCmYa_tHHbudxA",
+              "timestamp":1543863871950.097,
+              "type":"candidate-pair",
+              "transportId":"RTCTransport_audio_1",
+              "localCandidateId":"RTCIceCandidate_4OFKCmYa",
+              "remoteCandidateId":"RTCIceCandidate_tHHbudxA",
+              "state":"succeeded",
+              "priority":9115005270282354000,
+              "nominated":true,
+              "writable":true,
+              "bytesSent":215408,
+              "bytesReceived":888722,
+              "totalRoundTripTime":0.009,
+              "currentRoundTripTime":0.002,
+              "availableOutgoingBitrate":412653,
+              "availableIncomingBitrate":2202487,
+              "requestsReceived":1,
+              "requestsSent":3,
+              "responsesReceived":5,
+              "responsesSent":1,
+              "consentRequestsSent":4
             },
-            {
-              id: 'RTCIceCandidate_F/5cS67H',
-              timestamp: 1525111897754.9,
-              type: 'local-candidate',
-              transportId: 'RTCTransport_audio_1',
-              isRemote: false,
-              networkType: 'unknown',
-              ip: '107.20.226.156',
-              port: 57710,
-              protocol: 'udp',
-              candidateType: 'srflx',
-              priority: 1686052607,
-              deleted: false
+            "RTCIceCandidatePair_4OFKCmYa_xoscBzk6": {
+              "id":"RTCIceCandidatePair_4OFKCmYa_xoscBzk6",
+              "timestamp":1543863871950.097,
+              "type":"candidate-pair",
+              "transportId":"RTCTransport_audio_1",
+              "localCandidateId":"RTCIceCandidate_4OFKCmYa",
+              "remoteCandidateId":"RTCIceCandidate_xoscBzk6",
+              "state":"waiting",
+              "priority":7241260435179978000,
+              "nominated":false,
+              "writable":false,
+              "bytesSent":0,
+              "bytesReceived":0,
+              "totalRoundTripTime":0,
+              "requestsReceived":0,
+              "requestsSent":0,
+              "responsesReceived":0,
+              "responsesSent":0,
+              "consentRequestsSent":0
             },
-            {
-              id: 'RTCIceCandidate_U+HD8VMp',
-              timestamp: 1525111897754.9,
-              type: 'remote-candidate',
-              transportId: 'RTCTransport_audio_1',
-              isRemote: true,
-              ip: '107.20.226.156',
-              port: 59522,
-              protocol: 'udp',
-              candidateType: 'srflx',
-              priority: 1686052607,
-              deleted: false
+            "RTCIceCandidatePair_LbWBxqvW_Mi4ThK96": {
+              "id":"RTCIceCandidatePair_LbWBxqvW_Mi4ThK96",
+              "timestamp":1543863871950.097,
+              "type":"candidate-pair",
+              "transportId":"RTCTransport_audio_1",
+              "localCandidateId":"RTCIceCandidate_LbWBxqvW",
+              "remoteCandidateId":"RTCIceCandidate_Mi4ThK96",
+              "state":"in-progress",
+              "priority":395789001576693250,
+              "nominated":false,
+              "writable":false,
+              "bytesSent":0,
+              "bytesReceived":0,
+              "totalRoundTripTime":0,
+              "requestsReceived":0,
+              "requestsSent":5,
+              "responsesReceived":0,
+              "responsesSent":0,
+              "consentRequestsSent":0
             },
-            {
-              id: 'RTCIceCandidate_iAkACmH6',
-              timestamp: 1525111897754.9,
-              type: 'local-candidate',
-              transportId: 'RTCTransport_audio_1',
-              isRemote: false,
-              networkType: 'wifi',
-              ip: '34.203.250.85',
-              port: 53529,
-              protocol: 'udp',
-              candidateType: 'relay',
-              priority: 41820159,
-              deleted: false
+            "RTCIceCandidatePair_LbWBxqvW_Y0FHsxUI": {
+              "id":"RTCIceCandidatePair_LbWBxqvW_Y0FHsxUI",
+              "timestamp":1543863871950.097,
+              "type":"candidate-pair",
+              "transportId":"RTCTransport_audio_1",
+              "localCandidateId":"RTCIceCandidate_LbWBxqvW",
+              "remoteCandidateId":"RTCIceCandidate_Y0FHsxUI",
+              "state":"in-progress",
+              "priority":9114723795305512000,
+              "nominated":false,
+              "writable":false,
+              "bytesSent":0,
+              "bytesReceived":0,
+              "totalRoundTripTime":0,
+              "requestsReceived":0,
+              "requestsSent":5,
+              "responsesReceived":0,
+              "responsesSent":0,
+              "consentRequestsSent":0
             },
-            {
-              id: 'RTCIceCandidate_rO9TbAZ1',
-              timestamp: 1525111897754.9,
-              type: 'local-candidate',
-              transportId: 'RTCTransport_audio_1',
-              isRemote: false,
-              networkType: 'wifi',
-              ip: '10.20.64.226',
-              port: 61772,
-              protocol: 'udp',
-              candidateType: 'host',
-              priority: 2122194687,
-              deleted: false
+            "RTCIceCandidatePair_LbWBxqvW_gvROlq28": {
+              "id":"RTCIceCandidatePair_LbWBxqvW_gvROlq28",
+              "timestamp":1543863871950.097,
+              "type":"candidate-pair",
+              "transportId":"RTCTransport_audio_1",
+              "localCandidateId":"RTCIceCandidate_LbWBxqvW",
+              "remoteCandidateId":"RTCIceCandidate_gvROlq28",
+              "state":"in-progress",
+              "priority":35501031387053570,
+              "nominated":false,
+              "writable":false,
+              "bytesSent":0,
+              "bytesReceived":0,
+              "totalRoundTripTime":0,
+              "requestsReceived":0,
+              "requestsSent":3,
+              "responsesReceived":0,
+              "responsesSent":0,
+              "consentRequestsSent":0
             },
-            {
-              id: 'RTCIceCandidate_wSP+1iQn',
-              timestamp: 1525111897754.9,
-              type: 'remote-candidate',
-              transportId: 'RTCTransport_audio_1',
-              isRemote: true,
-              ip: '10.20.64.226',
-              port: 61913,
-              protocol: 'udp',
-              candidateType: 'host',
-              priority: 2122194687,
-              deleted: false
+            "RTCIceCandidatePair_LbWBxqvW_tHHbudxA": {
+              "id":"RTCIceCandidatePair_LbWBxqvW_tHHbudxA",
+              "timestamp":1543863871950.097,
+              "type":"candidate-pair",
+              "transportId":"RTCTransport_audio_1",
+              "localCandidateId":"RTCIceCandidate_LbWBxqvW",
+              "remoteCandidateId":"RTCIceCandidate_tHHbudxA",
+              "state":"in-progress",
+              "priority":9114756780654461000,
+              "nominated":false,
+              "writable":false,
+              "bytesSent":0,
+              "bytesReceived":0,
+              "totalRoundTripTime":0,
+              "requestsReceived":0,
+              "requestsSent":5,
+              "responsesReceived":0,
+              "responsesSent":0,
+              "consentRequestsSent":0
+            },
+            "RTCIceCandidatePair_LbWBxqvW_xoscBzk6": {
+              "id":"RTCIceCandidatePair_LbWBxqvW_xoscBzk6",
+              "timestamp":1543863871950.097,
+              "type":"candidate-pair",
+              "transportId":"RTCTransport_audio_1",
+              "localCandidateId":"RTCIceCandidate_LbWBxqvW",
+              "remoteCandidateId":"RTCIceCandidate_xoscBzk6",
+              "state":"in-progress",
+              "priority":7241260435179847000,
+              "nominated":false,
+              "writable":false,
+              "bytesSent":0,
+              "bytesReceived":0,
+              "totalRoundTripTime":0,
+              "requestsReceived":0,
+              "requestsSent":5,
+              "responsesReceived":0,
+              "responsesSent":0,
+              "consentRequestsSent":0
+            },
+            "RTCIceCandidatePair_ZLdcoED5_Mi4ThK96": {
+              "id":"RTCIceCandidatePair_ZLdcoED5_Mi4ThK96",
+              "timestamp":1543863871950.097,
+              "type":"candidate-pair",
+              "transportId":"RTCTransport_audio_1",
+              "localCandidateId":"RTCIceCandidate_ZLdcoED5",
+              "remoteCandidateId":"RTCIceCandidate_Mi4ThK96",
+              "state":"in-progress",
+              "priority":179616215402823680,
+              "nominated":false,
+              "writable":false,
+              "bytesSent":0,
+              "bytesReceived":0,
+              "totalRoundTripTime":0,
+              "requestsReceived":0,
+              "requestsSent":4,
+              "responsesReceived":0,
+              "responsesSent":0,
+              "consentRequestsSent":0
+            },
+            "RTCIceCandidatePair_ZLdcoED5_Y0FHsxUI": {
+              "id":"RTCIceCandidatePair_ZLdcoED5_Y0FHsxUI",
+              "timestamp":1543863871950.097,
+              "type":"candidate-pair",
+              "transportId":"RTCTransport_audio_1",
+              "localCandidateId":"RTCIceCandidate_ZLdcoED5",
+              "remoteCandidateId":"RTCIceCandidate_Y0FHsxUI",
+              "state":"failed",
+              "priority":179616219462894080,
+              "nominated":false,
+              "writable":false,
+              "bytesSent":0,
+              "bytesReceived":0,
+              "totalRoundTripTime":0,
+              "requestsReceived":0,
+              "requestsSent":0,
+              "responsesReceived":0,
+              "responsesSent":0,
+              "consentRequestsSent":0
+            },
+            "RTCIceCandidatePair_ZLdcoED5_gvROlq28": {
+              "id":"RTCIceCandidatePair_ZLdcoED5_gvROlq28",
+              "timestamp":1543863871950.097,
+              "type":"candidate-pair",
+              "transportId":"RTCTransport_audio_1",
+              "localCandidateId":"RTCIceCandidate_ZLdcoED5",
+              "remoteCandidateId":"RTCIceCandidate_gvROlq28",
+              "state":"in-progress",
+              "priority":35501027226304510,
+              "nominated":false,
+              "writable":false,
+              "bytesSent":0,
+              "bytesReceived":0,
+              "totalRoundTripTime":0,
+              "requestsReceived":0,
+              "requestsSent":3,
+              "responsesReceived":0,
+              "responsesSent":0,
+              "consentRequestsSent":0
+            },
+            "RTCIceCandidatePair_ZLdcoED5_tHHbudxA": {
+              "id":"RTCIceCandidatePair_ZLdcoED5_tHHbudxA",
+              "timestamp":1543863871950.097,
+              "type":"candidate-pair",
+              "transportId":"RTCTransport_audio_1",
+              "localCandidateId":"RTCIceCandidate_ZLdcoED5",
+              "remoteCandidateId":"RTCIceCandidate_tHHbudxA",
+              "state":"failed",
+              "priority":179616219463025150,
+              "nominated":false,
+              "writable":false,
+              "bytesSent":0,
+              "bytesReceived":0,
+              "totalRoundTripTime":0,
+              "requestsReceived":0,
+              "requestsSent":1,
+              "responsesReceived":0,
+              "responsesSent":0,
+              "consentRequestsSent":0
+            },
+            "RTCIceCandidatePair_ZLdcoED5_xoscBzk6": {
+              "id":"RTCIceCandidatePair_ZLdcoED5_xoscBzk6",
+              "timestamp":1543863871950.097,
+              "type":"candidate-pair",
+              "transportId":"RTCTransport_audio_1",
+              "localCandidateId":"RTCIceCandidate_ZLdcoED5",
+              "remoteCandidateId":"RTCIceCandidate_xoscBzk6",
+              "state":"in-progress",
+              "priority":179616218590494720,
+              "nominated":false,
+              "writable":false,
+              "bytesSent":0,
+              "bytesReceived":0,
+              "totalRoundTripTime":0,
+              "requestsReceived":0,
+              "requestsSent":5,
+              "responsesReceived":0,
+              "responsesSent":0,
+              "consentRequestsSent":0
+            },
+            "RTCIceCandidate_4OFKCmYa": {
+              "id":"RTCIceCandidate_4OFKCmYa",
+              "timestamp":1543864837237.473,
+              "type":"local-candidate",
+              "transportId":"RTCTransport_audio_1",
+              "isRemote":false,
+              "networkType":"wifi",
+              "ip":"10.30.64.129",
+              "port":62172,
+              "protocol":"udp",
+              "candidateType":"host",
+              "priority":2122260223,
+              "deleted":false
+            },
+            "RTCIceCandidate_tHHbudxA": {
+              "id":"RTCIceCandidate_tHHbudxA",
+              "timestamp":1543864842882.538,
+              "type":"remote-candidate",
+              "transportId":"RTCTransport_audio_1",
+              "isRemote":true,
+              "ip":"10.30.64.129",
+              "port":51185,
+              "protocol":"udp",
+              "candidateType":"host",
+              "priority":2122252543,
+              "deleted":false
             }
-          ]
+          }))
         };
         const peerConnection = new FakeRTCPeerConnection(options);
         const { activeIceCandidatePair } = await getStats(peerConnection, { testForChrome: true });
 
-        const expectedActiveIceCandidatePair = options.chromeFakeIceStats.find(stat => {
+        const expectedActiveIceCandidatePair = Array.from(options.chromeFakeStats.values()).find(stat => {
           return stat.nominated;
         });
-        const expectedActiveLocalCandidate = options.chromeFakeIceStats.find(stat => {
-          return stat.id === expectedActiveIceCandidatePair.localCandidateId;
-        });
-        const expectedActiveRemoteCandidate = options.chromeFakeIceStats.find(stat => {
-          return stat.id === expectedActiveIceCandidatePair.remoteCandidateId;
-        });
+        const expectedActiveLocalCandidate = options.chromeFakeStats.get(expectedActiveIceCandidatePair.localCandidateId);
+        const expectedActiveRemoteCandidate = options.chromeFakeStats.get(expectedActiveIceCandidatePair.remoteCandidateId);
 
         [
           'availableIncomingBitrate',
