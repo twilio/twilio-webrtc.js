@@ -4,6 +4,9 @@
 New Features
 ------------
 
+- `getStats` on Chrome now uses the WebRTC 1.0 compliant version of the
+  RTCPeerConnection's `getStats` API.
+
  - Worked around the [deprecation](https://blog.mozilla.org/webrtc/getstats-isremote-65/) of the
    `isRemote` property in `RTCInboundRTPStreamStats` and `RTCOutboundRTPStreamStats` in Firefox.
 
