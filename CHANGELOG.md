@@ -1,4 +1,4 @@
-2.1.4 (in progress)
+2.1.4 (December 5, 2018)
 =========================
 
 Bug Fixes
