@@ -44,7 +44,9 @@ FakeRTCPeerConnection.prototype.getSenders = function getSenders() {
 
 FakeRTCPeerConnection.prototype.getStats = function getStats() {
   var args = [].slice.call(arguments);
-  var stats = this._options.chromeFakeStats || this._options.firefoxFakeStats;
+  var stats = this._options.chromeFakeStats
+    || this._options.firefoxFakeStats
+    || this._options.safariFakeStats;
 
   if (stats) {
     if (typeof args[1] === 'function') {
