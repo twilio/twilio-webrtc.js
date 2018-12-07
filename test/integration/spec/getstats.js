@@ -16,8 +16,9 @@ const guess = guessBrowser();
 const isFirefox = guess === 'firefox';
 const isSafari = guess === 'safari';
 const sdpSemanticsIsSupported = checkIfSdpSemanticsIsSupported();
+const isSafariUnified = isSafari && 'currentDirection' in RTCRtpTransceiver.prototype
 
-const sdpSemanticsValues = isFirefox
+const sdpSemanticsValues = isFirefox || isSafari
   ? [null]  // Unified Plan
   : sdpSemanticsIsSupported
     ? ['plan-b', 'unified-plan']
@@ -29,7 +30,7 @@ sdpSemanticsValues.forEach(sdpSemantics => {
     ? `getStats ("${sdpSemantics}")`
     : 'getStats';
 
-  (isSafari ? describe.skip : describe)(description, function () {
+  (isSafari && !isSafariUnified ? describe.skip : describe.only)(description, function () {
     this.timeout(10000);
 
     describe('should resolve a Promise that resolves with a StandardizedStatsResponse which has', () => {
@@ -135,7 +136,6 @@ sdpSemanticsValues.forEach(sdpSemantics => {
             assert.equal(typeof candidate[key], type, `typeof candidate.${key} ("${typeof candidate[key]}") should be "${type}"`);
           });
         });
-
         [
           {key: 'deleted', type: 'boolean'},
           {key: 'relayProtocol', type: 'string'}

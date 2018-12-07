@@ -373,6 +373,85 @@ describe('getStats', function() {
       });
   });
 
+  it('should resolve the promise with a StandardizedStatsResponse in Safari (outbound)', () => {
+    var options = {
+      safariFakeStats: new Map(Object.entries({
+        RTCOutboundRTPVideoStream_968656041: {
+          id: "RTCOutboundRTPVideoStream_968656041",
+          timestamp: 1544153890580,
+          type: "outbound-rtp",
+          codecId: "RTCCodec_OutboundVideo_96",
+          firCount: 0,
+          isRemote: false,
+          mediaTrackId: "RTCMediaStreamTrack_sender_24",
+          mediaType: "video",
+          nackCount:0,
+          pliCount: 0,
+          qpSum: 0,
+          sliCount: 0,
+          ssrc: 968656041,
+          transportId: "RTCTransport_audio_1",
+          bytesSent: 601215,
+          framesEncoded: 150,
+          packetsSent: 736,
+          targetBitrate: 0
+        },
+        RTCMediaStreamTrack_sender_24: {
+          id: "RTCMediaStreamTrack_sender_24",
+          timestamp: 1544153890580,
+          type: "track",
+          audioLevel: 0,
+          detached: false,
+          echoReturnLoss: 0,
+          echoReturnLossEnhancement: 0,
+          ended: false,
+          frameHeight: 360,
+          frameWidth: 640,
+          framesCorrupted: 0,
+          framesDecoded: 0,
+          framesDropped: 0,
+          framesPerSecond:0,
+          framesReceived: 0,
+          framesSent: 150,
+          fullFramesLost: 0,
+          partialFramesLost: 0,
+          remoteSource: false,
+          trackIdentifier: "344d4c27-bad4-4b74-85db-b983ff33140f"
+        },
+
+      }))
+    };
+    var fakeOutbound = options.safariFakeStats.get('RTCOutboundRTPVideoStream_968656041');
+    var fakeTrack = options.safariFakeStats.get('RTCMediaStreamTrack_sender_24');
+    var peerConnection = new FakeRTCPeerConnection(options);
+    var localStream = new FakeMediaStream();
+
+    var fakeMediaStreamTrack = new FakeMediaStreamTrack('video')
+    fakeTrack.trackIdentifier = fakeMediaStreamTrack.id;
+    localStream.addTrack(fakeMediaStreamTrack);
+    peerConnection._addLocalStream(localStream);
+
+    return getStats(peerConnection, { testForSafari: true })
+      .then(response => {
+        assert.equal(response.localAudioTrackStats.length, 0);
+        assert.equal(response.localVideoTrackStats.length, 1);
+        assert.equal(response.remoteAudioTrackStats.length, 0);
+        assert.equal(response.remoteVideoTrackStats.length, 0);
+
+        response.localAudioTrackStats.concat(response.localVideoTrackStats)
+          .concat(response.remoteAudioTrackStats)
+          .concat(response.remoteVideoTrackStats)
+          .forEach(report => {
+            assert(report.trackId);
+            assert(report.timestamp);
+            assert.equal(report.frameRateSent, Math.round(fakeTrack.framesPerSecond));
+            assert.equal(report.ssrc, String(fakeOutbound.ssrc));
+            assert.equal(report.bytesSent, fakeOutbound.bytesSent);
+            assert.equal(report.packetsSent, fakeOutbound.packetsSent);
+          });
+      });
+  });
+
   describe('Active RTCIceCandidate pair stats', () => {
     context('should be present in StandardizedStatsResponse for', () => {
       it('chrome', async () => {
@@ -1093,6 +1172,121 @@ describe('getStats', function() {
             : null);
         });
       });
+
+      it('safari', async () => {
+        const options = {
+          safariFakeStats: new Map(Object.entries({
+            RTCIceCandidatePair_Izz_OUDUFHO1: {
+              id: "RTCIceCandidatePair_Izz_OUDUFHO1",
+              timestamp: 1544547877980,
+              type: "candidate-pair",
+              availableOutgoingBitrate: 2885390,
+              bytesReceived: 11786869,
+              bytesSent: 9570568,
+              currentRoundTripTime: 0.001,
+              localCandidateId: "RTCIceCandidate_Izz",
+              nominated: true,
+              priority: 9079290933588934000,
+              remoteCandidateId: "RTCIceCandidate_OUDUFHO1",
+              requestsReceived: 24,
+              requestsSent: 1,
+              responsesReceived: 24,
+              responsesSent: 24,
+              state: "succeeded",
+              totalRoundTripTime: 0.131,
+              transportId: "RTCTransport_audio_1",
+              writable: true
+            },
+            RTCIceCandidate_Izz: {
+              id: "RTCIceCandidate_Izz",
+              timestamp: 1544547877980,
+              type: "local-candidate",
+              candidateType: "host",
+              deleted: false,
+              port: 57605,
+              priority: 2113937151,
+              protocol: "udp",
+              transportId: "RTCTransport_audio_1"
+            },
+            RTCIceCandidate_OUDUFHO1: {
+              id: "RTCIceCandidate_OUDUFHO1",
+              timestamp: 1544547877980,
+              type: "remote-candidate",
+              candidateType: "host",
+              deleted: false,
+              port: 61091,
+              priority: 2122260223,
+              protocol: "udp",
+              transportId: "RTCTransport_audio_1"
+            }
+          }))
+        };
+        const peerConnection = new FakeRTCPeerConnection(options);
+        const { activeIceCandidatePair } = await getStats(peerConnection, { testForSafari: true });
+
+        const expectedActiveIceCandidatePair = Array.from(options.safariFakeStats.values()).find(stat => {
+          return stat.nominated;
+        });
+        const expectedActiveLocalCandidate = options.safariFakeStats.get(expectedActiveIceCandidatePair.localCandidateId);
+        const expectedActiveRemoteCandidate = options.safariFakeStats.get(expectedActiveIceCandidatePair.remoteCandidateId);
+
+        [
+          'availableIncomingBitrate',
+          'availableOutgoingBitrate',
+          'bytesReceived',
+          'bytesSent',
+          'consentRequestsSent',
+          'currentRoundTripTime',
+          'lastPacketReceivedTimestamp',
+          'lastPacketSentTimestamp',
+          'nominated',
+          'priority',
+          'readable',
+          'requestsReceived',
+          'requestsSent',
+          'responsesReceived',
+          'responsesSent',
+          'retransmissionsReceived',
+          'retransmissionsSent',
+          'state',
+          'totalRoundTripTime',
+          'transportId',
+          'writable'
+        ].forEach(key => {
+          assert.equal(activeIceCandidatePair[key], typeof expectedActiveIceCandidatePair[key] !== 'undefined'
+            ? expectedActiveIceCandidatePair[key]
+            : null);
+        });
+
+        [
+          'candidateType',
+          'deleted',
+          'ip',
+          'port',
+          'priority',
+          'protocol',
+          'relayProtocol',
+          'url'
+        ].forEach(key => {
+          assert.equal(activeIceCandidatePair.localCandidate[key], typeof expectedActiveLocalCandidate[key] !== 'undefined'
+            ? expectedActiveLocalCandidate[key]
+            : null);
+        });
+
+        [
+          'candidateType',
+          'ip',
+          'port',
+          'priority',
+          'protocol',
+          'url'
+        ].forEach(key => {
+          assert.equal(activeIceCandidatePair.remoteCandidate[key], typeof expectedActiveRemoteCandidate[key] !== 'undefined'
+            ? expectedActiveRemoteCandidate[key]
+            : null);
+        });
+      });
+
     });
   });
 });
