@@ -613,7 +613,7 @@ describe(description, function() {
         });
 
         // NOTE(mmalavalli): Because of a bug where "max-bundle" does not work
-        // with stopped RTCEtpTransceivers this scenario fails. So this test
+        // with stopped RTCRtpTransceivers this scenario fails. So this test is
         // disabled for Safari unified plan.
         //
         // Bug: https://bugs.chromium.org/p/webrtc/issues/detail?id=9954
