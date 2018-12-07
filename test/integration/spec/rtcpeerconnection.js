@@ -45,7 +45,7 @@ const sdpSemanticsValues = isFirefox
   ? [null]  // Unified Plan
   : sdpSemanticsIsSupported
     ? ['plan-b', 'unified-plan']
-    : ['plan-b'];
+    : ['currentDirection' in RTCRtpTransceiver.prototype ? 'unified-plan' : 'plan-b'];
 
 sdpSemanticsValues.forEach(sdpSemantics => {
 
@@ -161,7 +161,7 @@ describe(description, function() {
     });
   });
 
-  (isSafari ? describe.skip : describe)('#createOffer, called twice from signaling state "stable" without calling #setLocalDescription', () => {
+  (isSafari && sdpSemantics === 'plan-b' ? describe.skip : describe)('#createOffer, called twice from signaling state "stable" without calling #setLocalDescription', () => {
     let offer1;
     let offer2;
 
@@ -190,7 +190,7 @@ describe(description, function() {
     });
   });
 
-  (isSafari ? describe.skip : describe)('#createAnswer, called twice from signaling state "stable" without calling #setLocalDescription', () => {
+  (isSafari && sdpSemantics === 'plan-b' ? describe.skip : describe)('#createAnswer, called twice from signaling state "stable" without calling #setLocalDescription', () => {
     let answer1;
     let answer2;
 
@@ -239,7 +239,7 @@ describe(description, function() {
     });
   });
 
-  (isSafari ? describe.skip : describe)('#setRemoteDescription, called twice from signaling state "stable" with the same MediaStreamTrack IDs but different SSRCs', () => {
+  (isSafari && sdpSemantics === 'plan-b' ? describe.skip : describe)('#setRemoteDescription, called twice from signaling state "stable" with the same MediaStreamTrack IDs but different SSRCs', () => {
     let offer1;
     let offer2;
 
@@ -256,8 +256,11 @@ describe(description, function() {
 
       // Here is a dumb way to change SSRCs: just delete any SSRC groups, then
       // strip the leading digit from each SSRC.
-      offer2.sdp = offer2.sdp.replace(/^\r\na=ssrc-group:.*$/gm, '');
-      offer2.sdp = offer2.sdp.replace(/^a=ssrc:[0-9]([0-9]+)(.*)$/gm, 'a=ssrc:$1$2');
+      offer2 = new RTCSessionDescription({
+        type: offer2.type,
+        sdp: offer2.sdp.replace(/^\r\na=ssrc-group:.*$/gm, '')
+          .replace(/^a=ssrc:[0-9]([0-9]+)(.*)$/gm, 'a=ssrc:$1$2')
+      });
     });
 
     // NOTE(mroberts): This is the crux of the issue at the heart of CSDK-1206:
@@ -267,21 +270,24 @@ describe(description, function() {
     //   the right thing to do (especially when we go to Unified Plan SDP) but it's
     //   the way it's worked for a while.
     //
-    (isFirefox || isSafari
+    (isFirefox || isSafari || (isChrome && sdpSemantics === 'unified-plan')
       ? it
       : it.skip
     )('should create a single MediaStreamTrack for each MediaStreamTrack ID in the SDP, regardless of SSRC changes', async () => {
+      const getRemoteTracks = pc => sdpSemantics === 'plan-b'
+        ? flatMap(pc.getRemoteStreams(), stream => stream.getTracks())
+        : flatMap(pc.getTransceivers(), ({ receiver }) => receiver.track);
       const pc = new RTCPeerConnection({ iceServers: [], sdpSemantics });
 
       await pc.setRemoteDescription(offer1);
       const answer1 = await pc.createAnswer();
       await pc.setLocalDescription(answer1);
-      const tracksBefore = flatMap(pc.getRemoteStreams(), stream => stream.getTracks());
+      const tracksBefore = getRemoteTracks(pc);
 
       await pc.setRemoteDescription(offer2);
       const answer2 = await pc.createAnswer();
       await pc.setLocalDescription(answer2);
-      const tracksAfter = flatMap(pc.getRemoteStreams(), stream => stream.getTracks());
+      const tracksAfter = getRemoteTracks(pc);
 
       assert.equal(tracksAfter.length, tracksBefore.length);
       tracksAfter.forEach((trackAfter, i) => {
@@ -606,7 +612,13 @@ describe(description, function() {
           assert.equal(pc1.localDescription.sdp.match(/\r\nm=/g).length, 1);
         });
 
-        it('Scenario 2', async () => {
+        // NOTE(mmalavalli): Because of a bug where "max-bundle" does not work
+        // with stopped RTCEtpTransceivers this scenario fails. So this test
+        // disabled for Safari unified plan.
+        //
+        // Bug: https://bugs.chromium.org/p/webrtc/issues/detail?id=9954
+        //
+        (isSafari && sdpSemantics === 'unified-plan' ? it.skip : it)('Scenario 2', async () => {
           const configuration = {
             bundlePolicy: 'max-bundle',
             rtcpMuxPolicy: 'require'
@@ -787,7 +799,7 @@ function testGetSenders(sdpSemantics, signalingState) {
       if (isFirefox && signalingState === 'have-remote-offer') {
         assert.deepEqual(actualSenders.length, senders.length);
         return;
-      } else if (isSafari && signalingState === 'have-local-offer') {
+      } else if (isSafari && sdpSemantics === 'plan-b' && signalingState === 'have-local-offer') {
         assert.deepEqual(actualSenders.length, senders.length + 1);
         return;
       }
@@ -963,7 +975,7 @@ function testDtlsRoleNegotiation(sdpSemantics) {
           });
         });
 
-        (isSafari ? it.skip : it)('RTCPeerConnection 1 answers with "a=setup:passive"', () => {
+        (isSafari && sdpSemantics === 'plan-b' ? it.skip : it)('RTCPeerConnection 1 answers with "a=setup:passive"', () => {
           return pc1.createAnswer().then(answer => {
             assert(answer.sdp.match(/a=setup:passive/));
           });
@@ -1009,7 +1021,7 @@ function testGlare(sdpSemantics) {
           });
         });
 
-        (isSafari ? it.skip : it)('RTCPeerConnection 1 calls createOffer and setLocalDescription', () => {
+        (isSafari && sdpSemantics === 'plan-b' ? it.skip : it)('RTCPeerConnection 1 calls createOffer and setLocalDescription', () => {
           return pc1.createOffer().then(offer => {
             return pc1.setLocalDescription(offer);
           });
