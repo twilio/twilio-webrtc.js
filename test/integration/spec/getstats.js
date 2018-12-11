@@ -30,7 +30,7 @@ sdpSemanticsValues.forEach(sdpSemantics => {
     ? `getStats ("${sdpSemantics}")`
     : 'getStats';
 
-  (isSafari && !isSafariUnified ? describe.skip : describe.only)(description, function () {
+  (isSafari && !isSafariUnified ? describe.skip : describe)(description, function () {
     this.timeout(10000);
 
     describe('should resolve a Promise that resolves with a StandardizedStatsResponse which has', () => {
