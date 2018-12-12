@@ -4,6 +4,10 @@
 New Features
 ------------
 
+- Added support for Unified Plan SDPs on Safari 12.1. (JSDK-2231)
+
+- Removed workaround for this [Safari bug](https://bugs.webkit.org/show_bug.cgi?id=174323).
+
  - Removed workaround for this Chrome [bug](https://bugs.chromium.org/p/chromium/issues/detail?id=774303).
   Now, we no longer suppress the RTCPeerConnection's native `RTCTrackEvent`.
  
