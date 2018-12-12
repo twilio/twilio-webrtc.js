@@ -102,8 +102,6 @@ browsers.
 * Provides a workaround for the case where, when the SSRC of a `MediaStreamTrack` changes, the
   browser treats this as a removal of the existing `MediaStreamTrack` and the addition of a new
   `MediaStreamTrack`.
-* Provides a workaround for [this bug](https://bugs.webkit.org/show_bug.cgi?id=174323), where
-  trying to access the `localDescription` or `remoteDescription` throws an exception.
 * Provides a shim for the `removeTrack` method in order to work around [this bug](https://bugs.webkit.org/show_bug.cgi?id=174327).
 * Provides a shim for the `addTrack` method. Since `removeTrack` is shimmed, there is a necessity to
   maintain an explicit list of added `RTCRtpSender`s.
