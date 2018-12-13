@@ -262,17 +262,28 @@ const activeIceCandidatePairStatsNullProps = {
     'retransmissionsReceived',
     'retransmissionsSent',
     'totalRoundTripTime'
+  ]),
+  safari: new Set([
+    'availableIncomingBitrate',
+    'consentRequestsSent',
+    'lastPacketReceivedTimestamp',
+    'lastPacketSentTimestamp',
+    'readable',
+    'retransmissionsReceived',
+    'retransmissionsSent'
   ])
 };
 
 const localCandidateStatsNullProps = {
   chrome: new Set(['relayProtocol', 'url']),
-  firefox: new Set(['priority', 'relayProtocol', 'url'])
+  firefox: new Set(['priority', 'relayProtocol', 'url']),
+  safari: new Set(['ip', 'relayProtocol', 'url'])
 };
 
 const remoteCandidateStatsNullProps = {
   chrome: new Set(['url']),
-  firefox: new Set(['priority', 'url'])
+  firefox: new Set(['priority', 'url']),
+  safari: new Set(['ip', 'url'])
 };
 
 exports.activeIceCandidatePairStatsNullProps = activeIceCandidatePairStatsNullProps;
