@@ -4,6 +4,9 @@
 New Features
 ------------
 
+- `getStats` is now supported on Safari 12.1 and above. It is not supported
+  on Safari 12.0 and below due to this [Safari bug](https://bugs.webkit.org/show_bug.cgi?id=192601).
+
 - Added support for Unified Plan SDPs on Safari 12.1. (JSDK-2231)
 
 - Removed workaround for this [Safari bug](https://bugs.webkit.org/show_bug.cgi?id=174323).
