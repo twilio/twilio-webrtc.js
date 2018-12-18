@@ -772,7 +772,7 @@ function testAddIceCandidate(sdpSemantics, signalingState) {
         assert(error instanceof Error);
       });
     } else {
-      it('should return a Promise that resolves to undefiend', () => {
+      it('should return a Promise that resolves to undefined', () => {
         assert.equal(result, undefined);
       });
     }
