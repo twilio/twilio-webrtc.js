@@ -18,11 +18,11 @@ const isSafari = guess === 'safari';
 const sdpSemanticsIsSupported = checkIfSdpSemanticsIsSupported();
 const isSafariUnified = isSafari && 'currentDirection' in RTCRtpTransceiver.prototype
 
-const sdpSemanticsValues = isFirefox || isSafari
+const sdpSemanticsValues = isFirefox
   ? [null]  // Unified Plan
   : sdpSemanticsIsSupported
     ? ['plan-b', 'unified-plan']
-    : ['plan-b'];
+    : isSafariUnified ? ['unified-plan'] : [];
 
 sdpSemanticsValues.forEach(sdpSemantics => {
 
@@ -30,10 +30,10 @@ sdpSemanticsValues.forEach(sdpSemantics => {
     ? `getStats ("${sdpSemantics}")`
     : 'getStats';
 
-  (isSafari && !isSafariUnified ? describe.skip : describe)(description, function () {
+  describe(description, function () {
     this.timeout(10000);
 
-    describe('should resolve a Promise that resolves with a StandardizedStatsResponse which has', () => {
+    context('should return a Promise that resolves with a StandardizedStatsResponse which has', () => {
       let pc1;
       let pc2;
       let stats;
@@ -85,7 +85,7 @@ sdpSemanticsValues.forEach(sdpSemantics => {
           if (pc1.iceConnectionState === 'connected') {
             deferred.resolve();
           }
-        })
+        });
 
         const offer = await pc1.createOffer();
         await pc1.setLocalDescription(offer);
