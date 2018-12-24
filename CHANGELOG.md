@@ -4,6 +4,9 @@
 New Features
 ------------
 
+- `getStats` on Firefox will now consume the spec-compliant `RTCIceCandidateStats`
+  available in [versions 65 and above](https://www.fxsitecompat.com/en-CA/docs/2018/rtcicecandidatestats-has-been-updated-to-the-latest-spec/). (JSDK-2235)
+
 - Added support for Unified Plan SDPs on Safari 12.1. (JSDK-2231)
 
 - Removed workaround for this [Safari bug](https://bugs.webkit.org/show_bug.cgi?id=174323).

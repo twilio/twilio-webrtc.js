@@ -275,15 +275,15 @@ const activeIceCandidatePairStatsNullProps = {
 };
 
 const localCandidateStatsNullProps = {
-  chrome: new Set(['relayProtocol', 'url']),
-  firefox: new Set(['priority', 'relayProtocol', 'url']),
-  safari: new Set(['ip', 'relayProtocol', 'url'])
+  chrome: () => new Set(['relayProtocol', 'url']),
+  firefox: version => version < 65 ? new Set(['priority', 'relayProtocol', 'url']) : new Set(['relayProtocol', 'url']),
+  safari: () => new Set(['ip', 'relayProtocol', 'url'])
 };
 
 const remoteCandidateStatsNullProps = {
-  chrome: new Set(['url']),
-  firefox: new Set(['priority', 'url']),
-  safari: new Set(['ip', 'url'])
+  chrome: () => new Set(['url']),
+  firefox: version => version < 65 ? new Set(['priority', 'url']) : new Set(['url']),
+  safari: () => new Set(['ip', 'url'])
 };
 
 exports.activeIceCandidatePairStatsNullProps = activeIceCandidatePairStatsNullProps;
