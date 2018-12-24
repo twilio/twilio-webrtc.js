@@ -111,7 +111,8 @@ sdpSemanticsValues.forEach(sdpSemantics => {
           {key: 'url', type: 'string'}
         ].forEach(({key, type}) => {
           [localCandidate, remoteCandidate].forEach((candidate, i) => {
-            if ([localCandidateStatsNullProps, remoteCandidateStatsNullProps][i][guessBrowser()].has(key)) {
+            const firefoxVersion = isFirefox && navigator.userAgent.match(/Firefox\/(\d+)\./)[1];
+            if ([localCandidateStatsNullProps, remoteCandidateStatsNullProps][i][guessBrowser()](firefoxVersion).has(key)) {
               assert.equal(candidate[key], null);
               return;
             }
@@ -140,7 +141,8 @@ sdpSemanticsValues.forEach(sdpSemantics => {
           {key: 'deleted', type: 'boolean'},
           {key: 'relayProtocol', type: 'string'}
         ].forEach(({key, type}) => {
-          if (localCandidateStatsNullProps[guessBrowser()].has(key)) {
+          const firefoxVersion = isFirefox && navigator.userAgent.match(/Firefox\/(\d+)\./)[1];
+          if (localCandidateStatsNullProps[guessBrowser()](firefoxVersion).has(key)) {
             assert.equal(localCandidate[key], null);
             return;
           }
