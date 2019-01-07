@@ -22,6 +22,16 @@ Bug Fixes
 
 - Worked around Chrome [Bug 894231](https://bugs.chromium.org/p/chromium/issues/detail?id=894231).
 
+2.1.4 (December 5, 2018)
+=========================
+
+Bug Fixes
+---------
+
+- Fixed a bug in SafariRTCPeerConnection where `remoteDescription`,
+  when accessed in an RTCTrackEvent listener returned pending remote description
+  even though a new RTCSessionDescription had already been applied. (JSDK-2224)
+
 2.1.3 (August 28, 2018)
 =======================
 
