@@ -1,21 +1,17 @@
-2.2.0 (in progress)
-===================
+2.2.0 (January 10, 2019)
+========================
 
 New Features
 ------------
 
 - `getStats` on Firefox will now consume the spec-compliant `RTCIceCandidateStats`
   available in [versions 65 and above](https://www.fxsitecompat.com/en-CA/docs/2018/rtcicecandidatestats-has-been-updated-to-the-latest-spec/). (JSDK-2235)
-
 - Added support for Unified Plan SDPs on Safari 12.1. (JSDK-2231)
-
 - Removed workaround for this [Safari bug](https://bugs.webkit.org/show_bug.cgi?id=174323).
-
- - Removed workaround for this Chrome [bug](https://bugs.chromium.org/p/chromium/issues/detail?id=774303).
-  Now, we no longer suppress the RTCPeerConnection's native `RTCTrackEvent`.
- 
- - Worked around the [deprecation](https://blog.mozilla.org/webrtc/getstats-isremote-65/) of the
-   `isRemote` property in `RTCInboundRTPStreamStats` and `RTCOutboundRTPStreamStats` in Firefox.
+- Removed workaround for this Chrome [bug](https://bugs.chromium.org/p/chromium/issues/detail?id=774303).
+  Now, we no longer suppress the RTCPeerConnection's native `RTCTrackEvent`. 
+- Worked around the [deprecation](https://blog.mozilla.org/webrtc/getstats-isremote-65/) of the
+  `isRemote` property in `RTCInboundRTPStreamStats` and `RTCOutboundRTPStreamStats` in Firefox.
 
 Bug Fixes
 ---------
