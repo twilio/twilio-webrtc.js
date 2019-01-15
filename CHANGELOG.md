@@ -1,3 +1,11 @@
+3.2.1 (in progress)
+===================
+
+New Features
+------------
+
+- Worked around Firefox [Bug 1491957](https://bugzilla.mozilla.org/show_bug.cgi?id=1491957).
+
 3.2.0 (January 7, 2019)
 =======================
 
