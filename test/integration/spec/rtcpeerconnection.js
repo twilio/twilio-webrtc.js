@@ -250,6 +250,14 @@ describe(description, function() {
       addStream(pc, stream);
       const options = { offerToReceiveAudio: true, offerToReceiveVideo: true };
       offer1 = await pc.createOffer(options);
+
+      // NOTE(mmalavalli): Starting from Chrome 73, calling createOffer() without
+      // setLocalDescription() on the previous offer will generate new mids for
+      // RTCRtpTransceivers still under negotiation. So, in order to lock in the mids,
+      // we call setLocalDescription() on the pending local offer, if any, before
+      // calling createOffer() on the underlying RTCPeerConnection.
+      await pc.setLocalDescription(offer1);
+
       offer2 = await pc.createOffer(options);
       pc.close();
       stream.getTracks().forEach(track => track.stop());
