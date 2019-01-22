@@ -1,3 +1,12 @@
+2.2.1 (in progress)
+===================
+
+Bug Fixes
+---------
+
+- Added back the workaround for this Chrome [bug](https://bugs.chromium.org/p/chromium/issues/detail?id=774303)
+  in order to support Electron 2.x. (JSDK-2266)
+
 2.2.0 (January 10, 2019)
 ========================
 

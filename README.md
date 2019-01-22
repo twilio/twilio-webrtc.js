@@ -80,7 +80,12 @@ browsers.
 * Works around a [this bug](https://bugs.chromium.org/p/chromium/issues/detail?id=894231)
   in "unified-plan" SDPs where adding a `MediaStreamTrack` that was previously added and
   removed generates an SDP where the MSID does not match the `MediaStreamTrack` ID.
-
+* Does not depend on the native "track" event for "plan-b" RTCPeerConnection because
+  of [this bug](https://bugs.chromium.org/p/chromium/issues/detail?id=774303), which partly
+  refers to "ontrack" not firing when expected. We have filed
+  [this bug](https://bugs.chromium.org/p/chromium/issues/detail?id=783433) specifically for this.
+  This workaround is essential for Electron 2.x support.
+  
 #### Firefox
 * For new offers, adds support for calling `setLocalDescription` and `setRemoteDescription` in
   `have-local-offer` and `have-remote-offer` signaling states respectively.
