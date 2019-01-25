@@ -45,7 +45,9 @@ const sdpSemanticsValues = isFirefox
   ? [null]  // Unified Plan
   : sdpSemanticsIsSupported
     ? ['plan-b', 'unified-plan']
-    : ['currentDirection' in RTCRtpTransceiver.prototype ? 'unified-plan' : 'plan-b'];
+    : [typeof RTCRtpTransceiver !== 'undefined' && 'currentDirection' in RTCRtpTransceiver.prototype
+        ? 'unified-plan'
+        : 'plan-b'];
 
 sdpSemanticsValues.forEach(sdpSemantics => {
 
