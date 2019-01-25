@@ -4,6 +4,7 @@
 Bug Fixes
 ---------
 
+- Fixed a bug where `getStats` was throwing a TypeError in Electron 2.x and 3.x. (JSDK-2267)
 - Added back the workaround for this Chrome [bug](https://bugs.chromium.org/p/chromium/issues/detail?id=774303)
   in order to support Electron 2.x. (JSDK-2266)
 
