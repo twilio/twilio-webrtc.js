@@ -88,7 +88,6 @@ describe('getStats', function() {
           audioLevel: 0,
           frameHeight: 360,
           frameWidth: 640,
-          audioLevel: 0,
           concealedSamples: 62440,
           concealmentEvents: 91,
           detached: false,

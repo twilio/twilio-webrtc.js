@@ -13,16 +13,22 @@ const { guessBrowser } = require('../../../lib/util');
 const { checkIfSdpSemanticsIsSupported } = require('../../../lib/util/sdp');
 
 const guess = guessBrowser();
+const isChrome = guess === 'chrome';
 const isFirefox = guess === 'firefox';
 const isSafari = guess === 'safari';
 const sdpSemanticsIsSupported = checkIfSdpSemanticsIsSupported();
-const isSafariUnified = isSafari && 'currentDirection' in RTCRtpTransceiver.prototype
+
+const isSafariUnified = isSafari
+  && typeof RTCRtpTransceiver !== 'undefined'
+  && 'currentDirection' in RTCRtpTransceiver.prototype;
 
 const sdpSemanticsValues = isFirefox
   ? [null]  // Unified Plan
   : sdpSemanticsIsSupported
     ? ['plan-b', 'unified-plan']
-    : isSafariUnified ? ['unified-plan'] : [];
+    : isChrome
+      ? typeof RTCRtpTransceiver !== 'undefined' ? ['unified-plan'] : ['plan-b']
+      : isSafariUnified ? ['unified-plan'] : [];
 
 sdpSemanticsValues.forEach(sdpSemantics => {
 
