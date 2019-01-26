@@ -8,7 +8,7 @@ var RTCSessionDescription = require('../../../lib/rtcsessiondescription');
 var RTCPeerConnection = require('../../../lib/rtcpeerconnection');
 var util = require('../../lib/util');
 var { flatMap, guessBrowser } = require('../../../lib/util');
-var { checkIfSdpSemanticsIsSupported } = require('../../../lib/util/sdp');
+var { getSdpFormat } = require('../../../lib/util/sdp');
 
 const detectSilence = require('../../lib/detectsilence');
 
@@ -29,7 +29,7 @@ const guess = guessBrowser();
 const isChrome = guess === 'chrome';
 const isFirefox = guess === 'firefox';
 const isSafari = guess === 'safari';
-const sdpSemanticsIsSupported = checkIfSdpSemanticsIsSupported();
+const sdpFormat = getSdpFormat();
 
 const chromeVersion = isChrome && typeof navigator === 'object'
   ? navigator.userAgent.match(/Chrom(e|ium)\/(\d+)\./)[2]
@@ -39,21 +39,7 @@ const firefoxVersion = isFirefox && typeof navigator === 'object'
   ? navigator.userAgent.match(/Firefox\/(\d+)\./)[1]
   : null;
 
-// NOTE(mroberts): In Chrome, we run these tests twice if `sdpSemantics` is
-// supported: once for "plan-b" and once for "unified-plan".
-const sdpSemanticsValues = isFirefox
-  ? [null]  // Unified Plan
-  : sdpSemanticsIsSupported
-    ? ['plan-b', 'unified-plan']
-    : ['currentDirection' in RTCRtpTransceiver.prototype ? 'unified-plan' : 'plan-b'];
-
-sdpSemanticsValues.forEach(sdpSemantics => {
-
-const description = sdpSemantics
-  ? `RTCPeerConnection ("${sdpSemantics}")`
-  : 'RTCPeerConnection';
-
-describe(description, function() {
+describe(`RTCPeerConnection(${sdpFormat})`, function() {
   after(() => {
     if (typeof gc === 'function') {
       gc();
@@ -62,32 +48,32 @@ describe(description, function() {
 
   this.timeout(30000);
 
-  describe('constructor', () => testConstructor(sdpSemantics));
+  describe('constructor', () => testConstructor());
 
   describe('#addIceCandidate, called from signaling state', () => {
-    signalingStates.forEach(signalingState => testAddIceCandidate(sdpSemantics, signalingState));
+    signalingStates.forEach(signalingState => testAddIceCandidate(signalingState));
   });
 
   describe('#getSenders', () => {
-    signalingStates.forEach(signalingState => testGetSenders(sdpSemantics, signalingState));
+    signalingStates.forEach(signalingState => testGetSenders(signalingState));
   });
 
   describe('#getReceivers', () => {
-    signalingStates.forEach(signalingState => testGetReceivers(sdpSemantics, signalingState));
+    signalingStates.forEach(signalingState => testGetReceivers(signalingState));
   });
 
   describe('#close, called from signaling state', () => {
-    signalingStates.forEach(signalingState => testClose(sdpSemantics, signalingState));
+    signalingStates.forEach(signalingState => testClose(signalingState));
   });
 
-  describe('#addTrack', () => testAddTrack(sdpSemantics));
+  describe('#addTrack', () => testAddTrack());
 
-  describe('#removeTrack', () => testRemoveTrack(sdpSemantics));
+  describe('#removeTrack', () => testRemoveTrack());
 
   describe('#createAnswer, called from signaling state', () => {
     signalingStates.forEach(signalingState => {
       context(JSON.stringify(signalingState), () => {
-        testCreateAnswer(sdpSemantics, signalingState);
+        testCreateAnswer(signalingState);
       });
     });
   });
@@ -95,7 +81,7 @@ describe(description, function() {
   describe('#createDataChannel', () => {
     describe('called without setting maxPacketLifeTime', () => {
       it('sets maxPacketLifeTime to null', () => {
-        const pc = new RTCPeerConnection({ sdpSemantics });
+        const pc = new RTCPeerConnection();
         const dataChannel = pc.createDataChannel('foo');
         assert.equal(dataChannel.maxPacketLifeTime, null);
       });
@@ -103,14 +89,14 @@ describe(description, function() {
 
     describe('called without setting maxRetransmits', () => {
       it('sets maxRetransmits to null', () => {
-        const pc = new RTCPeerConnection({ sdpSemantics });
+        const pc = new RTCPeerConnection();
         const dataChannel = pc.createDataChannel('foo');
         assert.equal(dataChannel.maxRetransmits, null);
       });
     });
 
     describe('called without setting ordered', () => {
-      const pc = new RTCPeerConnection({ sdpSemantics });
+      const pc = new RTCPeerConnection();
       const dataChannel = pc.createDataChannel('foo');
       assert.equal(dataChannel.ordered, true);
     });
@@ -118,7 +104,7 @@ describe(description, function() {
     describe('called setting maxPacketLifeTime', () => {
       (isFirefox ? it.skip : it)('sets maxPacketLifeTime to the specified value', () => {
         const maxPacketLifeTime = 3;
-        const pc = new RTCPeerConnection({ sdpSemantics });
+        const pc = new RTCPeerConnection();
         const dataChannel = pc.createDataChannel('foo', { maxPacketLifeTime });
         assert.equal(dataChannel.maxPacketLifeTime, maxPacketLifeTime);
       });
@@ -127,7 +113,7 @@ describe(description, function() {
     describe('called setting maxRetransmits', () => {
       (isFirefox ? it.skip : it)('sets maxRetransmits to the specified value', () => {
         const maxRetransmits = 3;
-        const pc = new RTCPeerConnection({ sdpSemantics });
+        const pc = new RTCPeerConnection();
         const dataChannel = pc.createDataChannel('foo', { maxRetransmits });
         assert.equal(dataChannel.maxRetransmits, maxRetransmits);
       });
@@ -136,7 +122,7 @@ describe(description, function() {
     describe('called setting ordered to false', () => {
       it('sets ordered to false', () => {
         const ordered = false;
-        const pc = new RTCPeerConnection({ sdpSemantics });
+        const pc = new RTCPeerConnection();
         const dataChannel = pc.createDataChannel('foo', { ordered });
         assert.equal(dataChannel.ordered, ordered);
       });
@@ -144,7 +130,7 @@ describe(description, function() {
 
     describe('called setting both maxPacketLifeTime and maxRetransmits', () => {
       it('should throw', () => {
-        const pc = new RTCPeerConnection({ sdpSemantics });
+        const pc = new RTCPeerConnection();
         assert.throws(() => pc.createDataChannel('foo', {
           maxPacketLifeTime: 3,
           maxRetransmits: 3
@@ -156,19 +142,19 @@ describe(description, function() {
   describe('#createOffer, called from signaling state', () => {
     signalingStates.forEach(signalingState => {
       context(JSON.stringify(signalingState), () => {
-        testCreateOffer(sdpSemantics, signalingState);
+        testCreateOffer(signalingState);
       });
     });
   });
 
-  (isSafari && sdpSemantics === 'plan-b' ? describe.skip : describe)('#createOffer, called twice from signaling state "stable" without calling #setLocalDescription', () => {
+  (isSafari && sdpFormat === 'planb' ? describe.skip : describe)('#createOffer, called twice from signaling state "stable" without calling #setLocalDescription', () => {
     let offer1;
     let offer2;
 
     before(async () => {
       const constraints = { audio: true, video: true };
       const stream = await makeStream(constraints);
-      const pc = new RTCPeerConnection({ iceServers: [], sdpSemantics });
+      const pc = new RTCPeerConnection({ iceServers: [] });
       addStream(pc, stream);
       const options = { offerToReceiveAudio: true, offerToReceiveVideo: true };
       offer1 = await pc.createOffer(options);
@@ -190,15 +176,15 @@ describe(description, function() {
     });
   });
 
-  (isSafari && sdpSemantics === 'plan-b' ? describe.skip : describe)('#createAnswer, called twice from signaling state "stable" without calling #setLocalDescription', () => {
+  (isSafari && sdpFormat === 'planb' ? describe.skip : describe)('#createAnswer, called twice from signaling state "stable" without calling #setLocalDescription', () => {
     let answer1;
     let answer2;
 
     before(async () => {
       const constraints = { audio: true, video: true };
       const stream = await makeStream(constraints);
-      const pc1 = new RTCPeerConnection({ iceServers: [], sdpSemantics });
-      const pc2 = new RTCPeerConnection({ iceServers: [], sdpSemantics });
+      const pc1 = new RTCPeerConnection({ iceServers: [] });
+      const pc2 = new RTCPeerConnection({ iceServers: [] });
       addStream(pc2, stream);
       const options = { offerToReceiveAudio: true, offerToReceiveVideo: true };
       const offer = await pc1.createOffer(options);
@@ -226,7 +212,7 @@ describe(description, function() {
   describe('#setLocalDescription, called from signaling state', () => {
     signalingStates.forEach(signalingState => {
       context(JSON.stringify(signalingState) + ' with a description of type', () => {
-        sdpTypes.forEach(sdpType => testSetDescription(sdpSemantics, true, signalingState, sdpType));
+        sdpTypes.forEach(sdpType => testSetDescription(true, signalingState, sdpType));
       });
     });
   });
@@ -234,19 +220,19 @@ describe(description, function() {
   describe('#setRemoteDescription, called from signaling state', () => {
     signalingStates.forEach(signalingState => {
       context(JSON.stringify(signalingState) + ' with a description of type', () => {
-        sdpTypes.forEach(sdpType => testSetDescription(sdpSemantics, false, signalingState, sdpType));
+        sdpTypes.forEach(sdpType => testSetDescription(false, signalingState, sdpType));
       });
     });
   });
 
-  (isSafari && sdpSemantics === 'plan-b' ? describe.skip : describe)('#setRemoteDescription, called twice from signaling state "stable" with the same MediaStreamTrack IDs but different SSRCs', () => {
+  (isSafari && sdpFormat === 'planb' ? describe.skip : describe)('#setRemoteDescription, called twice from signaling state "stable" with the same MediaStreamTrack IDs but different SSRCs', () => {
     let offer1;
     let offer2;
 
     beforeEach(async () => {
       const constraints = { audio: true, video: true };
       const stream = await makeStream(constraints);
-      const pc = new RTCPeerConnection({ iceServers: [], sdpSemantics });
+      const pc = new RTCPeerConnection({ iceServers: [] });
       addStream(pc, stream);
       const options = { offerToReceiveAudio: true, offerToReceiveVideo: true };
       offer1 = await pc.createOffer(options);
@@ -278,14 +264,14 @@ describe(description, function() {
     //   the right thing to do (especially when we go to Unified Plan SDP) but it's
     //   the way it's worked for a while.
     //
-    (isFirefox || isSafari || (isChrome && sdpSemantics === 'unified-plan')
+    (isFirefox || isSafari || (isChrome && sdpFormat === 'unified')
       ? it
       : it.skip
     )('should create a single MediaStreamTrack for each MediaStreamTrack ID in the SDP, regardless of SSRC changes', async () => {
-      const getRemoteTracks = pc => sdpSemantics === 'plan-b'
+      const getRemoteTracks = pc => sdpFormat === 'planb'
         ? flatMap(pc.getRemoteStreams(), stream => stream.getTracks())
         : flatMap(pc.getTransceivers(), ({ receiver }) => receiver.track);
-      const pc = new RTCPeerConnection({ iceServers: [], sdpSemantics });
+      const pc = new RTCPeerConnection({ iceServers: [] });
 
       await pc.setRemoteDescription(offer1);
       const answer1 = await pc.createAnswer();
@@ -305,14 +291,14 @@ describe(description, function() {
     });
   });
 
-  describe('DTLS role negotiation', () => testDtlsRoleNegotiation(sdpSemantics));
+  describe('DTLS role negotiation', () => testDtlsRoleNegotiation());
 
-  describe('Glare', () => testGlare(sdpSemantics));
+  describe('Glare', () => testGlare());
 
   describe('"datachannel" event', () => {
     describe('when maxPacketLifeTime is not set', () => {
       it('sets maxPacketLifeTime to null', async () => {
-        const [offerer, answerer] = createPeerConnections(sdpSemantics);
+        const [offerer, answerer] = createPeerConnections();
         offerer.createDataChannel('foo');
         const dataChannelPromise = waitForDataChannel(answerer);
         await negotiate(offerer, answerer);
@@ -323,7 +309,7 @@ describe(description, function() {
 
     describe('when maxRetransmits is not set', () => {
       it('sets maxRetransmits to null', async () => {
-        const [offerer, answerer] = createPeerConnections(sdpSemantics);
+        const [offerer, answerer] = createPeerConnections();
         offerer.createDataChannel('foo');
         const dataChannelPromise = waitForDataChannel(answerer);
         await negotiate(offerer, answerer);
@@ -334,7 +320,7 @@ describe(description, function() {
 
     describe('when ordered is not set', () => {
       it('sets ordered to true', async () => {
-        const [offerer, answerer] = createPeerConnections(sdpSemantics);
+        const [offerer, answerer] = createPeerConnections();
         offerer.createDataChannel('foo');
         const dataChannelPromise = waitForDataChannel(answerer);
         await negotiate(offerer, answerer);
@@ -346,7 +332,7 @@ describe(description, function() {
     describe('when maxPacketLifeTime is set', () => {
       (isFirefox ? it.skip : it)('sets maxPacketLifeTime to the specified value', async () => {
         const maxPacketLifeTime = 3;
-        const [offerer, answerer] = createPeerConnections(sdpSemantics);
+        const [offerer, answerer] = createPeerConnections();
         offerer.createDataChannel('foo', { maxPacketLifeTime });
         const dataChannelPromise = waitForDataChannel(answerer);
         await negotiate(offerer, answerer);
@@ -358,7 +344,7 @@ describe(description, function() {
     describe('when maxRetransmits is set', () => {
       (isFirefox ? it.skip : it)('sets maxRetransmits to the specified value', async () => {
         const maxRetransmits = 3;
-        const [offerer, answerer] = createPeerConnections(sdpSemantics);
+        const [offerer, answerer] = createPeerConnections();
         offerer.createDataChannel('foo', { maxRetransmits });
         const dataChannelPromise = waitForDataChannel(answerer);
         await negotiate(offerer, answerer);
@@ -370,7 +356,7 @@ describe(description, function() {
     describe('when ordered is set to false', () => {
       it('sets ordered to true', async () => {
         const ordered = false;
-        const [offerer, answerer] = createPeerConnections(sdpSemantics);
+        const [offerer, answerer] = createPeerConnections();
         offerer.createDataChannel('foo', { ordered });
         const dataChannelPromise = waitForDataChannel(answerer);
         await negotiate(offerer, answerer);
@@ -383,8 +369,8 @@ describe(description, function() {
   describe('"track" event', () => {
     context('when a new MediaStreamTrack is added', () => {
       it('should trigger a "track" event on the remote RTCPeerConnection with the added MediaStreamTrack', async () => {
-        const pc1 = new RTCPeerConnection({ iceServers: [], sdpSemantics });
-        const pc2 = new RTCPeerConnection({ iceServers: [], sdpSemantics });
+        const pc1 = new RTCPeerConnection({ iceServers: [] });
+        const pc2 = new RTCPeerConnection({ iceServers: [] });
 
         const stream = new MediaStream();
 
@@ -453,7 +439,7 @@ describe(description, function() {
         rtcpMuxPolicy: 'required'
       };
 
-      const [pc1, pc2] = createPeerConnections(sdpSemantics, configuration);
+      const [pc1, pc2] = createPeerConnections(configuration);
 
       const audioContext = new AudioContext();
       const mediaStreamDestinationNode = audioContext.createMediaStreamDestination();
@@ -503,7 +489,7 @@ describe(description, function() {
     });
   });
 
-  if (RTCPeerConnection.prototype.addTransceiver && sdpSemantics !== 'plan-b') {
+  if (RTCPeerConnection.prototype.addTransceiver && sdpFormat !== 'planb') {
     describe('RTCRtpTransceiver', () => {
       describe('addTransceiver(kind, init)', () => {
         const kind = 'audio';
@@ -512,7 +498,7 @@ describe(description, function() {
         let transceiver;
 
         before(() => {
-          pc = new RTCPeerConnection({ sdpSemantics });
+          pc = new RTCPeerConnection();
           transceiver = pc.addTransceiver(kind, {});
         });
 
@@ -555,7 +541,7 @@ describe(description, function() {
         let transceiver;
 
         before(async () => {
-          pc = new RTCPeerConnection({ sdpSemantics });
+          pc = new RTCPeerConnection();
           const stream = await navigator.mediaDevices.getUserMedia({ audio: true, fake: true });
           [track] = await stream.getAudioTracks();
           transceiver = pc.addTransceiver(track, {});
@@ -602,7 +588,7 @@ describe(description, function() {
             rtcpMuxPolicy: 'require'
           };
 
-          const [pc1, pc2] = createPeerConnections(sdpSemantics, configuration);
+          const [pc1, pc2] = createPeerConnections(configuration);
 
           // Round 1
           const t1 = pc1.addTransceiver('audio');
@@ -626,13 +612,13 @@ describe(description, function() {
         //
         // Bug: https://bugs.chromium.org/p/webrtc/issues/detail?id=9954
         //
-        (isSafari && sdpSemantics === 'unified-plan' ? it.skip : it)('Scenario 2', async () => {
+        (isSafari && sdpFormat === 'unified' ? it.skip : it)('Scenario 2', async () => {
           const configuration = {
             bundlePolicy: 'max-bundle',
             rtcpMuxPolicy: 'require'
           };
 
-          const [pc1, pc2] = createPeerConnections(sdpSemantics, configuration);
+          const [pc1, pc2] = createPeerConnections(configuration);
 
           // Round 1
           const t1 = pc1.addTransceiver('audio');
@@ -653,8 +639,6 @@ describe(description, function() {
       });
     });
   }
-});
-
 });
 
 function assertEqualDescriptions(actual, expected) {
@@ -679,11 +663,11 @@ function emptyDescription() {
   return null;
 }
 
-function testConstructor(sdpSemantics) {
+function testConstructor() {
   var test;
 
   beforeEach(() => {
-    return makeTest({ sdpSemantics }).then(_test => test = _test);
+    return makeTest().then(_test => test = _test);
   });
 
   it('should return an instance of RTCPeerConnection', () => {
@@ -719,7 +703,7 @@ function testConstructor(sdpSemantics) {
   });
 }
 
-function testAddIceCandidate(sdpSemantics, signalingState) {
+function testAddIceCandidate(signalingState) {
   // NOTE(mroberts): "stable" and "have-local-offer" only trigger failure here
   // because we test one round of negotiation. If we tested multiple rounds,
   // such that remoteDescription was non-null, we would accept a success here.
@@ -745,7 +729,6 @@ function testAddIceCandidate(sdpSemantics, signalingState) {
       result = null;
 
       return makeTest({
-        sdpSemantics,
         signalingState
       }).then(_test => {
         test = _test;
@@ -787,7 +770,7 @@ function testAddIceCandidate(sdpSemantics, signalingState) {
   });
 }
 
-function testGetSenders(sdpSemantics, signalingState) {
+function testGetSenders(signalingState) {
   var senders;
   var stream;
   var test;
@@ -795,8 +778,8 @@ function testGetSenders(sdpSemantics, signalingState) {
   before(async () => {
     stream = await makeStream({ audio: true, video: true });
     test = signalingState === 'closed'
-      ? await makeTest({ sdpSemantics })
-      : await makeTest({ sdpSemantics, signalingState });
+      ? await makeTest()
+      : await makeTest({ signalingState });
     senders = addStream(test.peerConnection, stream);
     signalingState === 'closed' && test.peerConnection.close();
   });
@@ -807,7 +790,7 @@ function testGetSenders(sdpSemantics, signalingState) {
       if (isFirefox && signalingState === 'have-remote-offer') {
         assert.deepEqual(actualSenders.length, senders.length);
         return;
-      } else if (isSafari && sdpSemantics === 'plan-b' && signalingState === 'have-local-offer') {
+      } else if (isSafari && sdpFormat === 'planb' && signalingState === 'have-local-offer') {
         assert.deepEqual(actualSenders.length, senders.length + 1);
         return;
       }
@@ -816,13 +799,13 @@ function testGetSenders(sdpSemantics, signalingState) {
   });
 }
 
-function testGetReceivers(sdpSemantics, signalingState) {
+function testGetReceivers(signalingState) {
   var pc2;
   var stream;
 
   before(async () => {
-    const pc1 = new RTCPeerConnection({ iceServers: [], sdpSemantics });
-    pc2 = new RTCPeerConnection({ iceServers: [], sdpSemantics });
+    const pc1 = new RTCPeerConnection({ iceServers: [] });
+    pc2 = new RTCPeerConnection({ iceServers: [] });
     stream = await makeStream({ audio: true, video: true });
     addStream(pc1, stream);
 
@@ -861,7 +844,7 @@ function testGetReceivers(sdpSemantics, signalingState) {
   });
 }
 
-function testClose(sdpSemantics, signalingState) {
+function testClose(signalingState) {
   context(JSON.stringify(signalingState), () => {
     var result;
     var test;
@@ -876,7 +859,6 @@ function testClose(sdpSemantics, signalingState) {
       signalingStateChangeInThisTick = false;
 
       return makeTest({
-        sdpSemantics,
         signalingState
       }).then(_test => {
         test = _test;
@@ -940,14 +922,14 @@ function testClose(sdpSemantics, signalingState) {
   });
 }
 
-function testDtlsRoleNegotiation(sdpSemantics) {
+function testDtlsRoleNegotiation() {
   describe('RTCPeerConnection 1 offers with "a=setup:actpass", and', () => {
     let pc1;
     let pc2;
 
     beforeEach(() => {
-      pc1 = new RTCPeerConnection({ iceServers: [], sdpSemantics });
-      pc2 = new RTCPeerConnection({ iceServers: [], sdpSemantics });
+      pc1 = new RTCPeerConnection({ iceServers: [] });
+      pc2 = new RTCPeerConnection({ iceServers: [] });
       return makeStream().then(stream => {
         addStream(pc1, stream);
         addStream(pc2, stream);
@@ -983,7 +965,7 @@ function testDtlsRoleNegotiation(sdpSemantics) {
           });
         });
 
-        (isSafari && sdpSemantics === 'plan-b' ? it.skip : it)('RTCPeerConnection 1 answers with "a=setup:passive"', () => {
+        (isSafari && sdpFormat === 'planb' ? it.skip : it)('RTCPeerConnection 1 answers with "a=setup:passive"', () => {
           return pc1.createAnswer().then(answer => {
             assert(answer.sdp.match(/a=setup:passive/));
           });
@@ -993,15 +975,15 @@ function testDtlsRoleNegotiation(sdpSemantics) {
   });
 }
 
-function testGlare(sdpSemantics) {
+function testGlare() {
   describe('RTCPeerConnections 1 and 2 call createOffer, and RTCPeerConnection 1 calls setLocalDescription; then', () => {
     let pc1;
     let pc2;
     let offer;
 
     beforeEach(() => {
-      pc1 = new RTCPeerConnection({ iceServers: [], sdpSemantics });
-      pc2 = new RTCPeerConnection({ iceServers: [], sdpSemantics });
+      pc1 = new RTCPeerConnection({ iceServers: [] });
+      pc2 = new RTCPeerConnection({ iceServers: [] });
       return makeStream().then(stream => {
         addStream(pc1, stream);
         addStream(pc2, stream);
@@ -1029,7 +1011,7 @@ function testGlare(sdpSemantics) {
           });
         });
 
-        (isSafari && sdpSemantics === 'plan-b' ? it.skip : it)('RTCPeerConnection 1 calls createOffer and setLocalDescription', () => {
+        (isSafari && sdpFormat === 'planb' ? it.skip : it)('RTCPeerConnection 1 calls createOffer and setLocalDescription', () => {
           return pc1.createOffer().then(offer => {
             return pc1.setLocalDescription(offer);
           });
@@ -1061,7 +1043,7 @@ function makeStream(constraints) {
   return new Promise((resolve, reject) => getUserMedia(resolve, reject));
 }
 
-function testAddTrack(sdpSemantics) {
+function testAddTrack() {
   var test;
   var stream;
   var tracks;
@@ -1073,7 +1055,7 @@ function testAddTrack(sdpSemantics) {
   });
 
   beforeEach(async () => {
-    test = await makeTest({ sdpSemantics });
+    test = await makeTest();
     tracks = getTracks(test.peerConnection);
   });
 
@@ -1122,7 +1104,7 @@ function testAddTrack(sdpSemantics) {
   });
 }
 
-function testRemoveTrack(sdpSemantics) {
+function testRemoveTrack() {
   var test;
   var tracks;
   var stream;
@@ -1136,7 +1118,7 @@ function testRemoveTrack(sdpSemantics) {
   });
 
   beforeEach(async () => {
-    test = await makeTest({ sdpSemantics });
+    test = await makeTest();
     const senders = addStream(test.peerConnection, stream);
     localAudioSender = senders.find(sender => sender.track.kind === 'audio');
     localVideoSender = senders.find(sender => sender.track.kind === 'video');
@@ -1212,7 +1194,7 @@ function testRemoveTrack(sdpSemantics) {
   });
 }
 
-function testCreateAnswer(sdpSemantics, signalingState) {
+function testCreateAnswer(signalingState) {
   var error;
   var localDescription;
   var remoteDescription;
@@ -1230,7 +1212,6 @@ function testCreateAnswer(sdpSemantics, signalingState) {
     result = null;
 
     return makeTest({
-      sdpSemantics,
       signalingState
     }).then(_test => {
       test = _test;
@@ -1301,7 +1282,7 @@ function testCreateAnswer(sdpSemantics, signalingState) {
   }
 }
 
-function testCreateOffer(sdpSemantics, signalingState) {
+function testCreateOffer(signalingState) {
   var error;
   var localDescription;
   var remoteDescription;
@@ -1317,7 +1298,6 @@ function testCreateOffer(sdpSemantics, signalingState) {
     result = null;
 
     return makeTest({
-      sdpSemantics,
       signalingState
     }).then(_test => {
       test = _test;
@@ -1397,7 +1377,7 @@ function testCreateOffer(sdpSemantics, signalingState) {
   }
 }
 
-function testSetDescription(sdpSemantics, local, signalingState, sdpType) {
+function testSetDescription(local, signalingState, sdpType) {
   var createLocalDescription = local ? 'createLocalDescription' : 'createRemoteDescription';
   var setLocalDescription = local ? 'setLocalDescription' : 'setRemoteDescription';
 
@@ -1444,7 +1424,6 @@ function testSetDescription(sdpSemantics, local, signalingState, sdpType) {
       result = null;
 
       return makeTest({
-        sdpSemantics,
         signalingState
       }).then(_test => {
         test = _test;
@@ -1552,7 +1531,7 @@ s=-\r
 t=0 0\r
 a=group:BUNDLE ${isFirefox && firefoxVersion < 63
     ? 'sdparta_0'
-    : options.sdpSemantics === 'unified-plan' || isFirefox
+    : sdpFormat === 'unified'
       ? '0' : 'audio'}\r
 a=msid-semantic: WMS\r
 m=audio 9 UDP/TLS/RTP/SAVPF 111 103 104 9 0 8 106 105 13 110 112 113 126\r
@@ -1563,7 +1542,7 @@ a=ice-pwd:VSJteFVvAyoewWkSfaxKgU6C\r
 a=ice-options:trickle\r
 a=mid:${isFirefox && firefoxVersion < 63
     ? 'sdparta_0'
-    : options.sdpSemantics === 'unified-plan' || isFirefox
+    : sdpFormat === 'unified'
       ? '0' : 'audio'}\r
 a=extmap:1 urn:ietf:params:rtp-hdrext:ssrc-audio-level\r
 a=recvonly\r
@@ -1797,9 +1776,9 @@ function getTracks(peerConnection) {
   return peerConnection.getSenders().filter(sender => sender.track).map(sender => sender.track);
 }
 
-function createPeerConnections(sdpSemantics, configuration) {
-  const pc1 = new RTCPeerConnection(Object.assign({ sdpSemantics }, configuration));
-  const pc2 = new RTCPeerConnection(Object.assign({ sdpSemantics }, configuration));
+function createPeerConnections(configuration) {
+  const pc1 = new RTCPeerConnection(configuration);
+  const pc2 = new RTCPeerConnection(configuration);
   [[pc1, pc2], [pc1, pc2]].forEach(([pc1, pc2]) => {
     pc1.addEventListener('icecandidate', event => {
       if (event.candidate) {
