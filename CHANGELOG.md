@@ -4,6 +4,10 @@
 Bug Fixes
 ---------
 
+- Fixed a bug where, in Electron 2.x, if the remote peer adds a second
+  MediaStreamTrack after completing the negotiation for the first MediaStreamTrack,
+  calling `getStats` did not return the StandardizedTrackStatsReport for the second
+  remote MediaStreamTrack. (JSDK-2269)
 - Fixed a bug where `getStats` was throwing a TypeError in Electron 2.x and 3.x. (JSDK-2267)
 - Added back the workaround for this Chrome [bug](https://bugs.chromium.org/p/chromium/issues/detail?id=774303)
   in order to support Electron 2.x. (JSDK-2266)
