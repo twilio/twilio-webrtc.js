@@ -1,3 +1,13 @@
+2.2.2 (in progress)
+===================
+
+New Features
+------------
+
+- Starting from Chrome 73 ("unified-plan" SDP semantics), `ChromeRTCPeerConnection.createOffer`,
+  when called a second time without calling `ChromeRTCPeerConnection.setLocalDescription` on the
+  previous offer, will not change the mids of any RTCRtpTransceivers still under negotiation. (JSDK-2219)
+
 2.2.1 (January 29, 2019)
 ========================
 

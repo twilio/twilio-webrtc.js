@@ -89,7 +89,10 @@ sdpSemanticsValues.forEach(sdpSemantics => {
 
         pc1.addEventListener('iceconnectionstatechange', e => {
           if (pc1.iceConnectionState === 'connected') {
-            deferred.resolve();
+            // NOTE(mmalavalli): Sometimes, the RTCIceCandidateStats are not
+            // available exactly at this time, making this test flaky. So,
+            // we add a small delay here.
+            setTimeout(() => deferred.resolve(), 200);
           }
         });
 
