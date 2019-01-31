@@ -1,3 +1,16 @@
+3.3.0 (in progress)
+===================
+
+New Features
+------------
+
+- ChromeRTCPeerConnection will now be initialized with the default SDP semantics. (JSDK-2265)
+
+Bug Fixes
+---------
+
+- Fixed a bug where getStats was throwing a TypeError in Electron 3.x. (JSDK-2267)
+
 3.2.0 (January 7, 2019)
 =======================
 
