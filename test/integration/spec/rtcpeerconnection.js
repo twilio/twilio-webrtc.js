@@ -240,9 +240,9 @@ describe(`RTCPeerConnection(${sdpFormat})`, function() {
       // NOTE(mmalavalli): Starting from Chrome 73, calling createOffer() without
       // setLocalDescription() on the previous offer will generate new mids for
       // RTCRtpTransceivers still under negotiation. So, in order to lock in the mids,
-      // we call setLocalDescription() on the pending local offer, if any, before
-      // calling createOffer() on the underlying RTCPeerConnection.
-      await pc.setLocalDescription(offer1);
+      // we call setLocalDescription() before calling createOffer() on the underlying
+      // RTCPeerConnection.
+      await pc._peerConnection.setLocalDescription(offer1);
 
       offer2 = await pc.createOffer(options);
       pc.close();
