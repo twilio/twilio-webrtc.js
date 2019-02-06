@@ -10,6 +10,7 @@ Bug Fixes
 ---------
 
 - Fixed a bug where getStats was throwing a TypeError in Electron 3.x. (JSDK-2267)
+- Fixed a bug where getStats was throwing a TypeError in non-Chrome environments
 
 3.2.0 (January 7, 2019)
 =======================
