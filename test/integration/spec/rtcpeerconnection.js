@@ -8,7 +8,7 @@ var RTCSessionDescription = require('../../../lib/rtcsessiondescription');
 var RTCPeerConnection = require('../../../lib/rtcpeerconnection');
 var util = require('../../lib/util');
 var { flatMap, guessBrowser } = require('../../../lib/util');
-var { checkIfSdpSemanticsIsSupported } = require('../../../lib/util/sdp');
+var { getSdpFormat } = require('../../../lib/util/sdp');
 
 const detectSilence = require('../../lib/detectsilence');
 
@@ -29,7 +29,7 @@ const guess = guessBrowser();
 const isChrome = guess === 'chrome';
 const isFirefox = guess === 'firefox';
 const isSafari = guess === 'safari';
-const sdpSemanticsIsSupported = checkIfSdpSemanticsIsSupported();
+const sdpFormat = getSdpFormat();
 
 const chromeVersion = isChrome && typeof navigator === 'object'
   ? navigator.userAgent.match(/Chrom(e|ium)\/(\d+)\./)[2]
@@ -39,469 +39,460 @@ const firefoxVersion = isFirefox && typeof navigator === 'object'
   ? navigator.userAgent.match(/Firefox\/(\d+)\./)[1]
   : null;
 
-// NOTE(mroberts): In Chrome, we run these tests twice if `sdpSemantics` is
-// supported: once for "plan-b" and once for "unified-plan".
-const sdpSemanticsValues = isFirefox
-  ? [null]  // Unified Plan
-  : sdpSemanticsIsSupported
-    ? ['plan-b', 'unified-plan']
-    : [typeof RTCRtpTransceiver !== 'undefined' && 'currentDirection' in RTCRtpTransceiver.prototype
-        ? 'unified-plan'
-        : 'plan-b'];
+describe(`RTCPeerConnection(${sdpFormat})`, function() {
+    after(() => {
+      if (typeof gc === 'function') {
+        gc();
+      }
+    });
 
-sdpSemanticsValues.forEach(sdpSemantics => {
+    this.timeout(30000);
 
-const description = sdpSemantics
-  ? `RTCPeerConnection ("${sdpSemantics}")`
-  : 'RTCPeerConnection';
+    describe('constructor', () => testConstructor());
 
-describe(description, function() {
-  after(() => {
-    if (typeof gc === 'function') {
-      gc();
-    }
-  });
+    describe('#addIceCandidate, called from signaling state', () => {
+      signalingStates.forEach(signalingState => testAddIceCandidate(signalingState));
+    });
 
-  this.timeout(30000);
+    describe('#getSenders', () => {
+      signalingStates.forEach(signalingState => testGetSenders(signalingState));
+    });
 
-  describe('constructor', () => testConstructor(sdpSemantics));
+    describe('#getReceivers', () => {
+      signalingStates.forEach(signalingState => testGetReceivers(signalingState));
+    });
 
-  describe('#addIceCandidate, called from signaling state', () => {
-    signalingStates.forEach(signalingState => testAddIceCandidate(sdpSemantics, signalingState));
-  });
+    describe('#close, called from signaling state', () => {
+      signalingStates.forEach(signalingState => testClose(signalingState));
+    });
 
-  describe('#getSenders', () => {
-    signalingStates.forEach(signalingState => testGetSenders(sdpSemantics, signalingState));
-  });
+    describe('#addTrack', () => testAddTrack());
 
-  describe('#getReceivers', () => {
-    signalingStates.forEach(signalingState => testGetReceivers(sdpSemantics, signalingState));
-  });
+    const isUnifiedPlan = sdpFormat === 'unified';
+    (isUnifiedPlan && RTCPeerConnection.prototype.addTransceiver ? describe : describe.skip)('#addTransceiver', () => testAddTransceiver());
 
-  describe('#close, called from signaling state', () => {
-    signalingStates.forEach(signalingState => testClose(sdpSemantics, signalingState));
-  });
+    describe('#removeTrack', () => testRemoveTrack());
 
-  describe('#addTrack', () => testAddTrack(sdpSemantics));
-
-  const isUnifiedPlan = sdpSemantics === null || sdpSemantics === 'unified-plan';
-  (isUnifiedPlan && RTCPeerConnection.prototype.addTransceiver ? describe : describe.skip)('#addTransceiver', () => testAddTransceiver(sdpSemantics));
-
-  describe('#removeTrack', () => testRemoveTrack(sdpSemantics));
-
-  describe('#createAnswer, called from signaling state', () => {
-    signalingStates.forEach(signalingState => {
-      context(JSON.stringify(signalingState), () => {
-        testCreateAnswer(sdpSemantics, signalingState);
+    describe('#createAnswer, called from signaling state', () => {
+      signalingStates.forEach(signalingState => {
+        context(JSON.stringify(signalingState), () => {
+          testCreateAnswer(signalingState);
+        });
       });
     });
-  });
 
-  describe('#createDataChannel', () => {
-    describe('called without setting maxPacketLifeTime', () => {
-      it('sets maxPacketLifeTime to null', () => {
-        const pc = new RTCPeerConnection({ sdpSemantics });
+    describe('#createDataChannel', () => {
+      describe('called without setting maxPacketLifeTime', () => {
+        it('sets maxPacketLifeTime to null', () => {
+          const pc = new RTCPeerConnection();
+          const dataChannel = pc.createDataChannel('foo');
+          assert.equal(dataChannel.maxPacketLifeTime, null);
+        });
+      });
+
+      describe('called without setting maxRetransmits', () => {
+        it('sets maxRetransmits to null', () => {
+          const pc = new RTCPeerConnection();
+          const dataChannel = pc.createDataChannel('foo');
+          assert.equal(dataChannel.maxRetransmits, null);
+        });
+      });
+
+      describe('called without setting ordered', () => {
+        const pc = new RTCPeerConnection();
         const dataChannel = pc.createDataChannel('foo');
-        assert.equal(dataChannel.maxPacketLifeTime, null);
-      });
-    });
-
-    describe('called without setting maxRetransmits', () => {
-      it('sets maxRetransmits to null', () => {
-        const pc = new RTCPeerConnection({ sdpSemantics });
-        const dataChannel = pc.createDataChannel('foo');
-        assert.equal(dataChannel.maxRetransmits, null);
-      });
-    });
-
-    describe('called without setting ordered', () => {
-      const pc = new RTCPeerConnection({ sdpSemantics });
-      const dataChannel = pc.createDataChannel('foo');
-      assert.equal(dataChannel.ordered, true);
-    });
-
-    describe('called setting maxPacketLifeTime', () => {
-      (isFirefox ? it.skip : it)('sets maxPacketLifeTime to the specified value', () => {
-        const maxPacketLifeTime = 3;
-        const pc = new RTCPeerConnection({ sdpSemantics });
-        const dataChannel = pc.createDataChannel('foo', { maxPacketLifeTime });
-        assert.equal(dataChannel.maxPacketLifeTime, maxPacketLifeTime);
-      });
-    });
-
-    describe('called setting maxRetransmits', () => {
-      (isFirefox ? it.skip : it)('sets maxRetransmits to the specified value', () => {
-        const maxRetransmits = 3;
-        const pc = new RTCPeerConnection({ sdpSemantics });
-        const dataChannel = pc.createDataChannel('foo', { maxRetransmits });
-        assert.equal(dataChannel.maxRetransmits, maxRetransmits);
-      });
-    });
-
-    describe('called setting ordered to false', () => {
-      it('sets ordered to false', () => {
-        const ordered = false;
-        const pc = new RTCPeerConnection({ sdpSemantics });
-        const dataChannel = pc.createDataChannel('foo', { ordered });
-        assert.equal(dataChannel.ordered, ordered);
-      });
-    });
-
-    describe('called setting both maxPacketLifeTime and maxRetransmits', () => {
-      it('should throw', () => {
-        const pc = new RTCPeerConnection({ sdpSemantics });
-        assert.throws(() => pc.createDataChannel('foo', {
-          maxPacketLifeTime: 3,
-          maxRetransmits: 3
-        }));
-      });
-    });
-  });
-
-  describe('#createOffer, called from signaling state', () => {
-    signalingStates.forEach(signalingState => {
-      context(JSON.stringify(signalingState), () => {
-        testCreateOffer(sdpSemantics, signalingState);
-      });
-    });
-  });
-
-  (isSafari && sdpSemantics === 'plan-b' ? describe.skip : describe)('#createOffer, called twice from signaling state "stable" without calling #setLocalDescription', () => {
-    let offer1;
-    let offer2;
-
-    before(async () => {
-      const constraints = { audio: true, video: true };
-      const stream = await makeStream(constraints);
-      const pc = new RTCPeerConnection({ iceServers: [], sdpSemantics });
-      addStream(pc, stream);
-      const options = { offerToReceiveAudio: true, offerToReceiveVideo: true };
-      offer1 = await pc.createOffer(options);
-      offer2 = await pc.createOffer(options);
-      pc.close();
-      stream.getTracks().forEach(track => track.stop());
-    });
-
-    it('does not change the SSRCs for any MediaStreamTrack in the SDP', () => {
-      const ssrcAttrs1 = offer1.sdp.match(/^a=ssrc:.*$/gm);
-      const ssrcAttrs2 = offer2.sdp.match(/^a=ssrc:.*$/gm);
-      assert.deepEqual(ssrcAttrs2, ssrcAttrs1);
-    });
-
-    it('does not change the SSRC groups in the SDP', () => {
-      const ssrcGroups1 = offer1.sdp.match(/^a=ssrc-group:.*$/gm);
-      const ssrcGroups2 = offer2.sdp.match(/^a=ssrc-group:.*$/gm);
-      assert.deepEqual(ssrcGroups2, ssrcGroups1);
-    });
-  });
-
-  (isSafari && sdpSemantics === 'plan-b' ? describe.skip : describe)('#createAnswer, called twice from signaling state "stable" without calling #setLocalDescription', () => {
-    let answer1;
-    let answer2;
-
-    before(async () => {
-      const constraints = { audio: true, video: true };
-      const stream = await makeStream(constraints);
-      const pc1 = new RTCPeerConnection({ iceServers: [], sdpSemantics });
-      const pc2 = new RTCPeerConnection({ iceServers: [], sdpSemantics });
-      addStream(pc2, stream);
-      const options = { offerToReceiveAudio: true, offerToReceiveVideo: true };
-      const offer = await pc1.createOffer(options);
-      await pc2.setRemoteDescription(offer);
-      answer1 = await pc2.createAnswer();
-      answer2 = await pc2.createAnswer();
-      pc1.close();
-      pc2.close();
-      stream.getTracks().forEach(track => track.stop());
-    });
-
-    it('does not change the SSRCs for any MediaStreamTrack in the SDP', () => {
-      const ssrcAttrs1 = answer1.sdp.match(/^a=ssrc:.*$/gm);
-      const ssrcAttrs2 = answer2.sdp.match(/^a=ssrc:.*$/gm);
-      assert.deepEqual(ssrcAttrs2, ssrcAttrs1);
-    });
-
-    it('does not change the SSRC groups in the SDP', () => {
-      const ssrcGroups1 = answer1.sdp.match(/^a=ssrc-group:.*$/gm);
-      const ssrcGroups2 = answer2.sdp.match(/^a=ssrc-group:.*$/gm);
-      assert.deepEqual(ssrcGroups2, ssrcGroups1);
-    });
-  });
-
-  describe('#setLocalDescription, called from signaling state', () => {
-    signalingStates.forEach(signalingState => {
-      context(JSON.stringify(signalingState) + ' with a description of type', () => {
-        sdpTypes.forEach(sdpType => testSetDescription(sdpSemantics, true, signalingState, sdpType));
-      });
-    });
-  });
-
-  describe('#setRemoteDescription, called from signaling state', () => {
-    signalingStates.forEach(signalingState => {
-      context(JSON.stringify(signalingState) + ' with a description of type', () => {
-        sdpTypes.forEach(sdpType => testSetDescription(sdpSemantics, false, signalingState, sdpType));
-      });
-    });
-  });
-
-  (isSafari ? describe.skip : describe)('#setRemoteDescription, called twice from signaling state "stable" with the same MediaStreamTrack IDs but different SSRCs', () => {
-    let offer1;
-    let offer2;
-
-    beforeEach(async () => {
-      const constraints = { audio: true, video: true };
-      const stream = await makeStream(constraints);
-      const pc = new RTCPeerConnection({ iceServers: [], sdpSemantics });
-      addStream(pc, stream);
-      const options = { offerToReceiveAudio: true, offerToReceiveVideo: true };
-      offer1 = await pc.createOffer(options);
-      offer2 = await pc.createOffer(options);
-      pc.close();
-      stream.getTracks().forEach(track => track.stop());
-
-      // Here is a dumb way to change SSRCs: just delete any SSRC groups, then
-      // strip the leading digit from each SSRC.
-      offer2 = new RTCSessionDescription({
-        type: offer2.type,
-        sdp: offer2.sdp.replace(/^\r\na=ssrc-group:.*$/gm, '')
-          .replace(/^a=ssrc:[0-9]([0-9]+)(.*)$/gm, 'a=ssrc:$1$2')
-      });
-    });
-
-    // NOTE(mroberts): This is the crux of the issue at the heart of CSDK-1206:
-    //
-    //   Chrome's WebRTC implementation treats changing the SSRC as removing a track
-    //   with the old SSRC and adding a track with the new one. This probably isn't
-    //   the right thing to do (especially when we go to Unified Plan SDP) but it's
-    //   the way it's worked for a while.
-    //
-    (isFirefox || isSafari || (isChrome && sdpSemantics === 'unified-plan')
-      ? it
-      : it.skip
-    )('should create a single MediaStreamTrack for each MediaStreamTrack ID in the SDP, regardless of SSRC changes', async () => {
-      const getRemoteTracks = pc => sdpSemantics === 'plan-b'
-        ? flatMap(pc.getRemoteStreams(), stream => stream.getTracks())
-        : flatMap(pc.getTransceivers(), ({ receiver }) => receiver.track);
-      const pc = new RTCPeerConnection({ iceServers: [], sdpSemantics });
-
-      await pc.setRemoteDescription(offer1);
-      const answer1 = await pc.createAnswer();
-      await pc.setLocalDescription(answer1);
-      const tracksBefore = getRemoteTracks(pc);
-
-      await pc.setRemoteDescription(offer2);
-      const answer2 = await pc.createAnswer();
-      await pc.setLocalDescription(answer2);
-      const tracksAfter = getRemoteTracks(pc);
-
-      assert.equal(tracksAfter.length, tracksBefore.length);
-      tracksAfter.forEach((trackAfter, i) => {
-        const trackBefore = tracksBefore[i];
-        assert.equal(trackAfter, trackBefore);
-      });
-    });
-  });
-
-  describe('DTLS role negotiation', () => testDtlsRoleNegotiation(sdpSemantics));
-
-  describe('Glare', () => testGlare(sdpSemantics));
-
-  describe('"datachannel" event', () => {
-    describe('when maxPacketLifeTime is not set', () => {
-      it('sets maxPacketLifeTime to null', async () => {
-        const [offerer, answerer] = createPeerConnections(sdpSemantics);
-        offerer.createDataChannel('foo');
-        const dataChannelPromise = waitForDataChannel(answerer);
-        await negotiate(offerer, answerer);
-        const dataChannel = await dataChannelPromise;
-        assert.equal(dataChannel.maxPacketLifeTime, null);
-      });
-    });
-
-    describe('when maxRetransmits is not set', () => {
-      it('sets maxRetransmits to null', async () => {
-        const [offerer, answerer] = createPeerConnections(sdpSemantics);
-        offerer.createDataChannel('foo');
-        const dataChannelPromise = waitForDataChannel(answerer);
-        await negotiate(offerer, answerer);
-        const dataChannel = await dataChannelPromise;
-        assert.equal(dataChannel.maxRetransmits, null);
-      });
-    });
-
-    describe('when ordered is not set', () => {
-      it('sets ordered to true', async () => {
-        const [offerer, answerer] = createPeerConnections(sdpSemantics);
-        offerer.createDataChannel('foo');
-        const dataChannelPromise = waitForDataChannel(answerer);
-        await negotiate(offerer, answerer);
-        const dataChannel = await dataChannelPromise;
         assert.equal(dataChannel.ordered, true);
       });
-    });
 
-    describe('when maxPacketLifeTime is set', () => {
-      (isFirefox ? it.skip : it)('sets maxPacketLifeTime to the specified value', async () => {
-        const maxPacketLifeTime = 3;
-        const [offerer, answerer] = createPeerConnections(sdpSemantics);
-        offerer.createDataChannel('foo', { maxPacketLifeTime });
-        const dataChannelPromise = waitForDataChannel(answerer);
-        await negotiate(offerer, answerer);
-        const dataChannel = await dataChannelPromise;
-        assert.equal(dataChannel.maxPacketLifeTime, maxPacketLifeTime);
+      describe('called setting maxPacketLifeTime', () => {
+        (isFirefox ? it.skip : it)('sets maxPacketLifeTime to the specified value', () => {
+          const maxPacketLifeTime = 3;
+          const pc = new RTCPeerConnection();
+          const dataChannel = pc.createDataChannel('foo', { maxPacketLifeTime });
+          assert.equal(dataChannel.maxPacketLifeTime, maxPacketLifeTime);
+        });
+      });
+
+      describe('called setting maxRetransmits', () => {
+        (isFirefox ? it.skip : it)('sets maxRetransmits to the specified value', () => {
+          const maxRetransmits = 3;
+          const pc = new RTCPeerConnection();
+          const dataChannel = pc.createDataChannel('foo', { maxRetransmits });
+          assert.equal(dataChannel.maxRetransmits, maxRetransmits);
+        });
+      });
+
+      describe('called setting ordered to false', () => {
+        it('sets ordered to false', () => {
+          const ordered = false;
+          const pc = new RTCPeerConnection();
+          const dataChannel = pc.createDataChannel('foo', { ordered });
+          assert.equal(dataChannel.ordered, ordered);
+        });
+      });
+
+      describe('called setting both maxPacketLifeTime and maxRetransmits', () => {
+        it('should throw', () => {
+          const pc = new RTCPeerConnection();
+          assert.throws(() => pc.createDataChannel('foo', {
+            maxPacketLifeTime: 3,
+            maxRetransmits: 3
+          }));
+        });
       });
     });
 
-    describe('when maxRetransmits is set', () => {
-      (isFirefox ? it.skip : it)('sets maxRetransmits to the specified value', async () => {
-        const maxRetransmits = 3;
-        const [offerer, answerer] = createPeerConnections(sdpSemantics);
-        offerer.createDataChannel('foo', { maxRetransmits });
-        const dataChannelPromise = waitForDataChannel(answerer);
-        await negotiate(offerer, answerer);
-        const dataChannel = await dataChannelPromise;
-        assert.equal(dataChannel.maxRetransmits, maxRetransmits);
+    describe('#createOffer, called from signaling state', () => {
+      signalingStates.forEach(signalingState => {
+        context(JSON.stringify(signalingState), () => {
+          testCreateOffer(signalingState);
+        });
       });
     });
 
-    describe('when ordered is set to false', () => {
-      it('sets ordered to true', async () => {
-        const ordered = false;
-        const [offerer, answerer] = createPeerConnections(sdpSemantics);
-        offerer.createDataChannel('foo', { ordered });
-        const dataChannelPromise = waitForDataChannel(answerer);
-        await negotiate(offerer, answerer);
-        const dataChannel = await dataChannelPromise;
-        assert.equal(dataChannel.ordered, ordered);
+    (isSafari && sdpFormat === 'planb' ? describe.skip : describe)('#createOffer, called twice from signaling state "stable" without calling #setLocalDescription', () => {
+      let offer1;
+      let offer2;
+
+      before(async () => {
+        const constraints = { audio: true, video: true };
+        const stream = await makeStream(constraints);
+        const pc = new RTCPeerConnection({ iceServers: [] });
+        addStream(pc, stream);
+        const options = { offerToReceiveAudio: true, offerToReceiveVideo: true };
+        offer1 = await pc.createOffer(options);
+        offer2 = await pc.createOffer(options);
+        pc.close();
+        stream.getTracks().forEach(track => track.stop());
+      });
+
+      it('does not change the SSRCs for any MediaStreamTrack in the SDP', () => {
+        const ssrcAttrs1 = offer1.sdp.match(/^a=ssrc:.*$/gm);
+        const ssrcAttrs2 = offer2.sdp.match(/^a=ssrc:.*$/gm);
+        assert.deepEqual(ssrcAttrs2, ssrcAttrs1);
+      });
+
+      it('does not change the SSRC groups in the SDP', () => {
+        const ssrcGroups1 = offer1.sdp.match(/^a=ssrc-group:.*$/gm);
+        const ssrcGroups2 = offer2.sdp.match(/^a=ssrc-group:.*$/gm);
+        assert.deepEqual(ssrcGroups2, ssrcGroups1);
       });
     });
-  });
 
-  describe('"track" event', () => {
-    context('when a new MediaStreamTrack is added', () => {
-      it('should trigger a "track" event on the remote RTCPeerConnection with the added MediaStreamTrack', async () => {
-        const pc1 = new RTCPeerConnection({ iceServers: [], sdpSemantics });
-        const pc2 = new RTCPeerConnection({ iceServers: [], sdpSemantics });
+    (isSafari && sdpFormat === 'planb' ? describe.skip : describe)('#createAnswer, called twice from signaling state "stable" without calling #setLocalDescription', () => {
+      let answer1;
+      let answer2;
 
-        const stream = new MediaStream();
+      before(async () => {
+        const constraints = { audio: true, video: true };
+        const stream = await makeStream(constraints);
+        const pc1 = new RTCPeerConnection({ iceServers: [] });
+        const pc2 = new RTCPeerConnection({ iceServers: [] });
+        addStream(pc2, stream);
+        const options = { offerToReceiveAudio: true, offerToReceiveVideo: true };
+        const offer = await pc1.createOffer(options);
+        await pc2.setRemoteDescription(offer);
+        answer1 = await pc2.createAnswer();
+        answer2 = await pc2.createAnswer();
+        pc1.close();
+        pc2.close();
+        stream.getTracks().forEach(track => track.stop());
+      });
 
-        const [localAudioTrack] = (await makeStream({ audio: true, fake: true })).getAudioTracks();
-        stream.addTrack(localAudioTrack);
+      it('does not change the SSRCs for any MediaStreamTrack in the SDP', () => {
+        const ssrcAttrs1 = answer1.sdp.match(/^a=ssrc:.*$/gm);
+        const ssrcAttrs2 = answer2.sdp.match(/^a=ssrc:.*$/gm);
+        assert.deepEqual(ssrcAttrs2, ssrcAttrs1);
+      });
 
-        pc1.addTrack(localAudioTrack, stream);
-        const trackEvent1 = waitForEvent(pc2, 'track');
-
-        const offer1 = await pc1.createOffer();
-        await Promise.all([
-          pc1.setLocalDescription(offer1),
-          pc2.setRemoteDescription(offer1)
-        ]);
-
-        const answer1 = await pc2.createAnswer();
-
-        const { track: remoteAudioTrack, transceiver: transceiver1 } = await trackEvent1;
-
-        // NOTE(mroberts): This only holds pre-WebRTC 1.0; see the TrackMatcher
-        // in twilio-video.js if you want behavior like this.
-        if (!transceiver1 || !transceiver1.mid) {
-          assert.equal(remoteAudioTrack.id, localAudioTrack.id);
-        }
-
-        await Promise.all([
-          pc1.setRemoteDescription(answer1),
-          pc2.setLocalDescription(answer1)
-        ]);
-
-        const [localVideoTrack] = (await makeStream({ video: true, fake: true })).getVideoTracks();
-        stream.addTrack(localVideoTrack);
-        pc1.addTrack(localVideoTrack, stream);
-        const trackEvent2 = waitForEvent(pc2, 'track');
-
-        const offer2 = await pc1.createOffer();
-        await Promise.all([
-          pc1.setLocalDescription(offer2),
-          pc2.setRemoteDescription(offer2)
-        ]);
-
-        const answer2 = await pc2.createAnswer();
-
-        const { track: remoteVideoTrack, transceiver: transceiver2 } = await trackEvent2;
-
-        // NOTE(mroberts): This only holds pre-WebRTC 1.0; see the TrackMatcher
-        // in twilio-video.js if you want behavior like this.
-        if (!transceiver2 || !transceiver2.mid) {
-          assert.equal(remoteVideoTrack.id, localVideoTrack.id);
-        }
-
-        await Promise.all([
-          pc1.setRemoteDescription(answer2),
-          pc2.setLocalDescription(answer2)
-        ]);
+      it('does not change the SSRC groups in the SDP', () => {
+        const ssrcGroups1 = answer1.sdp.match(/^a=ssrc-group:.*$/gm);
+        const ssrcGroups2 = answer2.sdp.match(/^a=ssrc-group:.*$/gm);
+        assert.deepEqual(ssrcGroups2, ssrcGroups1);
       });
     });
-  });
 
-  // NOTE(mroberts): This integration test is ported from the JSFiddle in Bug
-  // 1480277.
-  (isFirefox ? describe : describe.skip)('Bug 1480277', () => {
-    it('is worked around', async () => {
-      const configuration = {
-        bundlePolicy: 'max-bundle',
-        rtcpMuxPolicy: 'required'
-      };
+    describe('#setLocalDescription, called from signaling state', () => {
+      signalingStates.forEach(signalingState => {
+        context(JSON.stringify(signalingState) + ' with a description of type', () => {
+          sdpTypes.forEach(sdpType => testSetDescription(true, signalingState, sdpType));
+        });
+      });
+    });
 
-      const [pc1, pc2] = createPeerConnections(sdpSemantics, configuration);
+    describe('#setRemoteDescription, called from signaling state', () => {
+      signalingStates.forEach(signalingState => {
+        context(JSON.stringify(signalingState) + ' with a description of type', () => {
+          sdpTypes.forEach(sdpType => testSetDescription(false, signalingState, sdpType));
+        });
+      });
+    });
 
-      const audioContext = new AudioContext();
-      const mediaStreamDestinationNode = audioContext.createMediaStreamDestination();
-      const { stream: stream1 } = mediaStreamDestinationNode;
-      const [track1] = stream1.getAudioTracks();
-      pc1.addTrack(track1, stream1);
+    (isSafari ? describe.skip : describe)('#setRemoteDescription, called twice from signaling state "stable" with the same MediaStreamTrack IDs but different SSRCs', () => {
+      let offer1;
+      let offer2;
 
-      const options = {
-        offerToReceiveAudio: true,
-        offerToReceiveVideo: true
-      };
+      beforeEach(async () => {
+        const constraints = { audio: true, video: true };
+        const stream = await makeStream(constraints);
+        const pc = new RTCPeerConnection({ iceServers: [] });
+        addStream(pc, stream);
+        const options = { offerToReceiveAudio: true, offerToReceiveVideo: true };
+        offer1 = await pc.createOffer(options);
 
-      await negotiate(pc1, pc2, options);
+        // NOTE(mmalavalli): Starting from Chrome 73, calling createOffer() without
+        // setLocalDescription() on the previous offer will generate new mids for
+        // RTCRtpTransceivers still under negotiation. So, in order to lock in the mids,
+        // we call setLocalDescription() before calling createOffer() on the underlying
+        // RTCPeerConnection.
+        await pc._peerConnection.setLocalDescription(offer1);
 
-      const constraints = {
-        audio: true,
-        fake: true
-      };
+        offer2 = await pc.createOffer(options);
+        pc.close();
+        stream.getTracks().forEach(track => track.stop());
 
-      const stream2 = await navigator.mediaDevices.getUserMedia(constraints);
-      const [track2] = stream2.getAudioTracks();
-      pc2.addTransceiver(track2, { streams: [stream2] });
+        // Here is a dumb way to change SSRCs: just delete any SSRC groups, then
+        // strip the leading digit from each SSRC.
+        offer2 = new RTCSessionDescription({
+          type: offer2.type,
+          sdp: offer2.sdp.replace(/^\r\na=ssrc-group:.*$/gm, '')
+            .replace(/^a=ssrc:[0-9]([0-9]+)(.*)$/gm, 'a=ssrc:$1$2')
+        });
+      });
 
-      await negotiate(pc2, pc1, options);
+      // NOTE(mroberts): This is the crux of the issue at the heart of CSDK-1206:
+      //
+      //   Chrome's WebRTC implementation treats changing the SSRC as removing a track
+      //   with the old SSRC and adding a track with the new one. This probably isn't
+      //   the right thing to do (especially when we go to Unified Plan SDP) but it's
+      //   the way it's worked for a while.
+      //
+      (isFirefox || isSafari || (isChrome && sdpFormat === 'unified')
+          ? it
+          : it.skip
+      )('should create a single MediaStreamTrack for each MediaStreamTrack ID in the SDP, regardless of SSRC changes', async () => {
+        const getRemoteTracks = pc => sdpFormat === 'planb'
+          ? flatMap(pc.getRemoteStreams(), stream => stream.getTracks())
+          : flatMap(pc.getTransceivers(), ({ receiver }) => receiver.track);
+        const pc = new RTCPeerConnection({ iceServers: [] });
 
-      const stream3 = await navigator.mediaDevices.getUserMedia(constraints);
-      const [track3] = stream3.getAudioTracks();
-      const sender = pc1.addTrack(track3, stream3);
+        await pc.setRemoteDescription(offer1);
+        const answer1 = await pc.createAnswer();
+        await pc.setLocalDescription(answer1);
+        const tracksBefore = getRemoteTracks(pc);
 
-      await negotiate(pc1, pc2, options);
+        await pc.setRemoteDescription(offer2);
+        const answer2 = await pc.createAnswer();
+        await pc.setLocalDescription(answer2);
+        const tracksAfter = getRemoteTracks(pc);
 
-      const { track: remoteTrack3 } = pc2.getReceivers()[2];
+        assert.equal(tracksAfter.length, tracksBefore.length);
+        tracksAfter.forEach((trackAfter, i) => {
+          const trackBefore = tracksBefore[i];
+          assert.equal(trackAfter, trackBefore);
+        });
+      });
+    });
+
+    describe('DTLS role negotiation', () => testDtlsRoleNegotiation());
+
+    describe('Glare', () => testGlare());
+
+    describe('"datachannel" event', () => {
+      describe('when maxPacketLifeTime is not set', () => {
+        it('sets maxPacketLifeTime to null', async () => {
+          const [offerer, answerer] = createPeerConnections();
+          offerer.createDataChannel('foo');
+          const dataChannelPromise = waitForDataChannel(answerer);
+          await negotiate(offerer, answerer);
+          const dataChannel = await dataChannelPromise;
+          assert.equal(dataChannel.maxPacketLifeTime, null);
+        });
+      });
+
+      describe('when maxRetransmits is not set', () => {
+        it('sets maxRetransmits to null', async () => {
+          const [offerer, answerer] = createPeerConnections();
+          offerer.createDataChannel('foo');
+          const dataChannelPromise = waitForDataChannel(answerer);
+          await negotiate(offerer, answerer);
+          const dataChannel = await dataChannelPromise;
+          assert.equal(dataChannel.maxRetransmits, null);
+        });
+      });
+
+      describe('when ordered is not set', () => {
+        it('sets ordered to true', async () => {
+          const [offerer, answerer] = createPeerConnections();
+          offerer.createDataChannel('foo');
+          const dataChannelPromise = waitForDataChannel(answerer);
+          await negotiate(offerer, answerer);
+          const dataChannel = await dataChannelPromise;
+          assert.equal(dataChannel.ordered, true);
+        });
+      });
+
+      describe('when maxPacketLifeTime is set', () => {
+        (isFirefox ? it.skip : it)('sets maxPacketLifeTime to the specified value', async () => {
+          const maxPacketLifeTime = 3;
+          const [offerer, answerer] = createPeerConnections();
+          offerer.createDataChannel('foo', { maxPacketLifeTime });
+          const dataChannelPromise = waitForDataChannel(answerer);
+          await negotiate(offerer, answerer);
+          const dataChannel = await dataChannelPromise;
+          assert.equal(dataChannel.maxPacketLifeTime, maxPacketLifeTime);
+        });
+      });
+
+      describe('when maxRetransmits is set', () => {
+        (isFirefox ? it.skip : it)('sets maxRetransmits to the specified value', async () => {
+          const maxRetransmits = 3;
+          const [offerer, answerer] = createPeerConnections();
+          offerer.createDataChannel('foo', { maxRetransmits });
+          const dataChannelPromise = waitForDataChannel(answerer);
+          await negotiate(offerer, answerer);
+          const dataChannel = await dataChannelPromise;
+          assert.equal(dataChannel.maxRetransmits, maxRetransmits);
+        });
+      });
+
+      describe('when ordered is set to false', () => {
+        it('sets ordered to true', async () => {
+          const ordered = false;
+          const [offerer, answerer] = createPeerConnections();
+          offerer.createDataChannel('foo', { ordered });
+          const dataChannelPromise = waitForDataChannel(answerer);
+          await negotiate(offerer, answerer);
+          const dataChannel = await dataChannelPromise;
+          assert.equal(dataChannel.ordered, ordered);
+        });
+      });
+    });
+
+    describe('"track" event', () => {
+      context('when a new MediaStreamTrack is added', () => {
+        it('should trigger a "track" event on the remote RTCPeerConnection with the added MediaStreamTrack', async () => {
+          const pc1 = new RTCPeerConnection({ iceServers: [] });
+          const pc2 = new RTCPeerConnection({ iceServers: [] });
+
+          const stream = new MediaStream();
+
+          const [localAudioTrack] = (await makeStream({ audio: true, fake: true })).getAudioTracks();
+          stream.addTrack(localAudioTrack);
+
+          pc1.addTrack(localAudioTrack, stream);
+          const trackEvent1 = waitForEvent(pc2, 'track');
+
+          const offer1 = await pc1.createOffer();
+          await Promise.all([
+            pc1.setLocalDescription(offer1),
+            pc2.setRemoteDescription(offer1)
+          ]);
+
+          const answer1 = await pc2.createAnswer();
+
+          const { track: remoteAudioTrack, transceiver: transceiver1 } = await trackEvent1;
+
+          // NOTE(mroberts): This only holds pre-WebRTC 1.0; see the TrackMatcher
+          // in twilio-video.js if you want behavior like this.
+          if (!transceiver1 || !transceiver1.mid) {
+            assert.equal(remoteAudioTrack.id, localAudioTrack.id);
+          }
+
+          await Promise.all([
+            pc1.setRemoteDescription(answer1),
+            pc2.setLocalDescription(answer1)
+          ]);
+
+          const [localVideoTrack] = (await makeStream({ video: true, fake: true })).getVideoTracks();
+          stream.addTrack(localVideoTrack);
+          pc1.addTrack(localVideoTrack, stream);
+          const trackEvent2 = waitForEvent(pc2, 'track');
+
+          const offer2 = await pc1.createOffer();
+          await Promise.all([
+            pc1.setLocalDescription(offer2),
+            pc2.setRemoteDescription(offer2)
+          ]);
+
+          const answer2 = await pc2.createAnswer();
+
+          const { track: remoteVideoTrack, transceiver: transceiver2 } = await trackEvent2;
+
+          // NOTE(mroberts): This only holds pre-WebRTC 1.0; see the TrackMatcher
+          // in twilio-video.js if you want behavior like this.
+          if (!transceiver2 || !transceiver2.mid) {
+            assert.equal(remoteVideoTrack.id, localVideoTrack.id);
+          }
+
+          await Promise.all([
+            pc1.setRemoteDescription(answer2),
+            pc2.setLocalDescription(answer2)
+          ]);
+        });
+      });
+    });
+
+    // NOTE(mroberts): This integration test is ported from the JSFiddle in Bug
+    // 1480277.
+    (isFirefox ? describe : describe.skip)('Bug 1480277', () => {
+      it('is worked around', async () => {
+        const configuration = {
+          bundlePolicy: 'max-bundle',
+          iceServers: [],
+          rtcpMuxPolicy: 'required'
+        };
+
+        const [pc1, pc2] = createPeerConnections(configuration);
+
+        const audioContext = new AudioContext();
+        const mediaStreamDestinationNode = audioContext.createMediaStreamDestination();
+        const { stream: stream1 } = mediaStreamDestinationNode;
+        const [track1] = stream1.getAudioTracks();
+        pc1.addTrack(track1, stream1);
+
+        const options = {
+          offerToReceiveAudio: true,
+          offerToReceiveVideo: true
+        };
+
+        await negotiate(pc1, pc2, options);
+
+        const constraints = {
+          audio: true,
+          fake: true
+        };
+
+        const stream2 = await navigator.mediaDevices.getUserMedia(constraints);
+        const [track2] = stream2.getAudioTracks();
+        pc2.addTransceiver(track2, { streams: [stream2] });
+
+        await negotiate(pc2, pc1, options);
+
+        const stream3 = await navigator.mediaDevices.getUserMedia(constraints);
+        const [track3] = stream3.getAudioTracks();
+        const sender = pc1.addTrack(track3, stream3);
+
+        await negotiate(pc1, pc2, options);
+
+        const { track: remoteTrack3 } = pc2.getReceivers()[2];
 
       const isSilent = await detectSilence(audioContext, new MediaStream([remoteTrack3]), 10000);
 
-      try {
-        assert(!isSilent);
-      } catch (error) {
-        throw error;
-      } finally {
-        pc1.close();
-        pc2.close();
-        track1.stop();
-        track2.stop();
-        track3.stop();
-      }
+        try {
+          assert(!isSilent);
+        } catch (error) {
+          throw error;
+        } finally {
+          pc1.close();
+          pc2.close();
+          track1.stop();
+          track2.stop();
+          track3.stop();
+        }
+      });
     });
   });
-});
-
-});
 
 function assertEqualDescriptions(actual, expected) {
   if (expected === null) {
@@ -525,11 +516,11 @@ function emptyDescription() {
   return null;
 }
 
-function testConstructor(sdpSemantics) {
+function testConstructor() {
   var test;
 
   beforeEach(() => {
-    return makeTest({ sdpSemantics }).then(_test => test = _test);
+    return makeTest().then(_test => test = _test);
   });
 
   it('should return an instance of RTCPeerConnection', () => {
@@ -565,7 +556,7 @@ function testConstructor(sdpSemantics) {
   });
 }
 
-function testAddIceCandidate(sdpSemantics, signalingState) {
+function testAddIceCandidate(signalingState) {
   // NOTE(mroberts): "stable" and "have-local-offer" only trigger failure here
   // because we test one round of negotiation. If we tested multiple rounds,
   // such that remoteDescription was non-null, we would accept a success here.
@@ -591,7 +582,6 @@ function testAddIceCandidate(sdpSemantics, signalingState) {
       result = null;
 
       return makeTest({
-        sdpSemantics,
         signalingState
       }).then(_test => {
         test = _test;
@@ -633,7 +623,7 @@ function testAddIceCandidate(sdpSemantics, signalingState) {
   });
 }
 
-function testGetSenders(sdpSemantics, signalingState) {
+function testGetSenders(signalingState) {
   var senders;
   var stream;
   var test;
@@ -641,8 +631,8 @@ function testGetSenders(sdpSemantics, signalingState) {
   before(async () => {
     stream = await makeStream({ audio: true, video: true });
     test = signalingState === 'closed'
-      ? await makeTest({ sdpSemantics })
-      : await makeTest({ sdpSemantics, signalingState });
+      ? await makeTest()
+      : await makeTest({ signalingState });
     senders = addStream(test.peerConnection, stream);
     signalingState === 'closed' && test.peerConnection.close();
   });
@@ -659,13 +649,13 @@ function testGetSenders(sdpSemantics, signalingState) {
   });
 }
 
-function testGetReceivers(sdpSemantics, signalingState) {
+function testGetReceivers(signalingState) {
   var pc2;
   var stream;
 
   before(async () => {
-    const pc1 = new RTCPeerConnection({ iceServers: [], sdpSemantics });
-    pc2 = new RTCPeerConnection({ iceServers: [], sdpSemantics });
+    const pc1 = new RTCPeerConnection({ iceServers: [] });
+    pc2 = new RTCPeerConnection({ iceServers: [] });
     stream = await makeStream({ audio: true, video: true });
     addStream(pc1, stream);
 
@@ -704,7 +694,7 @@ function testGetReceivers(sdpSemantics, signalingState) {
   });
 }
 
-function testClose(sdpSemantics, signalingState) {
+function testClose(signalingState) {
   context(JSON.stringify(signalingState), () => {
     var result;
     var test;
@@ -719,7 +709,6 @@ function testClose(sdpSemantics, signalingState) {
       signalingStateChangeInThisTick = false;
 
       return makeTest({
-        sdpSemantics,
         signalingState
       }).then(_test => {
         test = _test;
@@ -783,14 +772,14 @@ function testClose(sdpSemantics, signalingState) {
   });
 }
 
-function testDtlsRoleNegotiation(sdpSemantics) {
+function testDtlsRoleNegotiation() {
   describe('RTCPeerConnection 1 offers with "a=setup:actpass", and', () => {
     let pc1;
     let pc2;
 
     beforeEach(() => {
-      pc1 = new RTCPeerConnection({ iceServers: [], sdpSemantics });
-      pc2 = new RTCPeerConnection({ iceServers: [], sdpSemantics });
+      pc1 = new RTCPeerConnection({ iceServers: [] });
+      pc2 = new RTCPeerConnection({ iceServers: [] });
       return makeStream().then(stream => {
         addStream(pc1, stream);
         addStream(pc2, stream);
@@ -826,7 +815,7 @@ function testDtlsRoleNegotiation(sdpSemantics) {
           });
         });
 
-        (isSafari && sdpSemantics === 'plan-b' ? it.skip : it)('RTCPeerConnection 1 answers with "a=setup:passive"', () => {
+        (isSafari && sdpFormat === 'planb' ? it.skip : it)('RTCPeerConnection 1 answers with "a=setup:passive"', () => {
           return pc1.createAnswer().then(answer => {
             assert(answer.sdp.match(/a=setup:passive/));
           });
@@ -836,15 +825,15 @@ function testDtlsRoleNegotiation(sdpSemantics) {
   });
 }
 
-function testGlare(sdpSemantics) {
+function testGlare() {
   describe('RTCPeerConnections 1 and 2 call createOffer, and RTCPeerConnection 1 calls setLocalDescription; then', () => {
     let pc1;
     let pc2;
     let offer;
 
     beforeEach(() => {
-      pc1 = new RTCPeerConnection({ iceServers: [], sdpSemantics });
-      pc2 = new RTCPeerConnection({ iceServers: [], sdpSemantics });
+      pc1 = new RTCPeerConnection({ iceServers: [] });
+      pc2 = new RTCPeerConnection({ iceServers: [] });
       return makeStream().then(stream => {
         addStream(pc1, stream);
         addStream(pc2, stream);
@@ -872,7 +861,7 @@ function testGlare(sdpSemantics) {
           });
         });
 
-        (isSafari && sdpSemantics === 'plan-b' ? it.skip : it)('RTCPeerConnection 1 calls createOffer and setLocalDescription', () => {
+        (isSafari && sdpFormat === 'planb' ? it.skip : it)('RTCPeerConnection 1 calls createOffer and setLocalDescription', () => {
           return pc1.createOffer().then(offer => {
             return pc1.setLocalDescription(offer);
           });
@@ -904,7 +893,7 @@ function makeStream(constraints) {
   return new Promise((resolve, reject) => getUserMedia(resolve, reject));
 }
 
-function testAddTrack(sdpSemantics) {
+function testAddTrack() {
   var test;
   var stream;
   var tracks;
@@ -916,7 +905,7 @@ function testAddTrack(sdpSemantics) {
   });
 
   beforeEach(async () => {
-    test = await makeTest({ sdpSemantics });
+    test = await makeTest();
     tracks = getTracks(test.peerConnection);
   });
 
@@ -965,14 +954,14 @@ function testAddTrack(sdpSemantics) {
   });
 }
 
-function testAddTransceiver(sdpSemantics) {
+function testAddTransceiver() {
   let test;
   let track;
 
   before(async () => {
     const stream = await makeStream();
     [track] = stream.getTracks();
-    test = await makeTest({ sdpSemantics });
+    test = await makeTest();
   });
 
   it('should add each of the MediaStreamTracks to the RTCPeerConnection', () => {
@@ -986,7 +975,7 @@ function testAddTransceiver(sdpSemantics) {
   });
 }
 
-function testRemoveTrack(sdpSemantics) {
+function testRemoveTrack() {
   var test;
   var tracks;
   var stream;
@@ -1000,7 +989,7 @@ function testRemoveTrack(sdpSemantics) {
   });
 
   beforeEach(async () => {
-    test = await makeTest({ sdpSemantics });
+    test = await makeTest();
     const senders = addStream(test.peerConnection, stream);
     localAudioSender = senders.find(sender => sender.track.kind === 'audio');
     localVideoSender = senders.find(sender => sender.track.kind === 'video');
@@ -1067,7 +1056,7 @@ function testRemoveTrack(sdpSemantics) {
   });
 }
 
-function testCreateAnswer(sdpSemantics, signalingState) {
+function testCreateAnswer(signalingState) {
   var error;
   var localDescription;
   var remoteDescription;
@@ -1085,7 +1074,6 @@ function testCreateAnswer(sdpSemantics, signalingState) {
     result = null;
 
     return makeTest({
-      sdpSemantics,
       signalingState
     }).then(_test => {
       test = _test;
@@ -1156,7 +1144,7 @@ function testCreateAnswer(sdpSemantics, signalingState) {
   }
 }
 
-function testCreateOffer(sdpSemantics, signalingState) {
+function testCreateOffer(signalingState) {
   var error;
   var localDescription;
   var remoteDescription;
@@ -1172,7 +1160,6 @@ function testCreateOffer(sdpSemantics, signalingState) {
     result = null;
 
     return makeTest({
-      sdpSemantics,
       signalingState
     }).then(_test => {
       test = _test;
@@ -1252,7 +1239,7 @@ function testCreateOffer(sdpSemantics, signalingState) {
   }
 }
 
-function testSetDescription(sdpSemantics, local, signalingState, sdpType) {
+function testSetDescription(local, signalingState, sdpType) {
   var createLocalDescription = local ? 'createLocalDescription' : 'createRemoteDescription';
   var setLocalDescription = local ? 'setLocalDescription' : 'setRemoteDescription';
 
@@ -1299,7 +1286,6 @@ function testSetDescription(sdpSemantics, local, signalingState, sdpType) {
       result = null;
 
       return makeTest({
-        sdpSemantics,
         signalingState
       }).then(_test => {
         test = _test;
@@ -1407,7 +1393,7 @@ s=-\r
 t=0 0\r
 a=group:BUNDLE ${isFirefox && firefoxVersion < 63
     ? 'sdparta_0'
-    : options.sdpSemantics === 'unified-plan' || isFirefox
+    : sdpFormat === 'unified'
       ? '0' : 'audio'}\r
 a=msid-semantic: WMS\r
 m=audio 9 UDP/TLS/RTP/SAVPF 111 103 104 9 0 8 106 105 13 110 112 113 126\r
@@ -1418,7 +1404,7 @@ a=ice-pwd:VSJteFVvAyoewWkSfaxKgU6C\r
 a=ice-options:trickle\r
 a=mid:${isFirefox && firefoxVersion < 63
     ? 'sdparta_0'
-    : options.sdpSemantics === 'unified-plan' || isFirefox
+    : sdpFormat === 'unified'
       ? '0' : 'audio'}\r
 a=extmap:1 urn:ietf:params:rtp-hdrext:ssrc-audio-level\r
 a=recvonly\r
@@ -1651,9 +1637,9 @@ function getTracks(peerConnection) {
   return peerConnection.getSenders().filter(sender => sender.track).map(sender => sender.track);
 }
 
-function createPeerConnections(sdpSemantics, configuration) {
-  const pc1 = new RTCPeerConnection(Object.assign({ sdpSemantics }, configuration));
-  const pc2 = new RTCPeerConnection(Object.assign({ sdpSemantics }, configuration));
+function createPeerConnections(configuration) {
+  const pc1 = new RTCPeerConnection(configuration);
+  const pc2 = new RTCPeerConnection(configuration);
   [[pc1, pc2], [pc1, pc2]].forEach(([pc1, pc2]) => {
     pc1.addEventListener('icecandidate', event => {
       if (event.candidate) {
