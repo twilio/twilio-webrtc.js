@@ -1,3 +1,11 @@
+2.3.0 (in progress)
+===================
+
+New Features
+------------
+
+- ChromeRTCPeerConnection will now be initialized with the default SDP semantics. (JSDK-2265)
+
 2.2.1 (January 29, 2019)
 ========================
 
