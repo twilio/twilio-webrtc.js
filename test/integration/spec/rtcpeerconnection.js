@@ -785,13 +785,16 @@ function testGetSenders(signalingState) {
   });
 
   context(`"${signalingState}"`, () => {
-    it('should return a list of senders', () => {
+    // NOTE(mmalavalli): Disabling this test on Safari "unified-plan" for
+    // signalingState "closed" due to this bug:
+    // https://bugs.webkit.org/show_bug.cgi?id=194890
+    (isSafari && sdpFormat === 'unified' && signalingState === 'closed' ? it.skip : it)('should return a list of senders', () => {
       const actualSenders = test.peerConnection.getSenders();
       if (isFirefox && signalingState === 'have-remote-offer') {
-        assert.deepEqual(actualSenders.length, senders.length);
+        assert.equal(actualSenders.length, senders.length);
         return;
       } else if (isSafari && sdpFormat === 'planb' && signalingState === 'have-local-offer') {
-        assert.deepEqual(actualSenders.length, senders.length + 1);
+        assert.equal(actualSenders.length, senders.length + 1);
         return;
       }
       assert.deepEqual(actualSenders, senders);
