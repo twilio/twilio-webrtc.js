@@ -4,12 +4,16 @@
 New Features
 ------------
 
-- ChromeRTCPeerConnection will now be initialized with the default SDP semantics. (JSDK-2265)
+- In Chrome, RTCPeerConnection will now be initialized with the default SDP semantics. (JSDK-2265)
 
 Bug Fixes
 ---------
 
 - Fixed a bug where getStats was throwing a TypeError in Electron 3.x. (JSDK-2267)
+- Fixed a bug where createOffer(), when called in Safari 12.2 created "offerToReceive"
+  RTCRtpTransceivers even though the RTCPeerConnection already had "sendrecv" or
+  "recvonly" RTCRtpTransceivers. (JSDK-2286)
+  
 
 3.2.0 (January 7, 2019)
 =======================
