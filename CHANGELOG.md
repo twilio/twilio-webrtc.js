@@ -4,7 +4,7 @@
 New Features
 ------------
 
-- SafarRTCPeerConnection will now support Unified Plan SDPs in Safari 12.1 and above. (JSDK-2306)
+- SafariRTCPeerConnection will now support Unified Plan SDPs in Safari 12.1 and above. (JSDK-2306)
 
 Bug Fixes
 ---------
