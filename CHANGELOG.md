@@ -4,7 +4,7 @@
 New Features
 ------------
 
-- In Chrome, RTCPeerConnection will now be initialized with the default SDP semantics. (JSDK-2265)
+- SafariRTCPeerConnection will now support Unified Plan SDPs in Safari 12.1 and above. (JSDK-2306)
 
 Bug Fixes
 ---------
