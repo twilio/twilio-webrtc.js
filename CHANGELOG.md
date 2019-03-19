@@ -1,10 +1,16 @@
-2.3.0 (in progress)
-===================
+2.3.0 (March 18, 2019)
+======================
 
 New Features
 ------------
 
-- SafariRTCPeerConnection will now support Unified Plan SDPs in Safari 12.2 and above. (JSDK-2306)
+- SafariRTCPeerConnection will now support Unified Plan SDPs. (JSDK-2306)
+
+Bug Fixes
+---------
+
+- Fixed a bug where createOffer(), when called in Safari 12.2 created "offerToReceive" RTCRtpTransceivers
+  even though the RTCPeerConnection already had "sendrecv" or "recvonly" RTCRtpTransceivers. (JSDK-2286)
 
 2.2.1 (January 29, 2019)
 ========================
