@@ -4,7 +4,7 @@
 New Features
 ------------
 
-- ChromeRTCPeerConnection will now be support Unified Plan SDPs in Chrome 72 and above. (JSDK-2312)
+- ChromeRTCPeerConnection will now support Unified Plan SDPs in Chrome 72 and above. (JSDK-2312)
 
 Bug Fixes
 ---------
