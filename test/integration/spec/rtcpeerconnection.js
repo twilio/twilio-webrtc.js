@@ -785,10 +785,13 @@ function testGetSenders(signalingState) {
   });
 
   context(`"${signalingState}"`, () => {
-    // NOTE(mmalavalli): Disabling this test on Safari "unified-plan" for
-    // signalingState "closed" due to this bug:
-    // https://bugs.webkit.org/show_bug.cgi?id=194890
-    (isSafari && sdpFormat === 'unified' && signalingState === 'closed' ? it.skip : it)('should return a list of senders', () => {
+    // NOTE(mmalavalli): Safari 12.2+ and Firefox 67+ implement the spec-compliant
+    // version of RTCPeerConnection.getSenders() for signalingState "closed".
+    const isSpecCompliantForClosed = signalingState === 'closed'
+      && sdpFormat === 'unified'
+      && (isSafari || (isFirefox && firefoxVersion > 66));
+
+    it(`should return ${isSpecCompliantForClosed ? 'an empty list' : 'a list of senders'}`, () => {
       const actualSenders = test.peerConnection.getSenders();
       if (isFirefox && signalingState === 'have-remote-offer') {
         assert.equal(actualSenders.length, senders.length);
@@ -797,7 +800,11 @@ function testGetSenders(signalingState) {
         assert.equal(actualSenders.length, senders.length + 1);
         return;
       }
-      assert.deepEqual(actualSenders, senders);
+      if (isSpecCompliantForClosed) {
+        assert.deepEqual(actualSenders, []);
+      } else {
+        assert.deepEqual(actualSenders, senders);
+      }
     });
   });
 }
