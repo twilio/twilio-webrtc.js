@@ -77,9 +77,6 @@ browsers.
   remapping the legacy property `maxRetransmitTime` to `maxPacketLifeTime`. See
   [this bug](https://bugs.chromium.org/p/chromium/issues/detail?id=696681) for
   more information.
-* Works around a [this bug](https://bugs.chromium.org/p/chromium/issues/detail?id=894231)
-  in "unified-plan" SDPs where adding a `MediaStreamTrack` that was previously added and
-  removed generates an SDP where the MSID does not match the `MediaStreamTrack` ID.
 * Does not depend on the native "track" event for "plan-b" RTCPeerConnection because
   of [this bug](https://bugs.chromium.org/p/chromium/issues/detail?id=774303), which partly
   refers to "ontrack" not firing when expected. We have filed
@@ -95,11 +92,6 @@ browsers.
   change the previously negotiated DTLS role in an answer, which breaks Chrome.
 * Provides a workaround for [this bug](https://bugzilla.mozilla.org/show_bug.cgi?id=1363815),
   where the browser throws when `RTCPeerConnection.prototype.peerIdentity` is accessed.
-* Provides a shim for the `removeTrack` method in order to work around [this bug](https://bugzilla.mozilla.org/show_bug.cgi?id=1133874).
-* Provides a shim for the `addTrack` method. Since `removeTrack` is shimmed, there is a necessity to
-  maintain an explicit list of added `RTCRtpSender`s.
-* Provides a shim for the `getSenders` method. Since `removeTrack` is shimmed, there is a necessity to
-  maintain an explicit list of added `RTCRtpSender`s.
 * Works around Firefox [Bug 1480277](https://bugzilla.mozilla.org/show_bug.cgi?id=1480277).
 
 #### Safari
@@ -107,13 +99,7 @@ browsers.
 * Provides a workaround for the case where, when the SSRC of a `MediaStreamTrack` changes, the
   browser treats this as a removal of the existing `MediaStreamTrack` and the addition of a new
   `MediaStreamTrack`.
-* Provides a shim for the `removeTrack` method in order to work around [this bug](https://bugs.webkit.org/show_bug.cgi?id=174327).
-* Provides a shim for the `addTrack` method. Since `removeTrack` is shimmed, there is a necessity to
-  maintain an explicit list of added `RTCRtpSender`s.
-* Provides a workaround for [this bug](https://github.com/webrtc/adapter/issues/714), where webrtc-adapter's shimmed
-  `addTrack` method does not return the `RTCRtpSender` associated with the added track.
-* Provides a shim for the `getSenders` method. Since `removeTrack` is shimmed, there is a necessity to
-  maintain an explicit list of added `RTCRtpSender`s.
+* Provides a workaround for this `removeTrack` [bug](https://bugs.webkit.org/show_bug.cgi?id=174327).
 
 ### RTCSessionDescription
 

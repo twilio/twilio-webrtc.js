@@ -1,3 +1,16 @@
+2.4.0 (in progress)
+===================
+
+New Features
+------------
+
+- ChromeRTCPeerConnection will now support Unified Plan SDPs in Chrome 72 and above. (JSDK-2313)
+
+Bug Fixes
+---------
+
+- Fixed a bug where `audioLevel` returned by getStats() was not in the range [0-32767]. (JSDK-2318)
+
 2.3.0 (March 18, 2019)
 ======================
 
