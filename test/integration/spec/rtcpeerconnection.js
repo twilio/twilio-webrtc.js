@@ -638,12 +638,22 @@ function testGetSenders(signalingState) {
   });
 
   context(`"${signalingState}"`, () => {
-    it('should return a list of senders', () => {
+    // NOTE(mmalavalli): Safari 12.2+ and Firefox 67+ implement the spec-compliant
+    // version of RTCPeerConnection.getSenders() for signalingState "closed".
+    const isSpecCompliantForClosed = signalingState === 'closed'
+      && sdpFormat === 'unified'
+      && (isSafari || (isFirefox && firefoxVersion > 66));
+
+    it(`should return ${isSpecCompliantForClosed ? 'an empty list' : 'a list of senders'}`, () => {
       const actualSenders = test.peerConnection.getSenders();
-      if (isSafari && signalingState === 'have-local-offer') {
+      if (isSafari  && sdpFormat === 'planb' && signalingState === 'have-local-offer') {
         assert.equal(actualSenders.length, senders.length + 1);
       } else {
-        assert.deepEqual(actualSenders, senders);
+        if (isSpecCompliantForClosed) {
+          assert.deepEqual(actualSenders, []);
+        } else {
+          assert.deepEqual(actualSenders, senders);
+        }
       }
     });
   });
