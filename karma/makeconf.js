@@ -19,6 +19,7 @@ function makeConf(defaultFile, browserNoActivityTimeout, requires) {
 
     let browsers = {
       chrome: ['ChromeWebRTC'],
+      electron: ['Electron'],
       firefox: ['FirefoxWebRTC'],
       safari: ['Safari']
     };
@@ -29,7 +30,7 @@ function makeConf(defaultFile, browserNoActivityTimeout, requires) {
         throw new Error('Unknown browser');
       }
     } else if (process.platform === 'darwin') {
-      browsers = ['ChromeWebRTC', 'FirefoxWebRTC', 'Safari'];
+      browsers = ['ChromeWebRTC', 'FirefoxWebRTC', 'Safari', 'Electron'];
     } else {
       browsers = ['ChromeWebRTC', 'FirefoxWebRTC'];
     }
