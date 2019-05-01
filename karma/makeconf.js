@@ -19,6 +19,7 @@ function makeConf(defaultFile, browserNoActivityTimeout, requires) {
 
     let browsers = {
       chrome: ['ChromeWebRTC'],
+      electron: ['ElectronWebRTC'],
       firefox: ['FirefoxWebRTC'],
       safari: ['Safari']
     };
@@ -29,7 +30,7 @@ function makeConf(defaultFile, browserNoActivityTimeout, requires) {
         throw new Error('Unknown browser');
       }
     } else if (process.platform === 'darwin') {
-      browsers = ['ChromeWebRTC', 'FirefoxWebRTC', 'Safari'];
+      browsers = ['ChromeWebRTC', 'ElectronWebRTC', 'FirefoxWebRTC', 'Safari'];
     } else {
       browsers = ['ChromeWebRTC', 'FirefoxWebRTC'];
     }
@@ -67,6 +68,10 @@ function makeConf(defaultFile, browserNoActivityTimeout, requires) {
             '--use-fake-ui-for-media-stream',
             '--js-flags="--expose-gc"'
           ]
+        },
+        ElectronWebRTC: {
+          base: 'Electron',
+          flags: ['--no-custom-user-agent'],
         },
         FirefoxWebRTC: {
           base: 'Firefox',
