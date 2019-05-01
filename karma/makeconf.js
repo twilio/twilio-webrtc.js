@@ -71,7 +71,7 @@ function makeConf(defaultFile, browserNoActivityTimeout, requires) {
         },
         ElectronWebRTC: {
           base: 'Electron',
-          flags: ['--show', '--no-custom-user-agent'],
+          flags: ['--no-custom-user-agent'],
         },
         FirefoxWebRTC: {
           base: 'Firefox',
