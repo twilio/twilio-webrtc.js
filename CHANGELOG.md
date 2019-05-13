@@ -4,6 +4,8 @@
 New Features
 ------------
 
+- `getStats` now includes a `timestamp` for the activeIceCandidatePair
+
 - ChromeRTCPeerConnection will now support Unified Plan SDPs in Chrome 72 and above. (JSDK-2312)
 
 Bug Fixes
@@ -26,7 +28,7 @@ Bug Fixes
 - Fixed a bug where createOffer(), when called in Safari 12.2 created "offerToReceive"
   RTCRtpTransceivers even though the RTCPeerConnection already had "sendrecv" or
   "recvonly" RTCRtpTransceivers. (JSDK-2286)
-  
+
 
 3.2.0 (January 7, 2019)
 =======================
@@ -51,8 +53,8 @@ New Features
 Bug Fixes
 ---------
 
-- Fixed a bug in SafariRTCPeerConnection where `remoteDescription`, 
-  when accessed in an RTCTrackEvent listener returned pending remote description 
+- Fixed a bug in SafariRTCPeerConnection where `remoteDescription`,
+  when accessed in an RTCTrackEvent listener returned pending remote description
   even though a new RTCSessionDescription had already been applied. (JSDK-2224)
 
 3.1.0 (November 20, 2018)
@@ -163,7 +165,7 @@ Bug Fixes
 Bug Fixes
 ---------
 
-- `RTCSessionDescription` properties are now read-only, and therefore standards-compliant. (JSDK-1503)  
+- `RTCSessionDescription` properties are now read-only, and therefore standards-compliant. (JSDK-1503)
 
 1.0.0 (August 17, 2017)
 =======================
