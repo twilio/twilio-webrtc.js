@@ -161,6 +161,7 @@ const sdpFormat = getSdpFormat();
         {key: 'retransmissionsReceived', type: 'number'},
         {key: 'retransmissionsSent', type: 'number'},
         {key: 'state', type: 'string'},
+        {key: 'timestamp', type: 'number'},
         {key: 'totalRoundTripTime', type: 'number'},
         {key: 'transportId', type: 'string'},
         {key: 'writable', type: 'boolean'}
