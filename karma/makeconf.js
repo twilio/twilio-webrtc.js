@@ -46,6 +46,7 @@ function makeConf(defaultFile, browserNoActivityTimeout, requires) {
       files,
       preprocessors,
       browserify: {
+        debug: !!process.env.DEBUG,
         transform: [
           'envify'
         ]
@@ -56,7 +57,7 @@ function makeConf(defaultFile, browserNoActivityTimeout, requires) {
       logLevel: config.LOG_DEBUG,
       autoWatch: true,
       browsers,
-      singleRun: true,
+      singleRun: !process.env.DEBUG,
       concurrency: 1,
       browserNoActivityTimeout,
       customLaunchers: {
