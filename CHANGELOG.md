@@ -1,5 +1,5 @@
-4.1.0 (in progress)
-===================
+4.1.0 (July 12, 2019)
+=====================
 
 New Features
 ------------
@@ -26,7 +26,6 @@ Bug Fixes
 - Fixed a bug where createOffer(), when called in Safari 12.2 created "offerToReceive"
   RTCRtpTransceivers even though the RTCPeerConnection already had "sendrecv" or
   "recvonly" RTCRtpTransceivers. (JSDK-2286)
-  
 
 3.2.0 (January 7, 2019)
 =======================
