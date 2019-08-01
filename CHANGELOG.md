@@ -1,3 +1,12 @@
+4.1.1 (in progress)
+===================
+
+Bug Fixes
+---------
+
+- Fixed a bug where ChromeRTCPeerConnection and SafariRTCPeerConnection did not properly
+  update the SSRCs for MediaStreamTrack IDs in the local offer SDP after a rollback. (JSDK-2463)
+
 4.1.0 (July 12, 2019)
 =====================
 
