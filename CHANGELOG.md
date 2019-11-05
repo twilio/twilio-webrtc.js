@@ -1,5 +1,15 @@
-4.1.1 (in progress)
-===================
+4.1.2 (October 24, 2019)
+========================
+
+Bug Fixes
+---------
+
+- Fixed a bug where ChromeRTCPeerConnection and SafariRTCPeerConnection did not restore
+  the rolled back tracks to SSRCs Map when setLocalDescription() is called immediately
+  after a rollback. (JSDK-2522)
+
+4.1.1 (September 17, 2019)
+==========================
 
 Bug Fixes
 ---------
