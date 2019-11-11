@@ -1,5 +1,5 @@
-2.4.0 (in progress)
-===================
+2.4.0 (November 11, 2019)
+=========================
 
 New Features
 ------------
@@ -50,7 +50,7 @@ New Features
 - Added support for Unified Plan SDPs on Safari 12.1. (JSDK-2231)
 - Removed workaround for this [Safari bug](https://bugs.webkit.org/show_bug.cgi?id=174323).
 - Removed workaround for this Chrome [bug](https://bugs.chromium.org/p/chromium/issues/detail?id=774303).
-  Now, we no longer suppress the RTCPeerConnection's native `RTCTrackEvent`. 
+  Now, we no longer suppress the RTCPeerConnection's native `RTCTrackEvent`.
 - Worked around the [deprecation](https://blog.mozilla.org/webrtc/getstats-isremote-65/) of the
   `isRemote` property in `RTCInboundRTPStreamStats` and `RTCOutboundRTPStreamStats` in Firefox.
 
@@ -164,7 +164,7 @@ Bug Fixes
 Bug Fixes
 ---------
 
-- `RTCSessionDescription` properties are now read-only, and therefore standards-compliant. (JSDK-1503)  
+- `RTCSessionDescription` properties are now read-only, and therefore standards-compliant. (JSDK-1503)
 
 1.0.0 (August 17, 2017)
 =======================
