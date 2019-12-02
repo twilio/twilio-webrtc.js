@@ -1,3 +1,11 @@
+4.1.3 (In Progress)
+====================
+
+Bug Fixes
+---------
+
+- Fixed a bug where loading this module resulted in page errors on firefox if `media.peerconnection.enabled`  was set to false in about:config. (JSDK-2591)
+
 4.1.2 (October 24, 2019)
 ========================
 
@@ -69,8 +77,8 @@ New Features
 Bug Fixes
 ---------
 
-- Fixed a bug in SafariRTCPeerConnection where `remoteDescription`, 
-  when accessed in an RTCTrackEvent listener returned pending remote description 
+- Fixed a bug in SafariRTCPeerConnection where `remoteDescription`,
+  when accessed in an RTCTrackEvent listener returned pending remote description
   even though a new RTCSessionDescription had already been applied. (JSDK-2224)
 
 3.1.0 (November 20, 2018)
@@ -181,7 +189,7 @@ Bug Fixes
 Bug Fixes
 ---------
 
-- `RTCSessionDescription` properties are now read-only, and therefore standards-compliant. (JSDK-1503)  
+- `RTCSessionDescription` properties are now read-only, and therefore standards-compliant. (JSDK-1503)
 
 1.0.0 (August 17, 2017)
 =======================
