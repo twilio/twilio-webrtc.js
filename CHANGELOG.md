@@ -4,7 +4,7 @@
 Bug Fixes
 ---------
 
-- Fixed a bug where loading this module resulted in page errors on firefox if `media.peerconnection.enabled`  was set to false in about:config. (JSDK-2591)
+- Fixed a bug where loading `@twilio/webrtc` resulted in page errors on firefox if `media.peerconnection.enabled` was set to false in about:config. (JSDK-2591)
 
 4.1.2 (October 24, 2019)
 ========================
