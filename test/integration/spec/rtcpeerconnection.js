@@ -920,9 +920,14 @@ function testClose(signalingState) {
       ];
 
       events.forEach(event => {
-        it('should raise ' + util.a(event) + ' ' + event + ' event', () => {
-          return test.waitFor(event);
-        });
+        // Note(mpatwardhan): on newer chrome builds (80.0.3983.0+),
+        //  peerConnection.close does not fire iceconnectionstatechange
+        //  https://bugs.chromium.org/p/chromium/issues/detail?id=1032252
+        if (!isChrome || event !== 'iceconnectionstatechange') {
+          it('should raise ' + util.a(event) + ' ' + event + ' event', () => {
+            return test.waitFor(event);
+          });
+        }
       });
 
       it('should raise signalingstatechange event on next tick', () => {
@@ -1616,11 +1621,19 @@ a=fingerprint:sha-256 0F:F6:1E:6F:88:AC:BA:0F:D1:4D:D7:0C:E2:B7:8E:93:CA:75:C8:8
   }
 
   test.close = function close() {
-    return Promise.all([
+    const promisesToWaitFor = [
       test.peerConnection.close(),
       test.waitFor('signalingstatechange'),
-      test.waitFor('iceconnectionstatechange')
-    ]);
+    ];
+
+    if (!isChrome) {
+      // Note(mpatwardhan): on newer chrome builds (80.0.3983.0+),
+      //  peerConnection.close does not fire iceconnectionstatechange
+      //  https://bugs.chromium.org/p/chromium/issues/detail?id=1032252
+      promisesToWaitFor.push(test.waitFor('iceconnectionstatechange'));
+    }
+
+    return Promise.all(promisesToWaitFor);
   };
 
   test.createLocalDescription = function createLocalDesription(sdpType) {
@@ -1725,14 +1738,26 @@ a=fingerprint:sha-256 0F:F6:1E:6F:88:AC:BA:0F:D1:4D:D7:0C:E2:B7:8E:93:CA:75:C8:8
     events.forEach(test.resetEvent);
   };
 
-  test.waitFor = function waitFor(event) {
+  test.waitFor = async function waitFor(event) {
+    const timeoutMS = 10 * 1000;
     var events = test.events.get(event);
     if (events.length) {
       return Promise.resolve(events[0]);
     }
-    return new Promise(resolve => {
+    const eventPromise = new Promise(resolve => {
       test.peerConnection.addEventListener(event, resolve);
     });
+
+    let timer = null;
+    const timeoutPromise = new Promise((_resolve, reject) => {
+      timer = setTimeout(() => {
+        // eslint-disable-next-line no-console
+        reject(new Error(`Timed out waiting for ${event} to fire`));
+      }, timeoutMS);
+    });
+    const result = await Promise.race([eventPromise, timeoutPromise]);
+    clearTimeout(timer);
+    return result;
   };
 
   test.eventIsNotRaised = function eventIsNotRaised(event) {
