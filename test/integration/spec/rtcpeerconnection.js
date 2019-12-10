@@ -914,20 +914,18 @@ function testClose(signalingState) {
       });
 
     } else {
-      var events = [
+      // NOTE(mpatwardhan): on newer chrome builds (80.0.3983.0+),
+      //  RTCPeerConnection.close() does not fire "iceconnectionstatechange"
+      //  https://bugs.chromium.org/p/chromium/issues/detail?id=1032252
+      var events = isChrome && chromeVersion >= 80 ? ['signalingstatechange'] : [
         'iceconnectionstatechange',
         'signalingstatechange'
       ];
 
       events.forEach(event => {
-        // Note(mpatwardhan): on newer chrome builds (80.0.3983.0+),
-        //  peerConnection.close does not fire iceconnectionstatechange
-        //  https://bugs.chromium.org/p/chromium/issues/detail?id=1032252
-        if (!isChrome || event !== 'iceconnectionstatechange') {
-          it('should raise ' + util.a(event) + ' ' + event + ' event', () => {
-            return test.waitFor(event);
-          });
-        }
+        it('should raise ' + util.a(event) + ' ' + event + ' event', () => {
+          return test.waitFor(event);
+        });
       });
 
       it('should raise signalingstatechange event on next tick', () => {
@@ -1627,8 +1625,8 @@ a=fingerprint:sha-256 0F:F6:1E:6F:88:AC:BA:0F:D1:4D:D7:0C:E2:B7:8E:93:CA:75:C8:8
     ];
 
     if (!isChrome) {
-      // Note(mpatwardhan): on newer chrome builds (80.0.3983.0+),
-      //  peerConnection.close does not fire iceconnectionstatechange
+      // NOTE(mpatwardhan): on newer chrome builds (80.0.3983.0+),
+      //  RTCPeerConnection.close() does not fire "iceconnectionstatechange"
       //  https://bugs.chromium.org/p/chromium/issues/detail?id=1032252
       promisesToWaitFor.push(test.waitFor('iceconnectionstatechange'));
     }
