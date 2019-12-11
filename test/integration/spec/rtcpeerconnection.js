@@ -1624,7 +1624,7 @@ a=fingerprint:sha-256 0F:F6:1E:6F:88:AC:BA:0F:D1:4D:D7:0C:E2:B7:8E:93:CA:75:C8:8
       test.waitFor('signalingstatechange'),
     ];
 
-    if (!isChrome) {
+    if (!isChrome || chromeVersion < 80) {
       // NOTE(mpatwardhan): on newer chrome builds (80.0.3983.0+),
       //  RTCPeerConnection.close() does not fire "iceconnectionstatechange"
       //  https://bugs.chromium.org/p/chromium/issues/detail?id=1032252
