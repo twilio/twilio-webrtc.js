@@ -1,3 +1,18 @@
+4.2.0 (in progress)
+===================
+
+New Features
+------------
+
+- twilio-webrtc.js will now export `guessBrowserVersion`, which detects the major
+  and minor versions of the browser it is running on. (JSDK-2670)
+
+Bug Fixes
+---------
+
+- Fixed a bug where `guessBrowser` was falsely detecting Chrome and Firefox on iOS
+  as Safari. (JSDK-2670)
+
 4.1.3 (December 10, 2019)
 =========================
 
