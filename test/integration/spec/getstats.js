@@ -17,7 +17,7 @@ const isFirefox = guess === 'firefox';
 const isSafari = guess === 'safari';
 const sdpFormat = getSdpFormat();
 
-(isSafari && sdpFormat === 'planb' ? describe.skip : describe)(`getStats(${sdpFormat})`, function () {
+(isSafari && sdpFormat === 'planb' ? describe.skip : describe.only)(`getStats(${sdpFormat})`, function () {
   this.timeout(10000);
 
   context('should return a Promise that resolves with a StandardizedStatsResponse which has', () => {
@@ -102,6 +102,9 @@ const sdpFormat = getSdpFormat();
           {key: 'packetsSent', type: 'number'},
           {key: 'packetsReceived', type: 'number'},
           {key: 'trackId', type: 'string'},
+          {key: 'jitter', type: 'number'},
+          {key: 'packetsLost', type: 'number'},
+          {key: 'roundTripTime', type: 'number'}
         ].forEach(({key, type}) => {
           if (trackStats.hasOwnProperty(key)) {
             assert.equal(typeof trackStats[key], type, `typeof ${stats}.${trackType}[0].${key} ("${typeof trackStats[key]}") should be "${type}"`);
