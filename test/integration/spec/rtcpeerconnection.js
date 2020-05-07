@@ -858,8 +858,8 @@ function expectSinglingStateChangeOnClose() {
   // NOTE(mpatwardhan): Future Chrome will no longer emit "signalingstatechange"
   // when RTCPeerConnection.close() is called.
   // https://bugs.chromium.org/p/chromium/issues/detail?id=699036&q=signalingstatechange&can=2
-  // update this value to make it conditional on the chrome version when that happens.
-  return true;
+  // update this return value to make it conditional on the chrome version when that happens.
+  return !isChrome;
 }
 
 function testClose(signalingState) {
