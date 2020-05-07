@@ -61,7 +61,7 @@ before_script:
       pulseaudio --start
     fi
 
-script: npm run build
+script: ./scripts/travis-run-tests.sh
 
 notifications:
   slack:
