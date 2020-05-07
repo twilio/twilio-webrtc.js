@@ -80,7 +80,37 @@ const sdpFormat = getSdpFormat();
       await pc2.setLocalDescription(answer);
       await pc1.setRemoteDescription(answer);
       await deferred.promise;
+
+      // wait couple of seconds, and get stats
+      await new Promise(resolve => setTimeout(resolve, 2000));
+
       stats = await getStats(pc1);
+    });
+
+    ['localAudioTrackStats', 'localVideoTrackStats', 'remoteAudioTrackStats', 'remoteVideoTrackStats'].forEach(trackType => {
+      it('.' + trackType, () => {
+        assert.equal(stats[trackType].length, 1, `expected to have data about ${trackType}`);
+
+        const trackStats = stats[trackType][0];
+        assert(trackStats, `expected to have property: ${stats}.${trackType}[0]`);
+
+        [
+          {key: 'ssrc', type: 'string'},
+          {key: 'timestamp', type: 'number'},
+          {key: 'bytesReceived', type: 'number'},
+          {key: 'bytesSent', type: 'number'},
+          {key: 'packetsSent', type: 'number'},
+          {key: 'packetsReceived', type: 'number'},
+          {key: 'trackId', type: 'string'},
+          {key: 'jitter', type: 'number'},
+          {key: 'packetsLost', type: 'number'},
+          {key: 'roundTripTime', type: 'number'}
+        ].forEach(({key, type}) => {
+          if (trackStats.hasOwnProperty(key)) {
+            assert.equal(typeof trackStats[key], type, `typeof ${stats}.${trackType}[0].${key} ("${typeof trackStats[key]}") should be "${type}"`);
+          }
+        });
+      });
     });
 
     it('.activeIceCandidatePair', () => {

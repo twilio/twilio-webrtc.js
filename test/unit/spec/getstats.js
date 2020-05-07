@@ -304,7 +304,7 @@ describe('getStats', function() {
             assert.equal(report.packetsReceived, fakeInbound.packetsReceived);
             assert.equal(report.packetsLost, fakeInbound.packetsLost);
             assert.equal(report.jitter, Math.round(fakeInbound.jitter * 1000));
-            assert.equal(report.roundTripTime, fakeInbound.roundTripTime);
+            assert.equal(report.roundTripTime, Math.round(fakeInbound.roundTripTime * 1000));
           });
       });
   });
