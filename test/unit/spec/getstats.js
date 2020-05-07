@@ -1287,6 +1287,37 @@ describe('getStats', function() {
         });
       });
 
+      it('translates state=inprogress to state=in-progress', async () => {
+        const options = {
+          safariFakeStats: new Map(Object.entries({
+            RTCIceCandidatePair_Izz_OUDUFHO1: {
+              id: "RTCIceCandidatePair_Izz_OUDUFHO1",
+              timestamp: 1544547877980,
+              type: "candidate-pair",
+              availableOutgoingBitrate: 2885390,
+              bytesReceived: 11786869,
+              bytesSent: 9570568,
+              currentRoundTripTime: 0.001,
+              localCandidateId: "RTCIceCandidate_Izz",
+              nominated: true,
+              priority: 9079290933588934000,
+              remoteCandidateId: "RTCIceCandidate_OUDUFHO1",
+              requestsReceived: 24,
+              requestsSent: 1,
+              responsesReceived: 24,
+              responsesSent: 24,
+              state: "inprogress",
+              totalRoundTripTime: 0.131,
+              transportId: "RTCTransport_audio_1",
+              writable: true
+            }
+          }))
+        };
+        const peerConnection = new FakeRTCPeerConnection(options);
+        const { activeIceCandidatePair } = await getStats(peerConnection, { testForSafari: true });
+
+        assert.equal(activeIceCandidatePair.state, 'in-progress');
+      });
     });
   });
 });

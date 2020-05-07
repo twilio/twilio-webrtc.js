@@ -923,6 +923,8 @@ function testClose(signalingState) {
       // if (!isChrome || chromeVersion < 86) {
       //   events.push('signalingstatechange');
       // }
+      events.push('signalingstatechange');
+
 
       // NOTE(mpatwardhan): on newer chrome builds (80.0.3983.0+),
       //  RTCPeerConnection.close() does not fire "iceconnectionstatechange"
@@ -1637,6 +1639,7 @@ a=fingerprint:sha-256 0F:F6:1E:6F:88:AC:BA:0F:D1:4D:D7:0C:E2:B7:8E:93:CA:75:C8:8
     // if (!isChrome || chromeVersion < 86) {
     //   promisesToWaitFor.push(test.waitFor('signalingstatechange'));
     // }
+    promisesToWaitFor.push(test.waitFor('signalingstatechange'));
 
     if (!isChrome || chromeVersion < 80) {
       // NOTE(mpatwardhan): on newer chrome builds (80.0.3983.0+),
