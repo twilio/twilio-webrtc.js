@@ -854,6 +854,14 @@ function testGetReceivers(signalingState) {
   });
 }
 
+function expectSinglingStateChangeOnClose() {
+  // NOTE(mpatwardhan): Future Chrome will no longer emit "signalingstatechange"
+  // when RTCPeerConnection.close() is called.
+  // https://bugs.chromium.org/p/chromium/issues/detail?id=699036&q=signalingstatechange&can=2
+  // update this value to make it conditional on the chrome version when that happens.
+  return true;
+}
+
 function testClose(signalingState) {
   context(JSON.stringify(signalingState), () => {
     var result;
@@ -916,15 +924,9 @@ function testClose(signalingState) {
     } else {
       var events = [];
 
-      // NOTE(mpatwardhan): Future Chrome will no longer emit "signalingstatechange"
-      // when RTCPeerConnection.close() is called.
-      // https://bugs.chromium.org/p/chromium/issues/detail?id=699036&q=signalingstatechange&can=2
-      // uncomment these line when the change above lands.
-      // if (!isChrome || chromeVersion < 86) {
-      //   events.push('signalingstatechange');
-      // }
-      events.push('signalingstatechange');
-
+      if (expectSinglingStateChangeOnClose()) {
+        events.push('signalingstatechange');
+      }
 
       // NOTE(mpatwardhan): on newer chrome builds (80.0.3983.0+),
       //  RTCPeerConnection.close() does not fire "iceconnectionstatechange"
@@ -1632,14 +1634,9 @@ a=fingerprint:sha-256 0F:F6:1E:6F:88:AC:BA:0F:D1:4D:D7:0C:E2:B7:8E:93:CA:75:C8:8
   test.close = function close() {
     const promisesToWaitFor = [test.peerConnection.close()];
 
-    // NOTE(mpatwardhan): Future Chrome will no longer emit "signalingstatechange"
-    // when RTCPeerConnection.close() is called.
-    // https://bugs.chromium.org/p/chromium/issues/detail?id=699036&q=signalingstatechange&can=2
-    // uncomment these line when the change above lands.
-    // if (!isChrome || chromeVersion < 86) {
-    //   promisesToWaitFor.push(test.waitFor('signalingstatechange'));
-    // }
-    promisesToWaitFor.push(test.waitFor('signalingstatechange'));
+    if (expectSinglingStateChangeOnClose()) {
+      promisesToWaitFor.push(test.waitFor('signalingstatechange'));
+    }
 
     if (!isChrome || chromeVersion < 80) {
       // NOTE(mpatwardhan): on newer chrome builds (80.0.3983.0+),
