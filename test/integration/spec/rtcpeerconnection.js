@@ -854,6 +854,33 @@ function testGetReceivers(signalingState) {
   });
 }
 
+function expectIceConnectionStateChangeOnClose() {
+  // NOTE(mpatwardhan): on newer chrome builds (80.0.3983.0+),
+  //  RTCPeerConnection.close() does not fire "iceconnectionstatechange"
+  //  https://bugs.chromium.org/p/chromium/issues/detail?id=1032252
+  if (isChrome) {
+    return chromeVersion < 80;
+  } else if (isSafari) {
+    return true;
+  } else {
+    return false;
+  }
+}
+
+function expectSinglingStateChangeOnClose() {
+  // NOTE(mpatwardhan): Future Chrome will no longer emit "signalingstatechange"
+  // when RTCPeerConnection.close() is called.
+  // https://bugs.chromium.org/p/chromium/issues/detail?id=699036&q=signalingstatechange&can=2
+  // update this return value to make it conditional on the chrome version when that happens.
+  if (isChrome) {
+    return true;
+  } else if (isSafari) {
+    return true;
+  } else {
+    return false;
+  }
+}
+
 function testClose(signalingState) {
   context(JSON.stringify(signalingState), () => {
     var result;
@@ -916,15 +943,11 @@ function testClose(signalingState) {
     } else {
       var events = [];
 
-      // NOTE(mmalavalli): Chrome 81+ will no longer emit "signalingstatechange"
-      // when RTCPeerConnection.close() is called.
-      if (!isChrome || chromeVersion < 81) {
+      if (expectSinglingStateChangeOnClose()) {
         events.push('signalingstatechange');
       }
-      // NOTE(mpatwardhan): on newer chrome builds (80.0.3983.0+),
-      //  RTCPeerConnection.close() does not fire "iceconnectionstatechange"
-      //  https://bugs.chromium.org/p/chromium/issues/detail?id=1032252
-      if (!isChrome || chromeVersion < 80) {
+
+      if (expectIceConnectionStateChangeOnClose()) {
         events.push('iceconnectionstatechange');
       }
 
@@ -1626,15 +1649,12 @@ a=fingerprint:sha-256 0F:F6:1E:6F:88:AC:BA:0F:D1:4D:D7:0C:E2:B7:8E:93:CA:75:C8:8
 
   test.close = function close() {
     const promisesToWaitFor = [test.peerConnection.close()];
-    if (!isChrome || chromeVersion < 81) {
-      // NOTE(mmalavalli): Chrome 81+ will no longer emit "signalingstatechange"
-      // when RTCPeerConnection.close() is called.
+
+    if (expectSinglingStateChangeOnClose()) {
       promisesToWaitFor.push(test.waitFor('signalingstatechange'));
     }
-    if (!isChrome || chromeVersion < 80) {
-      // NOTE(mpatwardhan): on newer chrome builds (80.0.3983.0+),
-      //  RTCPeerConnection.close() does not fire "iceconnectionstatechange"
-      //  https://bugs.chromium.org/p/chromium/issues/detail?id=1032252
+
+    if (expectIceConnectionStateChangeOnClose()) {
       promisesToWaitFor.push(test.waitFor('iceconnectionstatechange'));
     }
 

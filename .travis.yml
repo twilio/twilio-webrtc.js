@@ -7,6 +7,12 @@ addons:
     packages:
       - pulseaudio
 
+# https://github.com/travis-ci/travis-ci/issues/8836#issuecomment-356362524
+sudo: required
+
+before_install:
+  - sudo apt-get install -y pulseaudio
+
 # https://docs.travis-ci.com/user/gui-and-headless-browsers/#using-xvfb-directly
 dist: trusty
 
@@ -35,33 +41,7 @@ matrix:
     - os: linux
       env: BROWSER=firefox BVER=unstable
 
-    - os: osx
-      sudo: required
-      osx_image: xcode8.3
-      env: BROWSER=safari BVER=unstable
-
-  allow_failures:
-    - env: BROWSER=safari BVER=unstable
-
-before_script:
-  - |
-    set -e
-    cd node_modules/travis-multirunner
-    if [ "${TRAVIS_OS_NAME}" == 'linux' ]; then
-      BROWSER=chrome ./setup.sh
-      BROWSER=firefox ./setup.sh
-      export CHROME_BIN=$(pwd)/browsers/bin/chrome-$BVER
-      export FIREFOX_BIN=$(pwd)/browsers/bin/firefox-$BVER
-    else
-      BROWSER=safari ./setup.sh
-    fi
-    cd ../..
-    if [ "${TRAVIS_OS_NAME}" == 'linux' ]; then
-      sh -e /etc/init.d/xvfb start
-      pulseaudio --start
-    fi
-
-script: npm run build
+script: ./scripts/travis-run-tests.sh
 
 notifications:
   slack:
