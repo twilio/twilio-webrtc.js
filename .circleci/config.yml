@@ -64,18 +64,13 @@ commands:
       - store_artifacts:
           path: ./logs
           prefix: tests
-  build:
+  lint:
     steps:
-      - get-code-and-dependencies
       - run:
-          name: Building Quick
-          command: npm run build:quick
-      - store_artifacts:
-          path: ./dist
-          prefix: dist
+          name: Linting...
+          command: npm run lint
   unit-tests:
     steps:
-      - get-code-and-dependencies
       - run:
           name: Running Unit Tests
           command: npm run test:unit
@@ -84,11 +79,16 @@ commands:
           prefix: coverage
   integration-tests:
     steps:
-      - get-code-and-dependencies
       - run:
           name: Running Integration Tests
           command: npm run test:integration
       - save-test-results
+  run-tests:
+    steps:
+      - get-code-and-dependencies
+      - lint
+      - unit-tests
+      - integration-tests
   echo-command:
     description: "marker command"
     parameters:
@@ -98,15 +98,7 @@ commands:
     steps:
       - run: echo << parameters.to >>
 jobs:
-  Build:
-    executor: docker-with-browser
-    steps:
-      - build
-  UnitTests:
-    executor: docker-with-browser
-    steps:
-      - unit-tests
-  run-integration-tests:
+  run-tests-job:
     parallelism: 2
     parameters:
       browser:
@@ -117,28 +109,23 @@ jobs:
       name: docker-with-browser
       browser: << parameters.browser >>
       bver: << parameters.bver >>
-    steps: [integration-tests]
+    steps: [run-tests]
 
 workflows:
   version: 2
   Custom_Workflow:
     when: << pipeline.parameters.custom_workflow >>
     jobs:
-      - Build
-      - UnitTests
-      - run-integration-tests:
+      - run-tests-job:
           name: << pipeline.parameters.browser >>(<< pipeline.parameters.bver >>)
           browser: << pipeline.parameters.browser >>
           bver: << pipeline.parameters.bver >>
   Pull_Request_Workflow:
     when: << pipeline.parameters.pr_workflow >>
     jobs:
-      - Build
-      - UnitTests
-      - run-integration-tests:
+      - run-tests-job:
           name: << matrix.browser >>(<< matrix.bver >>)
           matrix:
             parameters:
               browser: ["chrome", "firefox"]
               bver: ["stable", "unstable", "beta"]
-          requires: [Build, UnitTests]
