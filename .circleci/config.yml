@@ -67,7 +67,7 @@ commands:
   lint:
     steps:
       - run:
-          name: Linting...
+          name: Running Lint
           command: npm run lint
   unit-tests:
     steps:
@@ -89,14 +89,6 @@ commands:
       - lint
       - unit-tests
       - integration-tests
-  echo-command:
-    description: "marker command"
-    parameters:
-      to:
-        type: string
-        default: "Hello World"
-    steps:
-      - run: echo << parameters.to >>
 jobs:
   run-tests-job:
     parameters:
