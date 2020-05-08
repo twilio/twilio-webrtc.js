@@ -1,0 +1,144 @@
+# to validate any changes
+# use:
+# circleci config process .circleci/config.yml > config_processed.yml
+#
+# and run any job locally with:
+# circleci local execute -c config_processed.yml --job "firefox stable group"
+version: 2.1
+parameters:
+  pr_workflow:    # runs for every pull request.
+    type: boolean
+    default: true # by default pr workflow will get executed.
+  custom_workflow: # runs just one custom config.
+    type: boolean
+    default: false
+  browser:
+    type: enum
+    enum: ["chrome", "firefox"]
+    default: "chrome"
+  bver:
+    type: enum
+    enum: ["stable", "beta", "unstable"]
+    default: "stable"
+  tag:
+    type: string
+    default: "" # use something like: "2.0.0-beta15" when invoking with parameters.
+
+executors:
+  docker-with-browser:
+    parameters:
+      browser:
+        type: enum
+        enum: ["chrome", "firefox"]
+        default: "chrome"
+      bver:
+        type: enum
+        enum: ["stable", "beta", "unstable"]
+        default: "stable"
+    docker:
+      - image: twilio/twilio-video-browsers:<<parameters.browser>>-<<parameters.bver>>
+commands:
+  get-code:
+    steps:
+      - checkout
+      - when:
+          condition: << pipeline.parameters.tag >>
+          steps:
+            - run: git checkout << pipeline.parameters.tag >>
+  get-code-and-dependencies:
+    steps:
+      - get-code
+      - restore_cache:
+          key: dependency-cache-{{ checksum "package.json" }}
+      - run:
+          name: Installing dependencies
+          command: npm install
+      - save_cache:
+          key: dependency-cache-{{ checksum "package.json" }}
+          paths:
+            - ./node_modules
+  save-test-results:
+    steps:
+      - store_test_results:
+          path: ./logs
+      - store_artifacts:
+          path: ./logs
+          prefix: tests
+  build:
+    steps:
+      - get-code-and-dependencies
+      - run:
+          name: Building Quick
+          command: npm run build:quick
+      - store_artifacts:
+          path: ./dist
+          prefix: dist
+  unit-tests:
+    steps:
+      - get-code-and-dependencies
+      - run:
+          name: Running Unit Tests
+          command: npm run test:unit
+      - store_artifacts:
+          path: ./coverage
+          prefix: coverage
+  integration-tests:
+    steps:
+      - get-code-and-dependencies
+      - run:
+          name: Running Integration Tests
+          command: npm run test:integration
+      - save-test-results
+  echo-command:
+    description: "marker command"
+    parameters:
+      to:
+        type: string
+        default: "Hello World"
+    steps:
+      - run: echo << parameters.to >>
+jobs:
+  Build:
+    executor: docker-with-browser
+    steps:
+      - build
+  UnitTests:
+    executor: docker-with-browser
+    steps:
+      - unit-tests
+  run-integration-tests:
+    parallelism: 2
+    parameters:
+      browser:
+        type: string
+      bver:
+        type: string
+    executor:
+      name: docker-with-browser
+      browser: << parameters.browser >>
+      bver: << parameters.bver >>
+    steps: [integration-tests]
+
+workflows:
+  version: 2
+  Custom_Workflow:
+    when: << pipeline.parameters.custom_workflow >>
+    jobs:
+      - Build
+      - UnitTests
+      - run-integration-tests:
+          name: << pipeline.parameters.browser >>(<< pipeline.parameters.bver >>)
+          browser: << pipeline.parameters.browser >>
+          bver: << pipeline.parameters.bver >>
+  Pull_Request_Workflow:
+    when: << pipeline.parameters.pr_workflow >>
+    jobs:
+      - Build
+      - UnitTests
+      - run-integration-tests:
+          name: << matrix.browser >>(<< matrix.bver >>)
+          matrix:
+            parameters:
+              browser: ["chrome", "firefox"]
+              bver: ["stable", "unstable", "beta"]
+          requires: [Build, UnitTests]
