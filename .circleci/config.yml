@@ -99,7 +99,6 @@ commands:
       - run: echo << parameters.to >>
 jobs:
   run-tests-job:
-    parallelism: 2
     parameters:
       browser:
         type: string
