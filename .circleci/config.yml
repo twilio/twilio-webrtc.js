@@ -12,6 +12,9 @@ parameters:
   custom_workflow: # runs just one custom config.
     type: boolean
     default: false
+  release_workflow:
+    type: boolean
+    default: false
   browser:
     type: enum
     enum: ["chrome", "firefox"]
@@ -20,6 +23,9 @@ parameters:
     type: enum
     enum: ["stable", "beta", "unstable"]
     default: "stable"
+  releaseCommand:
+    type: string
+    default: "foo" # when specified this mean the workflow was called from release-tool.
   tag:
     type: string
     default: "" # use something like: "2.0.0-beta15" when invoking with parameters.
@@ -101,6 +107,17 @@ jobs:
       browser: << parameters.browser >>
       bver: << parameters.bver >>
     steps: [run-tests]
+  ExecuteRelease:
+    executor: docker-with-browser
+    parameters:
+      releaseCommand:
+        type: string
+        default: ""
+    steps:
+      - checkout # release command builds as part of the flow.
+      - run: echo <<pipeline.parameters.releaseCommand>>
+      # - run: <<parameters.releaseCommand>>
+      #     type: approval
 
 workflows:
   version: 2
@@ -120,3 +137,17 @@ workflows:
             parameters:
               browser: ["chrome", "firefox"]
               bver: ["stable", "unstable", "beta"]
+  Release_Workflow:
+    when: << pipeline.parameters.release_workflow >>
+    jobs:
+      - run-tests-job:
+          name: << matrix.browser >>(<< matrix.bver >>)
+          matrix:
+            parameters:
+              browser: ["chrome", "firefox"]
+              bver: ["stable", "unstable", "beta"]
+      - hold:
+          type: approval
+      - ExecuteRelease: # this job has conditional steps, no-ops when pipeline.parameters.releaseCommand not specified
+          releaseCommand: << pipeline.parameters.releaseCommand >>
+          requires: [hold]
