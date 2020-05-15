@@ -21,9 +21,9 @@ parameters:
     type: enum
     enum: ["stable", "beta", "unstable"]
     default: "stable"
-  releaseCommand:
+  release_command:
     type: string
-    default: "foo" # when specified this mean the workflow was called from release-tool.
+    default: "echo no release command was specified" # release-tool specifies the real command.
   tag:
     type: string
     default: "" # use something like: "2.0.0-beta15" when invoking with parameters.
@@ -112,14 +112,14 @@ jobs:
       - lint
       - unit-tests
       - run: echo Wait for other jobs in the workflow to finish
-      - run: echo Release will execute "<< pipeline.parameters.releaseCommand >>"
+      - run: echo Release will execute "<< pipeline.parameters.release_command >>"
   ExecuteRelease:
     executor: docker-with-browser
     steps:
       - get-code-and-dependencies
       - lint
       - unit-tests
-      - run: echo <<pipeline.parameters.releaseCommand>>
+      - run: <<pipeline.parameters.release_command>>
 
 workflows:
   version: 2

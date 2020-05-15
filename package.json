@@ -54,7 +54,7 @@
     "karma-spec-reporter": "0.0.31",
     "mocha": "^3.5.0",
     "npm-run-all": "^4.0.2",
-    "twilio-release-tool": "^0.2.11",
+    "twilio-release-tool": "^1.0.0",
     "rimraf": "^2.6.1",
     "travis-multirunner": "^4.2.3",
     "simple-git": "^2.4.0",
