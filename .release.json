@@ -1,6 +1,6 @@
 {
   "type": "JavaScript",
-  "travis": true,
+  "ci": "circleci",
   "slug": "twilio/twilio-webrtc.js",
   "env": {
     "GH_REF": "github.com/twilio/twilio-webrtc.js.git"

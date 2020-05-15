@@ -2,8 +2,6 @@
 # use:
 # circleci config process .circleci/config.yml > config_processed.yml
 #
-# and run any job locally with:
-# circleci local execute -c config_processed.yml --job "firefox stable group"
 version: 2.1
 parameters:
   pr_workflow:    # runs for every pull request.
@@ -107,17 +105,21 @@ jobs:
       browser: << parameters.browser >>
       bver: << parameters.bver >>
     steps: [run-tests]
+  ExecuteReleaseDummy:
+    executor: docker-with-browser
+    steps:
+      - get-code-and-dependencies
+      - lint
+      - unit-tests
+      - run: echo Wait for other jobs in the workflow to finish
+      - run: echo Release will execute "<< pipeline.parameters.releaseCommand >>"
   ExecuteRelease:
     executor: docker-with-browser
-    parameters:
-      releaseCommand:
-        type: string
-        default: ""
     steps:
-      - checkout # release command builds as part of the flow.
+      - get-code-and-dependencies
+      - lint
+      - unit-tests
       - run: echo <<pipeline.parameters.releaseCommand>>
-      # - run: <<parameters.releaseCommand>>
-      #     type: approval
 
 workflows:
   version: 2
@@ -146,8 +148,10 @@ workflows:
             parameters:
               browser: ["chrome", "firefox"]
               bver: ["stable", "unstable", "beta"]
+      - ExecuteReleaseDummy
       - hold:
           type: approval
-      - ExecuteRelease: # this job has conditional steps, no-ops when pipeline.parameters.releaseCommand not specified
-          releaseCommand: << pipeline.parameters.releaseCommand >>
+          requires: [ExecuteReleaseDummy]
+      - ExecuteRelease:
+          context: sdk_js
           requires: [hold]
