@@ -10,7 +10,7 @@ parameters:
   custom_workflow: # runs just one custom config.
     type: boolean
     default: false
-  release_workflow:
+  release_workflow: # release tool kicks of this workflow with release_command parameter.
     type: boolean
     default: false
   browser:
@@ -105,21 +105,26 @@ jobs:
       browser: << parameters.browser >>
       bver: << parameters.bver >>
     steps: [run-tests]
-  ExecuteReleaseDummy:
-    executor: docker-with-browser
-    steps:
-      - get-code-and-dependencies
-      - lint
-      - unit-tests
-      - run: echo Wait for other jobs in the workflow to finish
-      - run: echo Release will execute "<< pipeline.parameters.release_command >>"
+
   ExecuteRelease:
     executor: docker-with-browser
+    parameters:
+      dryRun:
+        type: boolean
+        default: true
     steps:
       - get-code-and-dependencies
       - lint
       - unit-tests
-      - run: <<pipeline.parameters.release_command>>
+      - when:
+          condition: << parameters.dryRun >>
+          steps:
+            - run: echo Wait for other jobs in the workflow to finish
+            - run: echo Release will execute "<< pipeline.parameters.release_command >>"
+      - unless:
+          condition: << parameters.dryRun >>
+          steps:
+            - run: << pipeline.parameters.release_command >>
 
 workflows:
   version: 2
@@ -148,10 +153,13 @@ workflows:
             parameters:
               browser: ["chrome", "firefox"]
               bver: ["stable", "unstable", "beta"]
-      - ExecuteReleaseDummy
+      - ExecuteRelease:
+          dryRun: true
+          name: Release dry run
       - hold:
           type: approval
-          requires: [ExecuteReleaseDummy]
+          requires: [Release dry run]
       - ExecuteRelease:
+          dryRun: false
           context: sdk_js
           requires: [hold]
