@@ -2,14 +2,15 @@
 # use:
 # circleci config process .circleci/config.yml > config_processed.yml
 #
-# and run any job locally with:
-# circleci local execute -c config_processed.yml --job "firefox stable group"
 version: 2.1
 parameters:
   pr_workflow:    # runs for every pull request.
     type: boolean
     default: true # by default pr workflow will get executed.
   custom_workflow: # runs just one custom config.
+    type: boolean
+    default: false
+  release_workflow: # release tool kicks of this workflow with release_command parameter.
     type: boolean
     default: false
   browser:
@@ -20,6 +21,9 @@ parameters:
     type: enum
     enum: ["stable", "beta", "unstable"]
     default: "stable"
+  release_command:
+    type: string
+    default: "echo no release command was specified" # release-tool specifies the real command.
   tag:
     type: string
     default: "" # use something like: "2.0.0-beta15" when invoking with parameters.
@@ -102,6 +106,26 @@ jobs:
       bver: << parameters.bver >>
     steps: [run-tests]
 
+  ExecuteRelease:
+    executor: docker-with-browser
+    parameters:
+      dryRun:
+        type: boolean
+        default: true
+    steps:
+      - get-code-and-dependencies
+      - lint
+      - unit-tests
+      - when:
+          condition: << parameters.dryRun >>
+          steps:
+            - run: echo Wait for other jobs in the workflow to finish
+            - run: echo Release will execute "<< pipeline.parameters.release_command >>"
+      - unless:
+          condition: << parameters.dryRun >>
+          steps:
+            - run: << pipeline.parameters.release_command >>
+
 workflows:
   version: 2
   Custom_Workflow:
@@ -120,3 +144,22 @@ workflows:
             parameters:
               browser: ["chrome", "firefox"]
               bver: ["stable", "unstable", "beta"]
+  Release_Workflow:
+    when: << pipeline.parameters.release_workflow >>
+    jobs:
+      - run-tests-job:
+          name: << matrix.browser >>(<< matrix.bver >>)
+          matrix:
+            parameters:
+              browser: ["chrome", "firefox"]
+              bver: ["stable", "unstable", "beta"]
+      - ExecuteRelease:
+          dryRun: true
+          name: Release dry run
+      - hold:
+          type: approval
+          requires: [Release dry run]
+      - ExecuteRelease:
+          dryRun: false
+          context: sdk_js
+          requires: [hold]
