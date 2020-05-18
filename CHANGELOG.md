@@ -1,3 +1,12 @@
+4.2.1 (in progress)
+===================
+
+Bug Fixes
+---------
+
+- Fixed a bug where `packetsLost` and `roundTripTime` were reported inaccurately
+  even though they were available in Chrome. (JSDK-2755, JSDK-2787, JSDK-2787)
+
 4.2.0 (February 21, 2020)
 =========================
 
