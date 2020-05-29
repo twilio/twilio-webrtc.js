@@ -1,6 +1,12 @@
 4.3.0 (in progress)
 ===================
 
+New Features
+------------
+
+- Added a new flag `isSupported` that indicates whether native WebRTC APIs are
+  supported by the browser. (JSDK-2832)
+
 Changes
 -------
 
