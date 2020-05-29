@@ -1,3 +1,12 @@
+4.3.0 (in progress)
+===================
+
+Changes
+-------
+
+- twilio-webrtc.js will no longer support Chrome and Firefox versions that support
+  only the prefixed versions (`webkit` and `moz`) of `getUserMedia` and `RTCPeerConnection`. (JSDK-2832)
+
 4.2.1 (May 27, 2020)
 ====================
 
