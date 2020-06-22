@@ -476,7 +476,7 @@ describe(`RTCPeerConnection(${sdpFormat})`, function() {
       const isSilent = await detectSilence(audioContext, new MediaStream([remoteTrack3]), 10000);
 
       try {
-        assert(!isSilent);
+        assert.equal(isSilent, false, 'remoteTrack was unexpectedly silent');
       } catch (error) {
         throw error;
       } finally {
@@ -869,12 +869,12 @@ function expectIceConnectionStateChangeOnClose() {
 }
 
 function expectSinglingStateChangeOnClose() {
-  // NOTE(mpatwardhan): Newer(85+) Chrome will no longer emits "signalingstatechange"
+  // NOTE(mpatwardhan): Chrome 85+ will no longer emit "signalingstatechange"
   // when RTCPeerConnection.close() is called.
   // https://bugs.chromium.org/p/chromium/issues/detail?id=699036&q=signalingstatechange&can=2
 
   if (isChrome) {
-    return chromeVersion < 85
+    return chromeVersion < 85;
   } else if (isSafari) {
     return true;
   } else {
