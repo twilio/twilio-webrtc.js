@@ -858,6 +858,7 @@ function expectIceConnectionStateChangeOnClose() {
   // NOTE(mpatwardhan): on newer chrome builds (80.0.3983.0+),
   //  RTCPeerConnection.close() does not fire "iceconnectionstatechange"
   //  https://bugs.chromium.org/p/chromium/issues/detail?id=1032252
+
   if (isChrome) {
     return chromeVersion < 80;
   } else if (isSafari) {
@@ -868,12 +869,12 @@ function expectIceConnectionStateChangeOnClose() {
 }
 
 function expectSinglingStateChangeOnClose() {
-  // NOTE(mpatwardhan): Future Chrome will no longer emit "signalingstatechange"
+  // NOTE(mpatwardhan): Newer(85+) Chrome will no longer emits "signalingstatechange"
   // when RTCPeerConnection.close() is called.
   // https://bugs.chromium.org/p/chromium/issues/detail?id=699036&q=signalingstatechange&can=2
-  // update this return value to make it conditional on the chrome version when that happens.
+
   if (isChrome) {
-    return true;
+    return chromeVersion < 85
   } else if (isSafari) {
     return true;
   } else {
