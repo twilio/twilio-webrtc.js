@@ -56,7 +56,6 @@
     "npm-run-all": "^4.0.2",
     "twilio-release-tool": "^1.0.0",
     "rimraf": "^2.6.1",
-    "travis-multirunner": "^4.2.3",
     "simple-git": "^2.4.0",
     "watchify": "^3.9.0",
     "webrtc-adapter": "^6.4.8"
