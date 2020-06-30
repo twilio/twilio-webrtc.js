@@ -152,6 +152,7 @@ function makeConf(defaultFile, browserNoActivityTimeout, requires) {
             'media.gstreamer.enabled': false,
             'media.navigator.permission.disabled': true,
             'media.navigator.streams.fake': true,
+            'media.autoplay.block-webaudio': false,
             'media.autoplay.enabled.user-gestures-needed': false,
             'media.block-autoplay-until-in-foreground': false,
             'media.getusermedia.insecure.enabled': true,
@@ -164,6 +165,7 @@ function makeConf(defaultFile, browserNoActivityTimeout, requires) {
             'media.gstreamer.enabled': false,
             'media.navigator.permission.disabled': true,
             'media.navigator.streams.fake': true,
+            'media.autoplay.block-webaudio': false,
             'media.autoplay.enabled.user-gestures-needed': false,
             'media.block-autoplay-until-in-foreground': false
           }
