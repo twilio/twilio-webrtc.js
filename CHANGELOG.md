@@ -1,3 +1,11 @@
+4.3.1 (July 8, 2020)
+====================
+
+Changes
+-------
+
+- Removed references to `const` in order to preserve es5 support. (JSDK-2913)
+
 4.3.0 (June 5, 2020)
 ====================
 
