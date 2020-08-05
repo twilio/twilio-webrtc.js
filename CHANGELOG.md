@@ -1,3 +1,12 @@
+4.4.0 (In Progress)
+===================
+
+Bug Fixes
+---------
+
+- Fixed a bug where `bytesSent`, `packetsSent` returned by getStats() were set to zero when simulcast was enabled. (JSDK-2920)
+
+
 4.3.0 (June 5, 2020)
 ====================
 
