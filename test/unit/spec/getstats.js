@@ -243,6 +243,101 @@ describe('getStats', function() {
       });
   });
 
+  it('should resolve the promise with a StandardizedStatsResponse in Chrome simulcast scenario (outbound) ', () => {
+    var options = {
+      chromeFakeStats: new Map(Object.entries({
+        RTCOutboundRTPVideoStream_4003256843: {
+          bytesSent: 425592592,
+          codecId: "RTCCodec_video_Outbound_120",
+          firCount: 0,
+          framesEncoded: 34221,
+          id: "RTCOutboundRTPVideoStream_4003256843",
+          isRemote: false,
+          mediaType: "video",
+          nackCount: 0,
+          packetsSent: 371331,
+          pliCount: 0,
+          qpSum: 572871,
+          ssrc: 4003256843,
+          timestamp: 1543604170954.952,
+          trackId: "RTCMediaStreamTrack_sender_3",
+          transportId: "RTCTransport_audio_1",
+          type: "outbound-rtp"
+        },
+        RTCOutboundRTPVideoStream_4003256844: {
+          bytesSent: 100,
+          codecId: "RTCCodec_video_Outbound_120",
+          firCount: 0,
+          framesEncoded: 34221,
+          id: "RTCOutboundRTPVideoStream_4003256843",
+          isRemote: false,
+          mediaType: "video",
+          nackCount: 0,
+          packetsSent: 10,
+          pliCount: 0,
+          qpSum: 572871,
+          ssrc: 4003256844,
+          timestamp: 1543604170954.952,
+          trackId: "RTCMediaStreamTrack_sender_3",
+          transportId: "RTCTransport_audio_1",
+          type: "outbound-rtp"
+        },
+        RTCMediaStreamTrack_sender_3: {
+          audioLevel: 0,
+          detached: false,
+          ended: false,
+          frameHeight: 540,
+          frameWidth: 960,
+          framesSent: 34221,
+          hugeFramesSent: 73,
+          id: "RTCMediaStreamTrack_sender_3",
+          kind: "video",
+          remoteSource: false,
+          timestamp: 1543604170954.952,
+          trackIdentifier: "ffdd22d1-4fab-4042-969d-a568aabeb614",
+          type: "track"
+        },
+        RTCCodec_video_Outbound_120: {
+          clockRate: 90000,
+          id: "RTCCodec_video_Outbound_120",
+          mimeType: "video/VP8",
+          payloadType: 120,
+          timestamp: 1543604170954.952,
+          type: "codec",
+        }
+      }))
+    };
+    var fakeTrackStat = options.chromeFakeStats.get('RTCMediaStreamTrack_sender_3');
+    var fakeCodecStat = options.chromeFakeStats.get('RTCCodec_video_Outbound_120');
+    var peerConnection = new FakeRTCPeerConnection(options);
+    var localStream = new FakeMediaStream();
+    var remoteStream = new FakeMediaStream();
+
+    localStream.addTrack(new FakeMediaStreamTrack('video'));
+    peerConnection._addLocalStream(localStream);
+
+    return getStats(peerConnection, { testForChrome: true })
+      .then(response => {
+        assert.equal(response.localVideoTrackStats.length, 2);
+
+        response.localVideoTrackStats.forEach(report => {
+            var fakeOutboundStat = options.chromeFakeStats.get('RTCOutboundRTPVideoStream_' + report.ssrc);
+            assert(report.trackId);
+            assert(report.timestamp);
+            assert.equal(report.codecName, fakeCodecStat.mimeType.split('/')[1]);
+            assert.equal(report.frameWidthSent, fakeTrackStat.frameWidth);
+            assert.equal(report.frameHeightSent, fakeTrackStat.frameHeight);
+            assert.equal(report.ssrc, String(fakeOutboundStat.ssrc));
+            assert.equal(report.bytesSent, fakeOutboundStat.bytesSent);
+            assert.equal(report.bytesSent, fakeOutboundStat.bytesSent);
+            assert.equal(report.packetsLost, fakeOutboundStat.packetsLost);
+            assert.equal(report.packetsReceived, fakeOutboundStat.packetsReceived);
+            assert.equal(report.packetsSent, fakeOutboundStat.packetsSent);
+            assert.equal(report.audioInputLevel, fakeTrackStat.audioLevel);
+          });
+      });
+  });
+
   it('should resolve the promise with a StandardizedStatsResponse in Firefox (outbound)', () => {
     var options = {
       firefoxFakeStats: new Map(Object.entries({
