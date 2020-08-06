@@ -5,7 +5,7 @@
 Bug Fixes
 ---------
 
-- Fixed a bug where `bytesSent`, `packetsSent` returned by getStats() were set to zero when simulcast was enabled. (JSDK-2920)
+- Fixed a bug where only one of the outbound track were returned even though multiple tracks are sent when simulcast is enabled. (JSDK-2920)
 
 
 4.3.1 (July 8, 2020)
