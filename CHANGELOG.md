@@ -5,7 +5,7 @@
 Bug Fixes
 ---------
 
-- Fixed a bug where only one of the outbound track were returned even though multiple tracks are sent when simulcast is enabled. (JSDK-2920)
+- Fixed a bug where `getStats()` returned stats for only one of the temporal layers of a VP8 simulcast MediaStreamTrack. (JSDK-2920)
 
 
 4.3.1 (July 8, 2020)
@@ -246,4 +246,3 @@ Bug Fixes
 =======================
 
 - Factored out the WebRTC shims from twilio-video.js 1.2.0 into its own library.
-

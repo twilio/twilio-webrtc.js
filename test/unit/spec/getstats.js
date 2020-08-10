@@ -243,7 +243,7 @@ describe('getStats', function() {
       });
   });
 
-  it('should resolve the promise with a StandardizedStatsResponse in Chrome simulcast scenario (outbound) ', () => {
+  it('should resolve the returned Promise with a StandardizedStatsResponse for VP8 simulcast scenario (outbound)', () => {
     var options = {
       chromeFakeStats: new Map(Object.entries({
         RTCOutboundRTPVideoStream_4003256843: {
