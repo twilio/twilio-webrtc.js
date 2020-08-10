@@ -1,3 +1,13 @@
+
+4.3.2 (In Progress)
+===================
+
+Bug Fixes
+---------
+
+- Fixed a bug where `getStats()` returned stats for only one of the temporal layers of a VP8 simulcast MediaStreamTrack. (JSDK-2920)
+
+
 4.3.1 (July 8, 2020)
 ====================
 
@@ -236,4 +246,3 @@ Bug Fixes
 =======================
 
 - Factored out the WebRTC shims from twilio-video.js 1.2.0 into its own library.
-
