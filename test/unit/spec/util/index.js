@@ -32,6 +32,11 @@ describe('Util', () => {
         'safari'
       ],
       [
+        'Safari WKWebView',
+        'Mozilla/5.0 (iPhone; CPU iPhone OS 14_4 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Mobile/15E148',
+        'safari'
+      ],
+      [
         'Edge Desktop (Chromium)',
         'Mozilla/5.0 (Windows NT 10.0; Win64; x64; Xbox; Xbox One) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/52.0.2743.116 Safari/537.36 Edg/15.15063',
         'chrome'
