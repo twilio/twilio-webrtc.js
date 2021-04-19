@@ -1,4 +1,12 @@
 
+4.3.3 (In Progress)
+===================
+
+Bug Fixes
+---------
+
+- Fixed a bug where loading `@twilio/webrtc` resulted in page errors on Firefox Galaxy S9 simulation mode. (VIDEO-4654)
+
 4.3.2 (August 12, 2020)
 =======================
 
