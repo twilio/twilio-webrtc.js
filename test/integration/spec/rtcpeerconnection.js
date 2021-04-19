@@ -580,8 +580,8 @@ describe(`RTCPeerConnection(${sdpFormat})`, function() {
         });
       });
 
-      // NOTE(mroberts): `stop` isn't implemented in Chrome yet.
-      (RTCRtpTransceiver.prototype.stop ? describe : describe.skip)('Recycling Behavior', () => {
+      // TODO(mpatwardhan): VIDEO-4940: chrome now supports RTCRtpTransceiver.prototype.stop, but test needs to be fixed for chrome
+      (RTCRtpTransceiver.prototype.stop && !isChrome ? describe : describe.skip)('Recycling Behavior', () => {
         it('Scenario 1', async () => {
           const configuration = {
             bundlePolicy: 'max-bundle',
@@ -591,15 +591,18 @@ describe(`RTCPeerConnection(${sdpFormat})`, function() {
           const [pc1, pc2] = createPeerConnections(configuration);
 
           // Round 1
+          console.log('Round 1');
           const t1 = pc1.addTransceiver('audio');
           await negotiate(pc1, pc2);
           assert.equal(pc1.localDescription.sdp.match(/\r\nm=/g).length, 1);
 
+          console.log('Round 2');
           // Round 2
           t1.stop();
           await negotiate(pc1, pc2);
           assert.equal(pc1.localDescription.sdp.match(/\r\nm=/g).length, 1);
 
+          console.log('Round 3');
           // Round 3
           const t2 = pc1.addTransceiver('audio');
           await negotiate(pc1, pc2);
