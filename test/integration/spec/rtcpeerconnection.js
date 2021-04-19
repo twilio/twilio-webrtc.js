@@ -581,7 +581,7 @@ describe(`RTCPeerConnection(${sdpFormat})`, function() {
       });
 
       // TODO(mpatwardhan): VIDEO-4940: chrome now supports RTCRtpTransceiver.prototype.stop, but test needs to be fixed for chrome
-      (RTCRtpTransceiver.prototype.stop || !isChrome ? describe : describe.skip)('Recycling Behavior', () => {
+      (RTCRtpTransceiver.prototype.stop && !isChrome ? describe : describe.skip)('Recycling Behavior', () => {
         it('Scenario 1', async () => {
           const configuration = {
             bundlePolicy: 'max-bundle',
