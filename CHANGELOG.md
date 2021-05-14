@@ -1,3 +1,18 @@
+4.4.0 (in progress)
+===================
+
+New Features
+------------
+
+- `getStats()` now reports the following additional metrics:
+  - `totalPacketSendDelay`
+  - `totalEncodeTime`
+  - `framesEncoded`
+  - `framesDecoded`
+  - `totalDecodeTime`
+  - `estimatedPlayoutTimestamp`
+  - `jitterBufferDelay`
+  - `jitterBufferEmittedCount`
 
 4.3.3 (May 10, 2021)
 ===================
