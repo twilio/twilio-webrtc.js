@@ -1,3 +1,26 @@
+4.4.0 (in progress)
+===================
+
+New Features
+------------
+
+- `getStats()` now reports the following additional metrics:
+  - `totalPacketSendDelay`
+  - `totalEncodeTime`
+  - `framesEncoded`
+  - `framesDecoded`
+  - `totalDecodeTime`
+  - `estimatedPlayoutTimestamp`
+  - `jitterBufferDelay`
+  - `jitterBufferEmittedCount`
+
+4.3.3 (May 10, 2021)
+===================
+
+Bug Fixes
+---------
+
+- Fixed a bug where loading `@twilio/webrtc` resulted in page errors on Firefox Galaxy S9 simulation mode. (VIDEO-4654)
 
 4.3.2 (August 12, 2020)
 =======================
