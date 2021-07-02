@@ -3,8 +3,8 @@
 var assert = require('assert');
 var util = require('../../../../lib/util');
 
-describe.only('Util', () => {
-  describe.only('guessBrowser', () => {
+describe('Util', () => {
+  describe('guessBrowser', () => {
     [
       [
         'Chrome Desktop',
