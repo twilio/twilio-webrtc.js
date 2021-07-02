@@ -3,8 +3,8 @@
 var assert = require('assert');
 var util = require('../../../../lib/util');
 
-describe('Util', () => {
-  describe('guessBrowser', () => {
+describe.only('Util', () => {
+  describe.only('guessBrowser', () => {
     [
       [
         'Chrome Desktop',
@@ -14,7 +14,7 @@ describe('Util', () => {
       [
         'Chrome iOS',
         'Mozilla/5.0 (iPad; CPU OS 13_3 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) CriOS/79.0.3945.73 Mobile/15E148 Safari/604.1',
-        'chrome'
+        'CriOS'
       ],
       [
         'Firefox Desktop',
@@ -39,7 +39,7 @@ describe('Util', () => {
     ].forEach(([browser, userAgent, name]) => {
       context(`${browser} - ${userAgent}`, () => {
         it(`should return "${name}"`, () => {
-          assert.equal(util.guessBrowser(userAgent), name);
+        assert.strictEqual(util.guessBrowser(userAgent), name);
         });
       });
     });
