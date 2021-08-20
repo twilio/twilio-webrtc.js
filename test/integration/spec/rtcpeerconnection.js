@@ -4,7 +4,6 @@ var assert = require('assert');
 var MediaStream = require('../../../lib/mediastream');
 var MediaStreamTrack = require('../../../lib/mediastreamtrack');
 var RTCIceCandidate = require('../../../lib/rtcicecandidate');
-var RTCSessionDescription = require('../../../lib/rtcsessiondescription');
 var RTCPeerConnection = require('../../../lib/rtcpeerconnection');
 var util = require('../../lib/util');
 var { flatMap, guessBrowser } = require('../../../lib/util');
@@ -49,10 +48,6 @@ describe(`RTCPeerConnection(${sdpFormat})`, function() {
   this.timeout(30000);
 
   describe('constructor', () => testConstructor());
-
-  describe('#addIceCandidate, called from signaling state', () => {
-    signalingStates.forEach(signalingState => testAddIceCandidate(signalingState));
-  });
 
   describe('#getSenders', () => {
     signalingStates.forEach(signalingState => testGetSenders(signalingState));
@@ -703,73 +698,6 @@ function testConstructor() {
     it('should set .' + property + ' to ' + JSON.stringify(expected[property]), () => {
       assert.equal(test.peerConnection[property], expected[property]);
     });
-  });
-}
-
-function testAddIceCandidate(signalingState) {
-  // NOTE(mroberts): "stable" and "have-local-offer" only trigger failure here
-  // because we test one round of negotiation. If we tested multiple rounds,
-  // such that remoteDescription was non-null, we would accept a success here.
-  var shouldFail = {
-    closed: true,
-    stable: !isSafari,
-    'have-local-offer': !isSafari
-  }[signalingState] || false;
-
-  var needsTransition = {
-    'have-local-offer': true,
-    'have-remote-offer': true
-  }[signalingState] || false;
-
-  (signalingState === 'closed' && isSafari ? context.skip : context)
-  (JSON.stringify(signalingState), () => {
-    var error;
-    var result;
-    var test;
-
-    beforeEach(() => {
-      error = null;
-      result = null;
-
-      return makeTest({
-        signalingState
-      }).then(_test => {
-        test = _test;
-
-        var candidate = test.createRemoteCandidate();
-        var promise = test.peerConnection.addIceCandidate(candidate);
-
-        // NOTE(mroberts): Because of the way the ChromeRTCPeerConnection
-        // simulates signalingStates "have-local-offer" and "have-remote-offer",
-        // addIceCandidate will block until we transition to stable.
-        if (signalingState === 'have-local-offer') {
-          test.createRemoteDescription('answer').then(answer => {
-            return test.peerConnection.setRemoteDescription(answer);
-          });
-        } else if (signalingState === 'have-remote-offer') {
-          test.peerConnection.createAnswer().then(answer => {
-            return test.peerConnection.setLocalDescription(answer);
-          });
-        }
-
-        // TODO(mroberts): Do something
-        if (shouldFail) {
-          return promise.catch(_error => error = _error);
-        } else {
-          return promise.then(_result => result = _result);
-        }
-      });
-    });
-
-    if (shouldFail) {
-      it('should return a Promise that rejects with an error', () => {
-        assert(error instanceof Error);
-      });
-    } else {
-      it('should return a Promise that resolves to undefined', () => {
-        assert.equal(result, undefined);
-      });
-    }
   });
 }
 
@@ -1470,6 +1398,11 @@ function testSetDescription(local, signalingState, sdpType) {
     var result;
     var test;
 
+    // var shouldRun = local && signalingState === 'have-remote-offer' && sdpType === 'rollback';
+    // if (!shouldRun) {
+    //   return;
+    // }
+
     beforeEach(() => {
       error = null;
       result = null;
@@ -1508,6 +1441,7 @@ function testSetDescription(local, signalingState, sdpType) {
 
     if (shouldFail) {
       it('should return a Promise that rejects with an Error', () => {
+        // console.log('Error:', error);
         assert(error instanceof Error);
       });
 
@@ -1522,6 +1456,7 @@ function testSetDescription(local, signalingState, sdpType) {
       });
 
       it('should not change .signalingState', () => {
+        // console.log('Signaling state:', test.peerConnection.signalingState);
         assert.equal(test.peerConnection.signalingState, signalingState);
       });
 

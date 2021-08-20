@@ -1,3 +1,12 @@
+5.0.0 (in progress)
+===================
+
+Changes
+-------
+
+- This version removes the following shims, which are no longer being used:
+  - Chrome's rollback support shim
+
 4.4.0 (June 15, 2021)
 ===================
 

@@ -8,4 +8,3 @@ if (typeof adapter !== 'undefined') {
 
 require('./spec/getstats');
 require('./spec/rtcpeerconnection');
-require('./spec/rtcsessiondescription');
