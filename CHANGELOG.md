@@ -4,8 +4,26 @@
 Changes
 -------
 
-- This version removes the following shims, which are no longer being used:
-  - Chrome's rollback support shim
+- The following ChromeRTCPeerConnection's shims have been removed. (VIDEO-4958)
+  - Rollback support (available natively from M80 onwards)
+  - `ontrack` compatibility with `webrtc-adapter`
+  - Workaround for bug [860853](https://bugs.chromium.org/p/chromium/issues/detail?id=860853) (fixed in M77)
+  - Plan B support (Unified Plan has been available since M72)
+  - `addTrack` shim using `addStream`
+
+- The following shims have been added to ChromeRTCPeerConnection. (VIDEO-4958)
+  - `setLocalDescription` no longer throws an exception when called with a `rollback` sdp
+    in the signaling state `have-remote-offer` in the updated RTCPeerConnection API.
+    So, a workaround has been added to support the behavior expected by twilio-video.js.
+  - `setRemoteDescription` no longer throws an exception when called with either an `offer`
+    or a `rollback` sdp in the signaling state `have-local-offer` in the updated RTCPeerConnection
+    API. So, a workaround has been added to support the behavior expected by twilio-video.js.
+
+- The following exports have been removed. (VIDEO-4958)
+  - `MediaStream`
+  - `MediaStreamTrack`
+  - `RTCIceCandidate`
+  - `RTCSessionDescription`
 
 4.4.0 (June 15, 2021)
 ===================

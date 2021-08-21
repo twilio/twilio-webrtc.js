@@ -1,9 +1,6 @@
 'use strict';
 
 var assert = require('assert');
-var MediaStream = require('../../../lib/mediastream');
-var MediaStreamTrack = require('../../../lib/mediastreamtrack');
-var RTCIceCandidate = require('../../../lib/rtcicecandidate');
 var RTCPeerConnection = require('../../../lib/rtcpeerconnection');
 var util = require('../../lib/util');
 var { flatMap, guessBrowser } = require('../../../lib/util');

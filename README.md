@@ -67,16 +67,9 @@ of WebRTC, and implements some WebRTC features that are not present in some
 browsers.
 
 #### Chrome
-* Adds "track" event support, as per the workaround in [webrtc-adapter](https://github.com/webrtc/adapter/blob/master/src/js/chrome/chrome_shim.js#L19).
 * Provides a workaround for the case where, when the SSRC of a `MediaStreamTrack` changes, the
   browser treats this as a removal of the existing `MediaStreamTrack` and the addition of a new
   `MediaStreamTrack`.
-* Adds support for getting and setting `maxPacketLifeTime` on RTCDataChannels by
-  remapping the legacy property `maxRetransmitTime` to `maxPacketLifeTime`. See
-  [this bug](https://bugs.chromium.org/p/chromium/issues/detail?id=696681) for
-  more information.
-* Provides a workaround for [this bug](https://bugs.chromium.org/p/chromium/issues/detail?id=860853), where calling `removeTrack`
-  with an `RTCRtpSender` that is not created by the `RTCPeerConnection` in question throws an exception.
 
 #### Firefox
 * For new offers, adds support for calling `setLocalDescription` and `setRemoteDescription` in
