@@ -20,9 +20,6 @@ The following WebRTC API shims are available:
 const {
   getStats,
   getUserMedia,
-  MediaStream,
-  MediaStreamTrack,
-  RTCIceCandidate,
   RTCPeerConnection
 } = require('@twilio/webrtc');
 ```
@@ -89,8 +86,3 @@ browsers.
   `MediaStreamTrack`.
 * Provides a workaround for [this bug](https://github.com/webrtc/adapter/issues/714), where webrtc-adapter's shimmed
   `addTrack` method does not return the `RTCRtpSender` associated with the added track.
-
-### Others
-
-`MediaStream`, `MediaStreamTrack`, and `RTCIceCandidate` abstracts away their
-browser-prefixed counterparts for earlier browser versions.
