@@ -1395,11 +1395,6 @@ function testSetDescription(local, signalingState, sdpType) {
     var result;
     var test;
 
-    // var shouldRun = local && signalingState === 'have-remote-offer' && sdpType === 'rollback';
-    // if (!shouldRun) {
-    //   return;
-    // }
-
     beforeEach(() => {
       error = null;
       result = null;
@@ -1438,7 +1433,6 @@ function testSetDescription(local, signalingState, sdpType) {
 
     if (shouldFail) {
       it('should return a Promise that rejects with an Error', () => {
-        // console.log('Error:', error);
         assert(error instanceof Error);
       });
 
@@ -1453,7 +1447,6 @@ function testSetDescription(local, signalingState, sdpType) {
       });
 
       it('should not change .signalingState', () => {
-        // console.log('Signaling state:', test.peerConnection.signalingState);
         assert.equal(test.peerConnection.signalingState, signalingState);
       });
 
