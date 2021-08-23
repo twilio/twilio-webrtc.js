@@ -19,6 +19,10 @@ Changes
     or a `rollback` sdp in the signaling state `have-local-offer` in the updated RTCPeerConnection
     API. So, a workaround has been added to support the behavior expected by twilio-video.js.
 
+- The following FirefoxRTCPeerConnection's shims have been removed. (VIDEO-4958)
+  - Workaround for bug [1240897](https://bugzilla.mozilla.org/show_bug.cgi?id=1240897) (fixed in mozilla68)
+  - Workaround for bug [1480277](https://bugzilla.mozilla.org/show_bug.cgi?id=1480277) (fixed in mozilla68)
+
 - The following exports have been removed. (VIDEO-4958)
   - `MediaStream`
   - `MediaStreamTrack`

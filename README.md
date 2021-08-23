@@ -73,11 +73,8 @@ browsers.
   `have-local-offer` and `have-remote-offer` signaling states respectively.
 * Adds support for calling `createOffer` in signaling state `have-local-offer`.
 * The above features are implemented using rollback to work around [this bug](https://bugzilla.mozilla.org/show_bug.cgi?id=1072388).
-* Provides a workaround for [this bug](https://bugzilla.mozilla.org/show_bug.cgi?id=1240897), where the browser may
-  change the previously negotiated DTLS role in an answer, which breaks Chrome.
 * Provides a workaround for [this bug](https://bugzilla.mozilla.org/show_bug.cgi?id=1363815),
   where the browser throws when `RTCPeerConnection.prototype.peerIdentity` is accessed.
-* Works around Firefox [Bug 1480277](https://bugzilla.mozilla.org/show_bug.cgi?id=1480277).
 
 #### Safari
 * Adds rollback support, according to the workaround specified [here](https://bugs.chromium.org/p/webrtc/issues/detail?id=5738#c3).
