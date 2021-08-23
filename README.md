@@ -20,11 +20,7 @@ The following WebRTC API shims are available:
 const {
   getStats,
   getUserMedia,
-  MediaStream,
-  MediaStreamTrack,
-  RTCIceCandidate,
-  RTCPeerConnection,
-  RTCSessionDescription
+  RTCPeerConnection
 } = require('@twilio/webrtc');
 ```
 
@@ -68,17 +64,9 @@ of WebRTC, and implements some WebRTC features that are not present in some
 browsers.
 
 #### Chrome
-* Adds rollback support, according to the workaround specified [here](https://bugs.chromium.org/p/webrtc/issues/detail?id=5738#c3).
-* Adds "track" event support, as per the workaround in [webrtc-adapter](https://github.com/webrtc/adapter/blob/master/src/js/chrome/chrome_shim.js#L19).
 * Provides a workaround for the case where, when the SSRC of a `MediaStreamTrack` changes, the
   browser treats this as a removal of the existing `MediaStreamTrack` and the addition of a new
   `MediaStreamTrack`.
-* Adds support for getting and setting `maxPacketLifeTime` on RTCDataChannels by
-  remapping the legacy property `maxRetransmitTime` to `maxPacketLifeTime`. See
-  [this bug](https://bugs.chromium.org/p/chromium/issues/detail?id=696681) for
-  more information.
-* Provides a workaround for [this bug](https://bugs.chromium.org/p/chromium/issues/detail?id=860853), where calling `removeTrack`
-  with an `RTCRtpSender` that is not created by the `RTCPeerConnection` in question throws an exception.
 
 #### Firefox
 * For new offers, adds support for calling `setLocalDescription` and `setRemoteDescription` in
@@ -98,15 +86,3 @@ browsers.
   `MediaStreamTrack`.
 * Provides a workaround for [this bug](https://github.com/webrtc/adapter/issues/714), where webrtc-adapter's shimmed
   `addTrack` method does not return the `RTCRtpSender` associated with the added track.
-
-### RTCSessionDescription
-
-`RTCSessionDescription` abstracts away some of the browser-specific implementations
-of WebRTC for Firefox and Safari, and works around [this bug](https://bugs.chromium.org/p/webrtc/issues/detail?id=4676)
-in Chrome, where the native `RTCSessionDescription` constructor throws when its argument is
-`{ type: 'rollback'}`.
-
-### Others
-
-`MediaStream`, `MediaStreamTrack`, and `RTCIceCandidate` abstracts away their
-browser-prefixed counterparts for earlier browser versions.
