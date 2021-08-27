@@ -1,11 +1,10 @@
-4.5.0 (August 27, 2021)
+4.5.0 (In Progress)
 =======================
 
 New Features
 ------------
 
-- Added `isIOSChrome` browser detection function.
-- ChromeRTCPeerConnection will now add transceivers when creating an offer if the browser is running on iOS.
+- Enabled support for Chrome on iOS.
 
 4.4.0 (June 15, 2021)
 ===================
