@@ -52,9 +52,8 @@ commands:
   get-code-and-dependencies:
     steps:
       - get-code
-      # TODO(joma): Commenting restore_cache as it breaks circle ci currently. Uncomment when circle is fixed
-      # - restore_cache:
-      #     key: dependency-cache-{{ checksum "package.json" }}
+      - restore_cache:
+          key: dependency-cache-{{ arch }}-{{ checksum "package.json" }}
       - run:
           name: Installing dependencies
           command: npm install
