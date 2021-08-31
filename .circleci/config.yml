@@ -52,8 +52,6 @@ commands:
   get-code-and-dependencies:
     steps:
       - get-code
-      - restore_cache:
-          key: dependency-cache-{{ checksum "package.json" }}
       - run:
           name: Installing dependencies
           command: npm install
