@@ -1,4 +1,4 @@
-4.5.0 (In Progress)
+4.5.0 (August 31, 2021)
 =======================
 
 New Features

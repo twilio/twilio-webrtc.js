@@ -53,7 +53,7 @@ commands:
     steps:
       - get-code
       - restore_cache:
-          key: dependency-cache-{{ checksum "package.json" }}
+          key: dependency-cache-{{ arch }}-{{ checksum "package.json" }}
       - run:
           name: Installing dependencies
           command: npm install
