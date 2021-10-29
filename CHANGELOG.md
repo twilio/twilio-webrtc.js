@@ -1,4 +1,12 @@
-4.4.0 (in progress)
+4.5.1 (September 1, 2021)
+=========================
+
+New Features
+------------
+
+- Enabled support for Chrome on iOS.
+
+4.4.0 (June 15, 2021)
 ===================
 
 New Features
