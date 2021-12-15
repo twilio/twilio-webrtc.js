@@ -189,7 +189,6 @@ describe('getStats', function() {
           type: "outbound-rtp"
         },
         RTCMediaStreamTrack_sender_3: {
-          audioLevel: 0,
           detached: false,
           ended: false,
           frameHeight: 540,
@@ -210,11 +209,24 @@ describe('getStats', function() {
           payloadType: 120,
           timestamp: 1543604170954.952,
           type: "codec",
+        },
+        RTCAudioSource_5: {
+          audioLevel: 0.1,
+          echoReturnLoss: -30,
+          echoReturnLossEnhancement: 0.17551203072071075,
+          id: "RTCAudioSource_5",
+          kind: "audio",
+          timestamp: 1639587143779.948,
+          totalAudioEnergy: 0.01288983591403498,
+          totalSamplesDuration: 2.2199999999999966,
+          trackIdentifier: "59d95667-882c-4138-808f-615f021b2fb1",
+          type: "media-source",
         }
       }))
     };
     var fakeOutboundStat = options.chromeFakeStats.get('RTCOutboundRTPVideoStream_4003256843');
     var fakeTrackStat = options.chromeFakeStats.get('RTCMediaStreamTrack_sender_3');
+    var fakeLocalAudioStat = options.chromeFakeStats.get('RTCAudioSource_5');
     var fakeCodecStat = options.chromeFakeStats.get('RTCCodec_video_Outbound_120');
     var peerConnection = new FakeRTCPeerConnection(options);
     var localStream = new FakeMediaStream();
@@ -249,7 +261,7 @@ describe('getStats', function() {
             assert.equal(report.packetsLost, fakeOutboundStat.packetsLost);
             assert.equal(report.packetsReceived, fakeOutboundStat.packetsReceived);
             assert.equal(report.packetsSent, fakeOutboundStat.packetsSent);
-            assert.equal(report.audioInputLevel, fakeTrackStat.audioLevel);
+            assert.equal(report.audioInputLevel, normalizeAudioLevel(fakeLocalAudioStat.audioLevel));
             assert.equal(report.framesEncoded, fakeOutboundStat.framesEncoded);
             assert.equal(report.totalEncodeTime, fakeOutboundStat.totalEncodeTime);
             assert.equal(report.totalPacketSendDelay, fakeOutboundStat.totalPacketSendDelay);
@@ -301,7 +313,6 @@ describe('getStats', function() {
           type: "outbound-rtp"
         },
         RTCMediaStreamTrack_sender_3: {
-          audioLevel: 0,
           detached: false,
           ended: false,
           frameHeight: 540,
@@ -322,10 +333,23 @@ describe('getStats', function() {
           payloadType: 120,
           timestamp: 1543604170954.952,
           type: "codec",
+        },
+        RTCAudioSource_5: {
+          audioLevel: 0.1,
+          echoReturnLoss: -30,
+          echoReturnLossEnhancement: 0.17551203072071075,
+          id: "RTCAudioSource_5",
+          kind: "audio",
+          timestamp: 1639587143779.948,
+          totalAudioEnergy: 0.01288983591403498,
+          totalSamplesDuration: 2.2199999999999966,
+          trackIdentifier: "59d95667-882c-4138-808f-615f021b2fb1",
+          type: "media-source",
         }
       }))
     };
     var fakeTrackStat = options.chromeFakeStats.get('RTCMediaStreamTrack_sender_3');
+    var fakeLocalAudioStat = options.chromeFakeStats.get('RTCAudioSource_5');
     var fakeCodecStat = options.chromeFakeStats.get('RTCCodec_video_Outbound_120');
     var peerConnection = new FakeRTCPeerConnection(options);
     var localStream = new FakeMediaStream();
@@ -351,7 +375,7 @@ describe('getStats', function() {
           assert.equal(report.packetsLost, fakeOutboundStat.packetsLost);
           assert.equal(report.packetsReceived, fakeOutboundStat.packetsReceived);
           assert.equal(report.packetsSent, fakeOutboundStat.packetsSent);
-          assert.equal(report.audioInputLevel, fakeTrackStat.audioLevel);
+          assert.equal(report.audioInputLevel, normalizeAudioLevel(fakeLocalAudioStat.audioLevel));
           assert.equal(report.framesEncoded, fakeOutboundStat.framesEncoded);
           assert.equal(report.totalEncodeTime, fakeOutboundStat.totalEncodeTime);
           assert.equal(report.totalPacketSendDelay, fakeOutboundStat.totalPacketSendDelay);
@@ -534,7 +558,6 @@ describe('getStats', function() {
           id: "RTCMediaStreamTrack_sender_24",
           timestamp: 1544153890580,
           type: "track",
-          audioLevel: 0,
           detached: false,
           echoReturnLoss: 0,
           echoReturnLossEnhancement: 0,
@@ -1458,3 +1481,7 @@ describe('getStats', function() {
     });
   });
 });
+
+function normalizeAudioLevel(level) {
+  return Math.round(level * 32767);
+}
