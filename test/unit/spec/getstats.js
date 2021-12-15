@@ -170,6 +170,8 @@ describe('getStats', function() {
       chromeFakeStats: new Map(Object.entries({
         RTCOutboundRTPVideoStream_4003256843: {
           bytesSent: 425592592,
+          frameHeight: 540,
+          frameWidth: 960,
           codecId: "RTCCodec_video_Outbound_120",
           firCount: 0,
           framesEncoded: 34221,
@@ -191,8 +193,8 @@ describe('getStats', function() {
         RTCMediaStreamTrack_sender_3: {
           detached: false,
           ended: false,
-          frameHeight: 540,
-          frameWidth: 960,
+          frameHeight: 720,
+          frameWidth: 1280,
           framesSent: 34221,
           hugeFramesSent: 73,
           id: "RTCMediaStreamTrack_sender_3",
@@ -253,8 +255,10 @@ describe('getStats', function() {
             assert(report.trackId);
             assert(report.timestamp);
             assert.equal(report.codecName, fakeCodecStat.mimeType.split('/')[1]);
-            assert.equal(report.frameWidthSent, fakeTrackStat.frameWidth);
-            assert.equal(report.frameHeightSent, fakeTrackStat.frameHeight);
+            assert.equal(report.frameWidthSent, fakeOutboundStat.frameWidth);
+            assert.equal(report.frameHeightSent, fakeOutboundStat.frameHeight);
+            assert.equal(report.frameWidthInput, fakeTrackStat.frameWidth);
+            assert.equal(report.frameHeightInput, fakeTrackStat.frameHeight);
             assert.equal(report.ssrc, String(fakeOutboundStat.ssrc));
             assert.equal(report.bytesSent, fakeOutboundStat.bytesSent);
             assert.equal(report.bytesSent, fakeOutboundStat.bytesSent);
@@ -275,6 +279,8 @@ describe('getStats', function() {
         RTCOutboundRTPVideoStream_4003256843: {
           bytesSent: 425592592,
           codecId: "RTCCodec_video_Outbound_120",
+          frameHeight: 480,
+          frameWidth: 640,
           firCount: 0,
           framesEncoded: 34221,
           id: "RTCOutboundRTPVideoStream_4003256843",
@@ -295,6 +301,8 @@ describe('getStats', function() {
         RTCOutboundRTPVideoStream_4003256844: {
           bytesSent: 100,
           codecId: "RTCCodec_video_Outbound_120",
+          frameHeight: 540,
+          frameWidth: 960,
           firCount: 0,
           framesEncoded: 34221,
           id: "RTCOutboundRTPVideoStream_4003256843",
@@ -315,8 +323,8 @@ describe('getStats', function() {
         RTCMediaStreamTrack_sender_3: {
           detached: false,
           ended: false,
-          frameHeight: 540,
-          frameWidth: 960,
+          frameHeight: 720,
+          frameWidth: 1280,
           framesSent: 34221,
           hugeFramesSent: 73,
           id: "RTCMediaStreamTrack_sender_3",
@@ -367,8 +375,10 @@ describe('getStats', function() {
           assert(report.trackId);
           assert(report.timestamp);
           assert.equal(report.codecName, fakeCodecStat.mimeType.split('/')[1]);
-          assert.equal(report.frameWidthSent, fakeTrackStat.frameWidth);
-          assert.equal(report.frameHeightSent, fakeTrackStat.frameHeight);
+          assert.equal(report.frameWidthSent, fakeOutboundStat.frameWidth);
+          assert.equal(report.frameHeightSent, fakeOutboundStat.frameHeight);
+          assert.equal(report.frameWidthInput, fakeTrackStat.frameWidth);
+          assert.equal(report.frameHeightInput, fakeTrackStat.frameHeight);
           assert.equal(report.ssrc, String(fakeOutboundStat.ssrc));
           assert.equal(report.bytesSent, fakeOutboundStat.bytesSent);
           assert.equal(report.bytesSent, fakeOutboundStat.bytesSent);
