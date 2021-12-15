@@ -68,44 +68,57 @@ describe('getStats', function() {
   it('should resolve the promise with a StandardizedStatsResponse in Chrome (inbound)', () => {
     var options = {
       chromeFakeStats: new Map(Object.entries({
-        RTCInboundRTPAudioStream_3265672822: {
-          bytesReceived: 5845447,
-          codecId: "RTCCodec_audio_Inbound_109",
-          estimatedPlayoutTimestamp: 1234567890,
-          framesDecoded: 500,
-          fractionLost: 0,
-          id: "RTCInboundRTPAudioStream_3265672822",
-          isRemote: false,
-          jitter: 0.004,
-          jitterBufferDelay: 2525,
-          jitterBufferEmittedCount: 123,
-          mediaType: "audio",
-          packetsLost: 0,
-          packetsReceived: 89930,
-          ssrc: 3265672822,
-          timestamp: 1543604205208.696,
-          totalDecodeTime: 7.25,
-          trackId: "RTCMediaStreamTrack_receiver_1",
-          transportId: "RTCTransport_audio_1",
-          type: "inbound-rtp"
-        },
-        RTCMediaStreamTrack_receiver_1: {
-          audioLevel: 0,
+        RTCInboundRTPVideoStream_3692393529: {
+          bytesReceived: 30011,
+          codecId: "RTCCodec_video0_Inbound_96",
+          decoderImplementation: "libvpx",
+          estimatedPlayoutTimestamp: 3848581138504,
+          firCount: 0,
           frameHeight: 360,
           frameWidth: 640,
-          concealedSamples: 62440,
-          concealmentEvents: 91,
+          framesDecoded: 43,
+          framesDropped: 0,
+          framesPerSecond: 23,
+          framesReceived: 43,
+          headerBytesReceived: 920,
+          id: "RTCInboundRTPVideoStream_2569502525",
+          jitter: 0.005,
+          jitterBufferDelay: 1.129,
+          jitterBufferEmittedCount: 42,
+          keyFramesDecoded: 2,
+          kind: "video",
+          lastPacketReceivedTimestamp: 1639592338412,
+          mediaType: "video",
+          nackCount: 0,
+          packetsLost: 0,
+          packetsReceived: 46,
+          pliCount: 0,
+          qpSum: 3999,
+          ssrc: 2569502525,
+          timestamp: 1639592338598.977,
+          totalDecodeTime: 0.019,
+          totalInterFrameDelay: 1.7410000000000003,
+          totalSquaredInterFrameDelay: 0.07349900000000002,
+          trackId: "RTCMediaStreamTrack_receiver_35",
+          transportId: "RTCTransport_0_1",
+          type: "inbound-rtp"
+        },
+        RTCMediaStreamTrack_receiver_35: {
+          audioLevel: 0.1,
           detached: false,
           ended: false,
-          id: "RTCMediaStreamTrack_receiver_1",
-          jitterBufferDelay: 2809036.8,
-          kind: "audio",
+          frameHeight: 360,
+          frameWidth: 640,
+          framesDecoded: 43,
+          framesDropped: 0,
+          framesReceived: 43,
+          id: "RTCMediaStreamTrack_receiver_35",
+          jitterBufferDelay: 1.129,
+          jitterBufferEmittedCount: 42,
+          kind: "video",
           remoteSource: true,
-          timestamp: 1543604205208.696,
-          totalAudioEnergy: 0,
-          totalSamplesDuration: 1799.0699999985088,
-          totalSamplesReceived: 86342560,
-          trackIdentifier: "{e6519108-5d27-534c-961b-418c82f38302}",
+          timestamp: 1639592338598.977,
+          trackIdentifier: "67b4e5d0-a942-4ddc-a7af-0d33958e6d32",
           type: "track"
         },
         RTCCodec_audio_Inbound_109: {
@@ -118,8 +131,8 @@ describe('getStats', function() {
         }
       }))
     };
-    var fakeInboundStat = options.chromeFakeStats.get('RTCInboundRTPAudioStream_3265672822');
-    var fakeTrackStat = options.chromeFakeStats.get('RTCMediaStreamTrack_receiver_1');
+    var fakeInboundStat = options.chromeFakeStats.get('RTCInboundRTPVideoStream_3692393529');
+    var fakeTrackStat = options.chromeFakeStats.get('RTCMediaStreamTrack_receiver_35');
     var fakeCodecStat = options.chromeFakeStats.get('RTCCodec_audio_Inbound_109');
     var peerConnection = new FakeRTCPeerConnection(options);
     var localStream = new FakeMediaStream();
@@ -149,13 +162,14 @@ describe('getStats', function() {
             assert.equal(report.jitter, Math.round(fakeInboundStat.jitter * 1000));
             assert.equal(report.frameWidthReceived, fakeTrackStat.frameWidth);
             assert.equal(report.frameHeightReceived, fakeTrackStat.frameHeight);
+            assert.equal(report.frameRateReceived, fakeInboundStat.framesPerSecond);
             assert.equal(report.ssrc, fakeInboundStat.ssrc);
             assert.equal(report.bytesReceived, fakeInboundStat.bytesReceived);
             assert.equal(report.bytesSent, fakeInboundStat.bytesSent);
             assert.equal(report.packetsLost, fakeInboundStat.packetsLost);
             assert.equal(report.packetsReceived, fakeInboundStat.packetsReceived);
             assert.equal(report.packetsSent, fakeInboundStat.packetsSent);
-            assert.equal(report.audioOutputLevel, fakeTrackStat.audioLevel);
+            assert.equal(report.audioOutputLevel, normalizeAudioLevel(fakeTrackStat.audioLevel));
             assert.equal(report.estimatedPlayoutTimestamp, fakeInboundStat.estimatedPlayoutTimestamp);
             assert.equal(report.framesDecoded, fakeInboundStat.framesDecoded);
             assert.equal(report.jitterBufferDelay, fakeInboundStat.jitterBufferDelay);
@@ -175,6 +189,7 @@ describe('getStats', function() {
           codecId: "RTCCodec_video_Outbound_120",
           firCount: 0,
           framesEncoded: 34221,
+          framesPerSecond: 20,
           id: "RTCOutboundRTPVideoStream_4003256843",
           isRemote: false,
           mediaType: "video",
@@ -259,6 +274,7 @@ describe('getStats', function() {
             assert.equal(report.frameHeightSent, fakeOutboundStat.frameHeight);
             assert.equal(report.frameWidthInput, fakeTrackStat.frameWidth);
             assert.equal(report.frameHeightInput, fakeTrackStat.frameHeight);
+            assert.equal(report.frameRateSent, fakeOutboundStat.framesPerSecond);
             assert.equal(report.ssrc, String(fakeOutboundStat.ssrc));
             assert.equal(report.bytesSent, fakeOutboundStat.bytesSent);
             assert.equal(report.bytesSent, fakeOutboundStat.bytesSent);
@@ -283,6 +299,7 @@ describe('getStats', function() {
           frameWidth: 640,
           firCount: 0,
           framesEncoded: 34221,
+          framesPerSecond: 23,
           id: "RTCOutboundRTPVideoStream_4003256843",
           isRemote: false,
           mediaType: "video",
@@ -305,6 +322,7 @@ describe('getStats', function() {
           frameWidth: 960,
           firCount: 0,
           framesEncoded: 34221,
+          framesPerSecond: 22,
           id: "RTCOutboundRTPVideoStream_4003256843",
           isRemote: false,
           mediaType: "video",
@@ -379,6 +397,7 @@ describe('getStats', function() {
           assert.equal(report.frameHeightSent, fakeOutboundStat.frameHeight);
           assert.equal(report.frameWidthInput, fakeTrackStat.frameWidth);
           assert.equal(report.frameHeightInput, fakeTrackStat.frameHeight);
+          assert.equal(report.frameRateSent, fakeOutboundStat.framesPerSecond);
           assert.equal(report.ssrc, String(fakeOutboundStat.ssrc));
           assert.equal(report.bytesSent, fakeOutboundStat.bytesSent);
           assert.equal(report.bytesSent, fakeOutboundStat.bytesSent);
@@ -559,6 +578,7 @@ describe('getStats', function() {
           transportId: "RTCTransport_audio_1",
           bytesSent: 601215,
           framesEncoded: 150,
+          framesPerSecond: 30,
           packetsSent: 736,
           targetBitrate: 0,
           totalEncodeTime: 12.5,
@@ -577,7 +597,6 @@ describe('getStats', function() {
           framesCorrupted: 0,
           framesDecoded: 0,
           framesDropped: 0,
-          framesPerSecond:0,
           framesReceived: 0,
           framesSent: 150,
           fullFramesLost: 0,
@@ -611,11 +630,11 @@ describe('getStats', function() {
           .forEach(report => {
             assert(report.trackId);
             assert(report.timestamp);
-            assert.equal(report.frameRateSent, Math.round(fakeTrack.framesPerSecond));
             assert.equal(report.ssrc, String(fakeOutbound.ssrc));
             assert.equal(report.bytesSent, fakeOutbound.bytesSent);
             assert.equal(report.packetsSent, fakeOutbound.packetsSent);
             assert.equal(report.framesEncoded, fakeOutbound.framesEncoded);
+            assert.equal(report.frameRateSent, fakeOutbound.framesPerSecond);
             assert.equal(report.totalEncodeTime, fakeOutbound.totalEncodeTime);
             assert.equal(report.totalPacketSendDelay, fakeOutbound.totalPacketSendDelay);
           });
