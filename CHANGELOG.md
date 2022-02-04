@@ -1,3 +1,11 @@
+4.5.2 (January 4, 2022)
+=========================
+
+Bug Fixes
+---------
+
+- Fixed a bug where `audioLevel`, `frameRate`, and `captureDimensions` WebRTC stats are returning null on certain browsers. With this release, these stats are now populated whenever they are available. (VIDEO-3600)
+
 4.5.1 (September 1, 2021)
 =========================
 
