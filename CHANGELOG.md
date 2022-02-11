@@ -1,10 +1,10 @@
 4.6.0 (In Progress)
-=========================
+===================
 
 New Features
 ------------
 
-- Enabled support for WKWebViews.
+- Enabled support for WKWebViews. Thank you @codeborne for your contribution.
 
 4.5.2 (January 4, 2022)
 =========================
