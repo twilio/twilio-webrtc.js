@@ -1,3 +1,11 @@
+4.6.0 (In Progress)
+=========================
+
+New Features
+------------
+
+- Enabled support for WKWebViews.
+
 4.5.2 (January 4, 2022)
 =========================
 
