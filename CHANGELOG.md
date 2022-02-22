@@ -4,7 +4,7 @@
 New Features
 ------------
 
-- Enabled support for WKWebViews. Thank you @codeborne for your contribution.
+- Enabled support for WKWebViews. Thank you @cbxp for your [contribution](https://github.com/twilio/twilio-webrtc.js/pull/133).
 
 4.5.2 (January 4, 2022)
 =========================
