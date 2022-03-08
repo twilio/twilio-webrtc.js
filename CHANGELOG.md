@@ -1,4 +1,4 @@
-4.6.0 (In Progress)
+4.6.0 (March 8, 2022)
 ===================
 
 New Features
